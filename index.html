@@ -83,8 +83,8 @@
   .section-title { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:1.5px; }
   .tag-filter-label { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text2); }
 
-  .auftraege-header { display:grid; grid-template-columns:50px 110px 80px 1fr 110px 64px 110px 110px 130px; gap:10px; padding:8px 14px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); margin-bottom:6px; }
-  .auftrag-row { display:grid; grid-template-columns:50px 110px 80px 1fr 110px 64px 110px 110px 130px; gap:10px; padding:11px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; align-items:center; transition:all 0.15s; }
+  .auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+  .auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:11px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; align-items:center; transition:all 0.15s; }
   .auftrag-row:hover { border-color:var(--text3); }
   .auftrag-row.fertig { opacity:0.55; border-color:var(--accent); }
   .auftrag-nr { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--text); }
@@ -1222,7 +1222,7 @@ function renderGF() {
 
   // Use a grid for cards
   const grid = document.createElement('div');
-  grid.className = 'hallen-grid';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;';
   list.appendChild(grid);
 
   tages.forEach(a => {
