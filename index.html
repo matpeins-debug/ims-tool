@@ -1223,7 +1223,7 @@ function renderGF() {
 
   // Use a grid for cards
   const grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;';
   list.appendChild(grid);
 
   tages.forEach(a => {
@@ -1768,11 +1768,6 @@ function acKey(e,field){
 // ─── START ────────────────────────────────────────────────────────────────
 initDate();
 initTheme();
-// Sofort rendern mit lokalen Daten
-const localData = localStorage.getItem('ims_auftraege_local');
-if(localData) { try { auftraege = JSON.parse(localData); } catch(e){} }
-renderAll();
-// Dann JSONBin laden
 initBin().then(() => {
   loadFromStorage();
   startPolling();
