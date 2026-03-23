@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IMS Produktionsplaner</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3248;
+    --accent:#00c896; --accent2:#0084ff; --warn:#ffaa00; --danger:#ff4455;
+    --text:#e8eaf0; --text2:#8890aa; --text3:#555d78;
+    --s0:#aa88ff; --s1:#0084ff; --s2:#00c896; --s3:#ff9944;
+  }
+  body.light {
+    --bg:#f4f6f9; --surface:#ffffff; --surface2:#eef0f5; --border:#d0d5e0;
+    --accent:#00a87a; --accent2:#0066cc; --warn:#e09000; --danger:#d63040;
+    --text:#1a1d27; --text2:#555d78; --text3:#9099b0;
+    --s0:#7755cc; --s1:#0066cc; --s2:#00a87a; --s3:#d97700;
+  }
+  .theme-toggle {
+    background:var(--surface2); border:1px solid var(--border); border-radius:20px;
+    padding:5px 12px; cursor:pointer; font-size:14px; color:var(--text2);
+    transition:all 0.2s; display:flex; align-items:center; gap:6px;
+  }
+  .theme-toggle:hover { border-color:var(--accent); color:var(--text); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'IBM Plex Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; }
+
+  .header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .header-left { display:flex; align-items:center; gap:16px; }
+  .logo { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:600; color:var(--accent); }
+  .logo span { color:var(--text2); font-weight:400; }
+  .header-date { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text2); background:var(--surface2); padding:4px 10px; border-radius:4px; border:1px solid var(--border); }
+  .sync-status { display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text3); }
+  .sync-dot { width:7px; height:7px; border-radius:50%; background:var(--text3); transition:all 0.3s; }
+  .sync-dot.ok { background:var(--accent); box-shadow:0 0 6px var(--accent); }
+  .sync-dot.loading { background:var(--warn); animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .tabs { display:flex; gap:2px; padding:12px 24px 0; border-bottom:1px solid var(--border); background:var(--surface); }
+  .tab { padding:8px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(--text2); border-bottom:2px solid transparent; transition:all 0.15s; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+  .main { padding:24px; }
+
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:6px; border:none; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; font-size:13px; font-weight:500; transition:all 0.15s; }
+  .btn-primary { background:var(--accent); color:#000; }
+  .btn-primary:hover { background:#00e0aa; }
+  .btn-ghost { background:transparent; color:var(--text2); border:1px solid var(--border); }
+  .btn-ghost:hover { border-color:var(--text2); color:var(--text); }
+  .btn-sm { padding:4px 10px; font-size:12px; }
+  .btn-danger { background:transparent; color:var(--danger); border:1px solid var(--danger); padding:4px 10px; font-size:12px; border-radius:6px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; transition:all 0.15s; }
+  .btn-danger:hover { background:var(--danger); color:#fff; }
+  .btn-edit { background:transparent; color:var(--text2); border:1px solid var(--border); padding:4px 10px; font-size:12px; border-radius:6px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; transition:all 0.15s; }
+  .btn-edit:hover { border-color:var(--accent2); color:var(--accent2); }
+  .btn-fertig { background:var(--accent); color:#000; padding:6px 14px; font-size:13px; font-weight:600; border-radius:6px; border:none; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; transition:all 0.15s; }
+  .btn-fertig:hover { background:#00e0aa; transform:scale(1.02); }
+  .btn-fertig:disabled { background:var(--surface2); color:var(--text3); cursor:default; transform:none; }
+
+  .woche-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:28px; }
+  .tag-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden; }
+  .tag-card:hover { border-color:var(--text3); }
+  .tag-card.selected { border-color:var(--accent); background:var(--surface2); }
+  .tag-card.selected .tag-name, .tag-card.selected .tag-datum, .tag-card.selected .tag-count { color:var(--text); }
+  .tag-card.heute::before { content:'HEUTE'; position:absolute; top:8px; right:8px; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:600; color:var(--accent); background:#00c89622; padding:2px 6px; border-radius:3px; letter-spacing:1px; }
+  .tag-name { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .tag-datum { font-size:20px; font-weight:600; color:var(--text); margin-bottom:10px; }
+  .auftrag-row.fertig { opacity:0.55; border-color:var(--accent); }
+  .kapazitaet-bar { height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; margin-bottom:8px; }
+  .kapazitaet-fill { height:100%; border-radius:2px; transition:width 0.3s; }
+  .kap-ok { background:var(--accent); } .kap-warn { background:var(--warn); } .kap-voll { background:var(--danger); }
+  .tag-stats { display:flex; justify-content:space-between; align-items:center; }
+  .tag-count { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text2); }
+  .tag-count strong { color:var(--text); }
+  .ampel { width:8px; height:8px; border-radius:50%; }
+  .ampel-ok { background:var(--accent); box-shadow:0 0 6px var(--accent); }
+  .ampel-warn { background:var(--warn); box-shadow:0 0 6px var(--warn); }
+  .ampel-voll { background:var(--danger); box-shadow:0 0 6px var(--danger); }
+
+  .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .section-title { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:1.5px; }
+  .tag-filter-label { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text2); }
+
+  .auftraege-header { display:grid; grid-template-columns:50px 110px 80px 1fr 110px 64px 110px 110px 130px; gap:10px; padding:8px 14px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+  .auftrag-row { display:grid; grid-template-columns:50px 110px 80px 1fr 110px 64px 110px 110px 130px; gap:10px; padding:11px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; align-items:center; transition:all 0.15s; }
+  .auftrag-row:hover { border-color:var(--text3); }
+  .auftrag-row.fertig { opacity:0.55; border-color:var(--accent); }
+  .auftrag-nr { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--text); }
+  .auftrag-kunde { font-size:13px; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .auftrag-notiz { font-size:11px; color:var(--text2); }
+
+  .s-badge { display:inline-flex; align-items:center; justify-content:center; width:32px; height:20px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+  .badge-s0 { background:#aa88ff22; color:var(--s0); border:1px solid #aa88ff44; }
+  .badge-s1 { background:#0084ff22; color:var(--s1); border:1px solid #0084ff44; }
+  .badge-s2 { background:#00c89622; color:var(--s2); border:1px solid #00c89644; }
+  .badge-s3 { background:#ff994422; color:var(--s3); border:1px solid #ff994444; }
+
+  .versand-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:3px 7px; border-radius:4px; background:var(--surface2); color:var(--text2); border:1px solid var(--border); white-space:nowrap; }
+  .versand-spedition { color:#ff9944; border-color:#ff994444; background:#ff994411; }
+  .versand-paket { color:var(--accent2); border-color:#0084ff44; background:#0084ff11; }
+  .versand-abholung { color:var(--s0); border-color:#aa88ff44; background:#aa88ff11; }
+  .versand-ims { color:var(--accent); border-color:#00c89644; background:#00c89611; }
+
+  .status-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; padding:3px 8px; border-radius:4px; }
+  .status-offen { background:#ffffff11; color:var(--text2); }
+  .status-fertig { background:#00c89622; color:var(--accent); }
+
+  .ap-chips { display:flex; flex-wrap:wrap; gap:4px; }
+  .ap-chip { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 6px; border-radius:3px; background:var(--surface2); color:var(--text2); border:1px solid var(--border); }
+
+  .stats-row { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+  .stat-chip { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 16px; display:flex; flex-direction:column; gap:2px; }
+  .stat-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+  .stat-value { font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; color:var(--text); }
+  .stat-value.green { color:var(--accent); }
+  .stat-value.orange { color:var(--warn); }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:100; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; width:520px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+  .modal-title { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; color:var(--text); margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-full { grid-column:1/-1; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-label { font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); }
+  .form-input { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:9px 12px; color:var(--text); font-family:'IBM Plex Sans',sans-serif; font-size:13px; outline:none; transition:border-color 0.15s; }
+  .form-input:focus { border-color:var(--accent); }
+  select.form-input option { background:var(--surface2); }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+
+  .ap-section { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; }
+  .ap-section-title { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+  .stk-row { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; }
+  .stk-label { font-size:12px; color:var(--text2); }
+  .ap-input { background:var(--bg); border:1px solid var(--border); border-radius:5px; padding:6px 10px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:13px; outline:none; width:80px; transition:border-color 0.15s; text-align:center; }
+  .ap-input:focus { border-color:var(--accent); }
+
+  /* HALLE */
+  .hallen-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+  .hallen-card { background:var(--surface); border:2px solid var(--border); border-radius:12px; padding:20px; transition:all 0.2s; }
+  .hallen-card.card-aktiv { background:#0a1f0a; border-color:#00c89644; }
+  .hallen-card.card-fertig { background:#0a0f2a; border-color:#0084ff44; }
+  .hallen-card.card-ueberfaellig { background:#1f0a0a; border-color:#ff445544; }
+  body.light .hallen-card.card-aktiv { background:#f0fff4; border-color:#00a87a; }
+  body.light .hallen-card.card-fertig { background:#f0f4ff; border-color:#0066cc; }
+  body.light .hallen-card.card-ueberfaellig { background:#fff0f0; border-color:#d63040; }
+  .hallen-nr { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; color:var(--text); margin-bottom:4px; }
+  .hallen-kunde { font-size:16px; font-weight:500; color:var(--text); margin-bottom:10px; }
+  .hallen-meta { display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+  .hallen-ap { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:14px; }
+  .hallen-fertig-info { display:flex; align-items:center; gap:8px; color:var(--accent); font-weight:600; font-size:14px; margin-top:4px; }
+  .fertig-zeit { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text3); margin-top:4px; }
+
+  /* AUTOCOMPLETE */
+  .ac-wrapper { position:relative; }
+  .ac-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--surface); border:1px solid var(--accent); border-radius:6px; z-index:200; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.5); }
+  .ac-item { padding:9px 12px; cursor:pointer; font-size:13px; color:var(--text); transition:background 0.1s; border-bottom:1px solid var(--border); }
+  .ac-item:last-child { border-bottom:none; }
+  .ac-item:hover, .ac-item.selected { background:var(--surface2); color:var(--accent); }
+  .ac-item mark { background:none; color:var(--accent); font-weight:600; }
+
+  .inline-edit { background:var(--surface2); border:1px solid var(--accent); border-radius:5px; padding:4px 8px; color:var(--text); font-family:'IBM Plex Sans',sans-serif; font-size:12px; outline:none; }
+
+  /* NEU BADGE */
+  .neu-badge { display:inline-block; background:#ff445522; color:var(--danger); border:1px solid #ff445544; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:9px; padding:1px 5px; margin-left:6px; vertical-align:middle; animation:pulse 1.5s infinite; }
+
+  .empty { text-align:center; padding:60px 20px; color:var(--text3); }
+  .empty-icon { font-size:40px; margin-bottom:12px; }
+  /* GF DRAG & DROP */
+  .gf-row {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px; background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; margin-bottom:8px; cursor:grab; transition:all 0.15s;
+    user-select:none;
+  }
+  .gf-row:hover { border-color:var(--text3); }
+  .gf-row.dragging { opacity:0.4; border:2px dashed var(--accent); }
+  .gf-row.drag-over { border-color:var(--accent); background:var(--surface2); transform:scale(1.01); }
+  .gf-row.fertig { opacity:0.45; }
+  .gf-prio { font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:700; color:var(--warn); min-width:48px; }
+  .gf-drag-handle { font-size:20px; color:var(--text3); cursor:grab; padding:0 4px; }
+  .gf-nr { font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--text2); min-width:80px; }
+  .gf-kunde { font-size:16px; font-weight:600; color:var(--text); flex:1; }
+  .gf-stk { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:600; color:var(--text); min-width:60px; text-align:right; }
+  .gf-versand { min-width:130px; }
+  .gf-status { min-width:90px; text-align:right; }
+
+  .kap-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 18px; min-width:130px; }
+  .kap-card-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .kap-card-datum { font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px; }
+
+  .hidden { display:none; }
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .header { padding:12px 16px; flex-wrap:wrap; gap:10px; }
+    .logo { font-size:15px; }
+    .header-date { display:none; }
+    .sync-status { font-size:10px; }
+    .tabs { padding:8px 16px 0; }
+    .tab { padding:6px 14px; font-size:12px; }
+    .main { padding:14px; }
+    .woche-grid { grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:16px; }
+    .tag-card { padding:8px; }
+    .tag-name { font-size:9px; }
+    .tag-datum { font-size:15px; margin-bottom:6px; }
+    .tag-count { font-size:10px; }
+    .auftraege-header { display:none; }
+    .auftrag-row {
+      grid-template-columns: 1fr;
+      gap:6px; padding:12px;
+    }
+    .auftrag-row > div:nth-child(1) { display:none; }
+    .stats-row { gap:8px; }
+    .stat-chip { padding:8px 12px; }
+    .stat-value { font-size:16px; }
+    .hallen-grid { grid-template-columns:1fr; }
+    .btn-fertig { padding:14px; font-size:15px; width:100%; justify-content:center; }
+    .modal { padding:20px 16px; }
+    .form-grid { grid-template-columns:1fr; }
+    .form-full { grid-column:1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">IMS <span>Produktionsplaner</span></div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dunkel</button>
+    <div class="sync-status">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">Verbinde...</span>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">+ Auftrag erfassen</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('planung')">Planung & Übersicht</div>
+  <div class="tab" onclick="switchTab('gf')">📊 GF-Übersicht</div>
+  <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
+  <div class="tab" onclick="switchTab('offen')">📋 Alle offenen</div>
+  <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
+  <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
+  <div class="tab" onclick="switchTab('ap-UP-Armatur 1')">🔩 UP-Armatur 1</div>
+  <div class="tab" onclick="switchTab('ap-UP-Armatur 2')">🔩 UP-Armatur 2</div>
+  <div class="tab" onclick="switchTab('ap-Heizung')">🌡 Heizung</div>
+  <div class="tab" onclick="switchTab('ap-Zusammenbau')">🏗 Zusammenbau</div>
+  <div class="tab" onclick="switchTab('ap-Nachbearbeitung')">🔨 Nachbearbeitung</div>
+  <div class="tab" onclick="switchTab('ap-Einbauelement')">📦 Einbauelement</div>
+</div>
+
+<div id="tab-planung" class="main">
+  <div class="section-header">
+    <div class="section-title">Wochenübersicht</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset--;renderAll()">← Vorige</button>
+      <span id="wocheLabel" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)"></span>
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset++;renderAll()">Nächste →</button>
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset=0;renderAll()">Heute</button>
+    </div>
+  </div>
+  <div class="woche-grid" id="wocheGrid"></div>
+  <div class="section-header">
+    <div id="tagFilterLabel" class="tag-filter-label"></div>
+  </div>
+  <div class="stats-row" id="statsRow"></div>
+  <div class="auftraege-header">
+    <div>Prio</div><div>Auftrag</div><div>Stück</div><div>Kunde</div>
+    <div>Versanddatum</div><div>S</div><div>Versandart</div><div>Status</div><div>Aktionen</div>
+  </div>
+  <div id="auftraegeList"></div>
+</div>
+
+<div id="tab-versand" class="main hidden">
+  <div class="section-header">
+    <div class="section-title">Versand Fertigmeldung</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-ghost btn-sm" onclick="versandOffset--;renderHalle()">← Zurück</button>
+      <span id="versandDatum" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></span>
+      <button class="btn btn-ghost btn-sm" onclick="versandOffset++;renderHalle()">Vor →</button>
+      <button class="btn btn-ghost btn-sm" onclick="versandOffset=0;renderHalle()">Heute</button>
+    </div>
+  </div>
+  <div class="hallen-grid" id="hallenGrid"></div>
+</div>
+
+<div id="tab-gf" class="main hidden">
+  <div class="section-header">
+    <div class="section-title">GF-Übersicht</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="gfDatumOffset--;renderGF()">← Zurück</button>
+      <span id="gfDatum" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></span>
+      <button class="btn btn-ghost btn-sm" onclick="gfDatumOffset++;renderGF()">Vor →</button>
+      <button class="btn btn-ghost btn-sm" onclick="gfDatumOffset=0;renderGF()">Heute</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadCSV()" style="border-color:var(--accent);color:var(--accent)">⬇ CSV Export</button>
+    </div>
+  </div>
+  <!-- Kapazitätsampeln -->
+  <div id="gfKapazitaet" style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap"></div>
+  <!-- Aufträge Drag & Drop -->
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px">Heute – Priorität (ziehen zum Verschieben)</div>
+  <div id="gfList"></div>
+</div>
+
+<div id="tab-offen" class="main hidden">
+  <div class="section-header">
+    <div class="section-title">Alle offenen Aufträge</div>
+    <div id="offenCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:110px 80px 1fr 110px 64px 110px;gap:10px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);margin-bottom:6px;">
+    <div class="sort-col" onclick="sortOffen('nr')" style="cursor:pointer" id="sort-nr">Auftrag ↕</div>
+    <div>Stück</div>
+    <div class="sort-col" onclick="sortOffen('kunde')" style="cursor:pointer" id="sort-kunde">Kunde ↕</div>
+    <div class="sort-col" onclick="sortOffen('datum')" style="cursor:pointer" id="sort-datum">Versanddatum ↕</div>
+    <div>S</div>
+    <div class="sort-col" onclick="sortOffen('versandart')" style="cursor:pointer" id="sort-versandart">Versandart ↕</div>
+  </div>
+  <div id="offenList"></div>
+</div>
+
+<div id="tab-ap" class="main hidden">
+  <div class="section-header">
+    <div class="section-title" id="apTabTitle"></div>
+    <div id="apTabCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
+  </div>
+  <div id="apTabList"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Neuen Auftrag erfassen</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Auftragsnummer *</label>
+        <div class="ac-wrapper">
+          <input class="form-input" id="inp-nr" type="text" placeholder="z.B. 2023500" autocomplete="off"
+            oninput="acShow('nr')" onkeydown="acKey(event,'nr')" onfocus="acShow('nr')" onblur="acHide('nr')">
+          <div class="ac-dropdown hidden" id="ac-nr"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Versanddatum *</label>
+        <input class="form-input" id="inp-datum" type="date">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Kunde *</label>
+        <div class="ac-wrapper">
+          <input class="form-input" id="inp-kunde" type="text" placeholder="Kundenname" autocomplete="off"
+            oninput="acShow('kunde')" onkeydown="acKey(event,'kunde')" onfocus="acShow('kunde')" onblur="acHide('kunde')">
+          <div class="ac-dropdown hidden" id="ac-kunde"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">S-Klasse *</label>
+        <select class="form-input" id="inp-sklasse">
+          <option value="S1">S1 – Kleinserie</option>
+          <option value="S2" selected>S2 – Standard</option>
+          <option value="S3">S3 – Sonder</option>
+          <option value="S0">S0 – Handel</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Versandart *</label>
+        <select class="form-input" id="inp-versandart">
+          <option value="Paketdienst">📦 Paketdienst</option>
+          <option value="Spedition">🚛 Spedition</option>
+          <option value="Kundenabholung">🏠 Kundenabholung</option>
+          <option value="IMS-Zustellung">🚐 IMS-Zustellung</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priorität</label>
+        <input class="form-input" id="inp-prio" type="number" min="1" max="99" placeholder="z.B. 01">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notiz</label>
+        <input class="form-input" id="inp-notiz" type="text" placeholder="z.B. DRINGEND, Spedition Dachser...">
+      </div>
+      <div class="form-group form-full">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label class="form-label" style="margin:0">Gruppen & Stückzahlen</label>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addGruppeRow()">+ Gruppe hinzufügen</button>
+        </div>
+        <div id="gruppenRows"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="saveAuftrag()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────
+const GRUPPEN = {
+  '0': { name:'Gruppe 0', aps:['CNC','AP-Armatur','Zusammenbau','Nachbearbeitung'] },
+  '1': { name:'Gruppe 1', aps:['CNC','UP-Armatur 1','UP-Armatur 2','Zusammenbau','Nachbearbeitung'] },
+  '2': { name:'Gruppe 2', aps:['Heizung'] },
+  '3': { name:'Gruppe 3', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','CNC','Heizung'] },
+  '4': { name:'Gruppe 4', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','CNC','Heizung'] },
+  '5': { name:'Gruppe 5', aps:['CNC','UP-Armatur 1','UP-Armatur 2','CNC','Einbauelement'] },
+  '6': { name:'Gruppe 6', aps:['Versand'] },
+};
+const AP_PARALLEL = {
+  'UP-Armatur 1': 'UP-Armatur', 'UP-Armatur 2': 'UP-Armatur',
+  'Zusammenbau': 'Zusammenbau', 'Nachbearbeitung': 'Zusammenbau',
+};
+const ARBEITSPLAETZE = ['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung','Zusammenbau','Nachbearbeitung','Einbauelement'];
+const ARBEITSPLAETZE_PLANUNG = ['CNC','AP-Armatur','UP-Armatur','Heizung','Zusammenbau','Einbauelement'];
+const AP_KAPAZITAET = {
+  'CNC': 200, 'AP-Armatur': 150, 'UP-Armatur': 50,
+  'Heizung': 100, 'Zusammenbau': 150, 'Einbauelement': 20,
+  'UP-Armatur 1': 25, 'UP-Armatur 2': 25,
+  'Nachbearbeitung': 75,
+};
+const ABHAENGIGKEITEN = {
+  'Zusammenbau': ['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2'],
+  'Nachbearbeitung': ['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Zusammenbau'],
+};
+// APs die Fotodokumentation bei S3 erfordern
+const AP_FOTO_REQUIRED = ['UP-Armatur 1','UP-Armatur 2'];
+
+function getAPKapazitaet(datum) {
+  const result = {};
+  ARBEITSPLAETZE_PLANUNG.forEach(ap => result[ap] = 0);
+  auftraege.filter(a=>a.datum===datum).forEach(a => {
+    const processAps = (aps, stk) => {
+      [...new Set(aps)].forEach(ap => {
+        // Merge UP-Armatur 1/2 → UP-Armatur, Zusammenbau 1/2 → Zusammenbau
+        const merged = AP_PARALLEL[ap] || ap;
+        if(result[merged]!==undefined) result[merged] += (stk||0);
+        else if(result[ap]!==undefined) result[ap] += (stk||0);
+      });
+    };
+    if(a.gruppen && a.gruppen.length>0) {
+      a.gruppen.forEach(g => { if(GRUPPEN[g.gruppe]) processAps(GRUPPEN[g.gruppe].aps, g.stk); });
+    } else if(a.gruppe && GRUPPEN[a.gruppe]) {
+      processAps(GRUPPEN[a.gruppe].aps, a.stk);
+    }
+  });
+  return result;
+}
+
+function auftraegeForAP(ap) {
+  // For parallel APs, also check the sibling group name
+  const parallelGroup = AP_PARALLEL[ap];
+  return auftraege.filter(a => {
+    const checkAp = (apName) => {
+      if(a.gruppen && a.gruppen.length>0)
+        return a.gruppen.some(g => GRUPPEN[g.gruppe] && GRUPPEN[g.gruppe].aps.some(a => a===apName || (parallelGroup && a===apName)));
+      if(a.gruppe && GRUPPEN[a.gruppe])
+        return GRUPPEN[a.gruppe].aps.some(a => a===apName);
+      return false;
+    };
+    // Check both the exact AP and any sibling parallel AP
+    const siblings = Object.entries(AP_PARALLEL)
+      .filter(([k,v]) => v === (parallelGroup||ap) )
+      .map(([k]) => k);
+    return [ap, ...siblings].some(name => {
+      if(a.gruppen && a.gruppen.length>0)
+        return a.gruppen.some(g => GRUPPEN[g.gruppe] && GRUPPEN[g.gruppe].aps.includes(name));
+      if(a.gruppe && GRUPPEN[a.gruppe])
+        return GRUPPEN[a.gruppe].aps.includes(name);
+      return false;
+    });
+  });
+}
+const VERSAND_ICONS = { 'Spedition':'🚛','Paketdienst':'📦','Kundenabholung':'🏠','IMS-Zustellung':'🚐' };
+const VERSAND_CLASS = { 'Spedition':'versand-spedition','Paketdienst':'versand-paket','Kundenabholung':'versand-abholung','IMS-Zustellung':'versand-ims' };
+const KUNDEN = ['AMG ANLAGEN','AMT KIRCHBACH','ANDRITZHANS','ANTRETTER&RIXNE','APEM','APFELTHALER','AQUA INSTALLATI','ARLT PARSCHLUG','AUER STVALENTIN','BAD KONZEPT DE','BADFRITZE DE','BARTHEL LUX','BAYWA NESSEL DE','BERGER KÄRNTEN','BOGER DE','BRAUN BAIERS DE','BUCK DE','CAVERION GRAZ','CBS HOME DE','CHLEBECEK','CSAMAY KRIEGLAC','CURRLIN DE','DENGLER DE','DENZEL GRAZPUNT','DIEHL DE','DIENEUEN FOHNSD','DIENEUEN PASSAI','DOLINSCHEK','DONAURIES DE','DUCH','EB-HT KÖTTMANNS','EDIT ITTER','EGGER STVEIT','EHTECH KROTTEND','ELEKTRO LEUTSCH','ENERGIETECH OÖ','EOOS KNITTELFEL','EPPLE DE','FEIEL MURAU','FENDER SÖLDEN','FERSTL ST.JOHA','FG PURGSTALL','FICHTINGER NÖ','FLANYEK STAINZ','FLOWFIX','FORSTENLECHNERP','FRANK HARTH DE','FRIEDL FOHNSDOR','FRITZ GRAF VILL','FÖRSTER GRAZ','GAUTSCH DE','GCIHAUSTEC WIEN','GEYERLECHNER','GITEC PREDING','GK BUSINESS GRZ','GLUSCHITSCH','GOMERNIKPICHLER','GREGORITSCH','GREIBICH','GRIEBLER','GRILLENBERGERBA','GRÄTZHOFERBRUCK','GSCHWANDTNER BA','GURMANN','GUTMANN FÜRSTEN','H3 THONDORF','HAAS GROSSWILFE','HAAS WOLFERN','HABELERBAUER MA','HACK ANGER','HAMMERSCHMID PR','HARKAM WILDON','HAUSBÖCK PERG','HB BRETT DE','HDG WALDSCHOBER','HEAT TECHNIC HR','HEGA WOLFAU','HEINS DE','HELD','HENKEL DE','HENNEGRIFF DE','HEST WIEN','HILLER DE','HME GRAZ','HOFER DE','HOFSTÄTTER SEIE','HOLZAPFEL MUTTE','HSALMER','HSE GLEISDORF','HWS POPKEN DE','HWSI','ICS WIEN','IMS VERTRIEB','JANISCH ILZ','JANKER HAIDERER','JAUK GMBH','JENTRO BE','JUNGHOFER','KABICHER','KAMMERHOFER','KAPLENIG','KARNER BERNSTEI','KDS HAUSTECHNIK','KEMPTE BADISCHL','KGT KROBATH GEB','KIKINGER','KINDERMANN LEIB','KIV DE','KL INSTALL LEIB','KLAUSNER','KLAUSRIEGLER','KOGLER PLAINFEL','KOLLAR LILIENFE','KOLLER STMK','KOPP DE','KOSTKA LEOBEN','KRISTEK DE','KROBATHFELDBACH','KROBATHFÜRSTENF','KROBATHGRAZ','KROBATHSTRADEN','KROLL DE','KUMMER VÖLKERMA','KUPPEK','KÄPPLER DE','KÖNIG MONDSEE','LABAN','LACKNER KRIEGLA','LAGERHAUS ZWETT','LANG DE','LEEB ENERGIE','LESSIAK KÄRNTEN','LGS SALZBURG','LICHT LOIDL','LOINDL KÖSTENDO','LOIPERDINGER','LUMAR SLO','LUX NÖ','MAIER EFERDING','MAIER STEYR','MAUSS HAUST DE','MÖNIUS DE','MÜLLER KREMSMÜN','NEUBAUER EGGERS','NOVOTHERM','OBEXER','ON TECHNIK GNAS','PECAN','PERKO HAUSTECH','PETERSCHELKA','PICHLER GLEISDO','PLASSER','PUSAR','RANDLSHOFER DE','REITERER SCHWAN','RIEDER BADHALL','RIEDER WELS','ROMBERGER GURTE','ROTH GLEISDORF','SCHIMAUTZ GRAZ','SHARK STMK','STOLZ NUSSDORF','STRASCHEK RADKE','STROMMER STJOHA','STURM SALZBURG','THOMMA WERTACH','THUMFORT GRAZ','UNISAN HART','WIESERSCHERER','ZEIRINGER MURAU','ZIEGELBAUR DE','ZOTTER'];
+const STORAGE_KEY = 'ims_auftraege';
+
+// ─── STATE ────────────────────────────────────────────────────────────────
+let auftraege = [];
+let selectedDatum = toDateStr(new Date());
+let editingId = null;
+let lastKnownCount = 0;
+let syncInterval = null;
+let wocheOffset = 0;
+let gfDatumOffset = 0;
+let versandOffset = 0;
+
+// ─── UTILS ────────────────────────────────────────────────────────────────
+function toDateStr(d) {
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function formatDatum(str) { if(!str)return'–'; const[y,m,d]=str.split('-'); return`${d}.${m}.${y}`; }
+function getWochentag(str) { return['So','Mo','Di','Mi','Do','Fr','Sa'][new Date(str).getDay()]; }
+function formatZeit(iso) { if(!iso)return''; const d=new Date(iso); return d.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'}); }
+function formatDateTime(iso) { if(!iso)return'–'; const d=new Date(iso); return d.toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'}); }
+
+function downloadCSV() {
+  const fertig = auftraege.filter(a=>a.fertig);
+  const rows = [['Auftragsnummer','Kunde','Versanddatum','Versandart','Stück','S-Klasse','Erste Zeit','Versand Fertig','Gesamtzeit (Min)','Notiz']];
+  fertig.forEach(a => {
+    const allStarts = a.timers ? Object.values(a.timers).filter(t=>t.start||t.totalMs>0).map(t=>t.start).filter(Boolean) : [];
+    const ersteZeit = allStarts.length>0 ? formatDateTime(allStarts.sort()[0]) : '';
+    const fertigZeit = a.fertigAm ? formatDateTime(a.fertigAm) : '';
+    const totalMin = getTotalAuftragMin(a);
+    rows.push([a.nr, a.kunde, formatDatum(a.datum), a.versandart||'', a.stk||'', a.sklasse, ersteZeit, fertigZeit, totalMin, a.notiz||'']);
+  });
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`IMS_Auftraege_${toDateStr(new Date())}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function getKapazitaet(datum) {
+  return auftraege.filter(a=>a.datum===datum).reduce((sum,a)=>{
+    const w = a.sklasse==='S3'?1.25:1;
+    return sum + (parseInt(a.stk)||1)*w;
+  },0);
+}
+function getKapAmpel(e) { const p=e/150; return p<0.75?'ok':p<0.95?'warn':'voll'; }
+
+function getWoche() {
+  const heute=new Date(); const day=heute.getDay();
+  const diff=day===0?-6:1-day;
+  const monday=new Date(heute); monday.setDate(heute.getDate()+diff+(wocheOffset*7));
+  return Array.from({length:5},(_,i)=>{ const d=new Date(monday); d.setDate(monday.getDate()+i); return toDateStr(d); });
+}
+
+// ─── JSONBIN CONFIG ───────────────────────────────────────────────────────
+// JSONBin.io – kostenloser Cloud-Speicher
+// API Key und Bin ID werden nach erstem Start automatisch erstellt
+const JSONBIN_API_KEY = '$2a$10$h7oPTgTwym.FqTXAzcNQqesl2MV2EoR93XgTmLBJlPriGipNL1LV6';
+let JSONBIN_BIN_ID = localStorage.getItem('ims_bin_id') || '69c06cdeb7ec241ddc9223d2';
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot ' + (state==='ok'?'ok':state==='loading'?'loading':'');
+  lbl.textContent = label;
+}
+
+async function initBin() {
+  localStorage.setItem('ims_bin_id', JSONBIN_BIN_ID);
+}
+
+async function loadFromStorage() {
+  try {
+    setSyncStatus('loading','Lade...');
+    if (!JSONBIN_BIN_ID) { setSyncStatus('','Keine Bin-ID'); return; }
+
+    const res = await fetch(`${JSONBIN_BASE}/b/${JSONBIN_BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    });
+    if (!res.ok) throw new Error('Fetch failed');
+    const data = await res.json();
+    const loaded = data.record.auftraege || [];
+
+    // Fertig-Benachrichtigungen
+    if (auftraege.length > 0) {
+      loaded.forEach(a => {
+        const prev = auftraege.find(x => x.id === a.id);
+        if (a.fertig && prev && !prev.fertig) showFertigNotification(a);
+      });
+    }
+    auftraege = loaded;
+    localStorage.setItem('ims_auftraege_local', JSON.stringify(auftraege));
+    setSyncStatus('ok','Synchronisiert');
+    renderAll();
+    if (!document.getElementById('tab-versand').classList.contains('hidden')) renderHalle();
+    if (!document.getElementById('tab-gf').classList.contains('hidden')) renderGF();
+    if (!document.getElementById('tab-offen').classList.contains('hidden')) renderOffen();
+    if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').textContent);
+  } catch(e) {
+    const local = localStorage.getItem('ims_auftraege_local');
+    if (local) auftraege = JSON.parse(local);
+    setSyncStatus('','Nur lokal');
+    renderAll();
+  }
+}
+
+async function saveToStorage() {
+  try {
+    setSyncStatus('loading','Speichere...');
+    localStorage.setItem('ims_auftraege_local', JSON.stringify(auftraege));
+    if (!JSONBIN_BIN_ID) { setSyncStatus('','Keine Bin-ID'); return; }
+
+    const res = await fetch(`${JSONBIN_BASE}/b/${JSONBIN_BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_API_KEY
+      },
+      body: JSON.stringify({ auftraege })
+    });
+    if (!res.ok) throw new Error('Save failed');
+    setSyncStatus('ok','Gespeichert ✓');
+    setTimeout(()=>setSyncStatus('ok','Synchronisiert'), 2000);
+  } catch(e) {
+    localStorage.setItem('ims_auftraege_local', JSON.stringify(auftraege));
+    setSyncStatus('','Nur lokal gespeichert');
+  }
+}
+
+function showFertigNotification(a) {
+  const n = document.createElement('div');
+  n.style.cssText = `position:fixed;bottom:24px;right:24px;background:#0a1a14;border:2px solid var(--accent);border-radius:12px;padding:16px 20px;z-index:999;font-family:'IBM Plex Sans',sans-serif;box-shadow:0 8px 32px rgba(0,200,150,0.2);animation:slideIn 0.3s ease;max-width:300px`;
+  n.innerHTML = `<div style="color:var(--accent);font-weight:600;margin-bottom:4px">✓ Auftrag fertig!</div><div style="color:var(--text);font-size:13px">${a.nr} – ${a.kunde}</div><div style="color:var(--text3);font-size:11px;margin-top:4px;font-family:'IBM Plex Mono',monospace">${formatZeit(a.fertigAm)}</div>`;
+  document.body.appendChild(n);
+  setTimeout(()=>n.remove(), 5000);
+}
+
+// Poll every 15 seconds for updates
+function startPolling() {
+  if (syncInterval) clearInterval(syncInterval);
+  syncInterval = setInterval(loadFromStorage, 15000);
+}
+
+// ─── THEME ────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('ims_theme', isLight ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isLight ? '🌙 Dunkel' : '☀️ Hell';
+}
+function initTheme() {
+  const saved = localStorage.getItem('ims_theme');
+  if (saved === 'light') {
+    document.body.classList.add('light');
+    document.getElementById('themeBtn').textContent = '🌙 Dunkel';
+  } else {
+    document.getElementById('themeBtn').textContent = '☀️ Hell';
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+function initDate() {
+  const heute = new Date();
+  document.getElementById('headerDate').textContent = heute.toLocaleDateString('de-AT',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+  document.getElementById('inp-datum').value = toDateStr(heute);
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  const allTabs = ['planung','versand','gf','offen','ap'];
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick')===`switchTab('${tab}')`));
+  allTabs.forEach(t => document.getElementById('tab-'+t) && document.getElementById('tab-'+t).classList.add('hidden'));
+  if(tab.startsWith('ap-')) {
+    document.getElementById('tab-ap').classList.remove('hidden');
+    renderAP(tab.replace('ap-',''));
+  } else {
+    document.getElementById('tab-'+tab) && document.getElementById('tab-'+tab).classList.remove('hidden');
+  }
+  if(tab==='versand') renderHalle();
+  if(tab==='gf') renderGF();
+  if(tab==='offen') renderOffen();
+}
+
+// ─── WOCHE ────────────────────────────────────────────────────────────────
+function renderWoche() {
+  const woche=getWoche(); const heute=toDateStr(new Date());
+  const grid=document.getElementById('wocheGrid'); grid.innerHTML='';
+  const lbl=document.getElementById('wocheLabel');
+  if(lbl){
+    if(wocheOffset===0) lbl.textContent='Diese Woche';
+    else if(wocheOffset===1) lbl.textContent='Nächste Woche';
+    else if(wocheOffset===-1) lbl.textContent='Vorige Woche';
+    else lbl.textContent=wocheOffset>0?`+${wocheOffset} Wochen`:`${wocheOffset} Wochen`;
+  }
+  woche.forEach(datum=>{
+    const einh=getKapazitaet(datum); const pct=Math.min(einh/150*100,100);
+    const ampel=getKapAmpel(einh);
+    const count=auftraege.filter(a=>a.datum===datum).length;
+    const fertig=auftraege.filter(a=>a.datum===datum&&a.fertig).length;
+    const hasNew = auftraege.some(a=>a.datum===datum&&!a.fertig&&a.neu);
+    const card=document.createElement('div');
+    card.className=`tag-card${datum===heute?' heute':''}${datum===selectedDatum?' selected':''}`;
+    card.onclick=()=>{selectedDatum=datum;renderAll();};
+    card.innerHTML=`
+      <div class="tag-name">${getWochentag(datum)}</div>
+      <div class="tag-datum">${datum.split('-')[2]}.</div>
+      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
+      <div class="tag-stats">
+        <div class="tag-count"><strong>${fertig}</strong>/${count} Aufträge</div>
+        <div class="ampel ampel-${ampel}"></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ─── AUFTRÄGE ─────────────────────────────────────────────────────────────
+function renderAuftraege() {
+  const list=document.getElementById('auftraegeList');
+  const label=document.getElementById('tagFilterLabel');
+  const statsRow=document.getElementById('statsRow');
+  const filtered=auftraege.filter(a=>a.datum===selectedDatum);
+  label.textContent=`Aufträge für ${getWochentag(selectedDatum)}, ${formatDatum(selectedDatum)}`;
+
+  const offen=filtered.filter(a=>!a.fertig).length;
+  const fertig=filtered.filter(a=>a.fertig).length;
+  const einh=getKapazitaet(selectedDatum);
+  const ampel=getKapAmpel(einh);
+  const vc=ampel==='ok'?'green':ampel==='warn'?'orange':'danger';
+  const apKap = getAPKapazitaet(selectedDatum);
+
+  const apChips = ARBEITSPLAETZE_PLANUNG.map(ap => {
+    const used = apKap[ap]||0;
+    const max = AP_KAPAZITAET[ap];
+    const pct = Math.min(used/max*100,100);
+    const col = pct<75?'var(--accent)':pct<95?'var(--warn)':'var(--danger)';
+    return `<div class="stat-chip" style="min-width:110px">
+      <div class="stat-label">${ap}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:${col}">${used} <span style="font-size:11px;color:var(--text3)">/ ${max}</span></div>
+      <div style="height:3px;background:var(--surface2);border-radius:2px;margin-top:4px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${col};border-radius:2px"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  statsRow.innerHTML=`
+    <div class="stat-chip"><div class="stat-label">Gesamt</div><div class="stat-value">${filtered.length}</div></div>
+    <div class="stat-chip"><div class="stat-label">Offen</div><div class="stat-value orange">${offen}</div></div>
+    <div class="stat-chip"><div class="stat-label">Fertig</div><div class="stat-value green">${fertig}</div></div>
+    <div class="stat-chip"><div class="stat-label">Kapazität gesamt</div><div class="stat-value ${vc}">${Math.round(einh)} / 150</div></div>
+    ${apChips}`;
+
+  if(filtered.length===0){ list.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Keine Aufträge für diesen Tag</div></div>`; return; }
+
+  // Sortieren nach Priorität, dann nach Erfassungszeit
+  filtered.sort((a,b)=>{
+    if(a.prio && b.prio) return a.prio - b.prio;
+    if(a.prio) return -1;
+    if(b.prio) return 1;
+    return 0;
+  });
+
+  list.innerHTML='';
+  filtered.forEach((a,i)=>{
+    const vClass=VERSAND_CLASS[a.versandart]||'';
+    const vIcon=VERSAND_ICONS[a.versandart]||'';
+    const apText = (a.gruppen && a.gruppen.length > 0)
+      ? a.gruppen.map(g => GRUPPEN[g.gruppe]
+          ? `<span class="ap-chip">${GRUPPEN[g.gruppe].aps.join('+')}${g.stk?` <strong>${g.stk}</strong>`:''}</span>`
+          : '').join('')
+      : (a.gruppe && GRUPPEN[a.gruppe]
+          ? GRUPPEN[a.gruppe].aps.map(ap=>`<span class="ap-chip">${ap}${a.stk?` <strong>${a.stk}</strong>`:''}</span>`).join('')
+          : '');
+    const row=document.createElement('div');
+    row.className=`auftrag-row${a.fertig?' fertig':''}`;
+    row.innerHTML=`
+      <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
+      <div class="auftrag-nr" style="font-size:12px">${a.nr}</div>
+      <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
+      <div>
+        <div class="auftrag-kunde">${a.kunde}</div>
+        ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
+        ${apText?`<div class="ap-chips" style="margin-top:4px">${apText}</div>`:''}
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${renderStationDots(a)}</div>
+      </div>
+      <div id="datum-cell-${a.id}">${renderDatumCell(a)}</div>
+      <div><span class="s-badge badge-${a.sklasse.toLowerCase()}">${a.sklasse}</span></div>
+      <div id="versand-cell-${a.id}">${renderVersandCell(a)}</div>
+      <div>
+        ${a.fertig
+          ?`<div><span class="status-badge status-fertig">✓ Fertig</span><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-top:3px">${formatZeit(a.fertigAm)}</div></div>`
+          :`<span class="status-badge status-offen">○ Offen</span>`}
+      </div>
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+        <button class="btn-edit" onclick="openEdit('${a.id}')">✏</button>
+        ${!a.fertig?`<button class="btn-fertig" onclick="markFertig('${a.id}')">✓ Fertig</button>`:`<button class="btn-fertig" disabled>✓</button>`}
+        <button class="btn-danger" onclick="deleteAuftrag('${a.id}')">✕</button>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function getCardClass(a, stationFertig, isRunning) {
+  const heute = toDateStr(new Date());
+  const ueberfaellig = a.datum < heute && !a.fertig;
+  if(ueberfaellig) return 'card-ueberfaellig';
+  if(stationFertig !== undefined ? stationFertig : a.fertig) return 'card-fertig';
+  if(isRunning) return 'card-aktiv';
+  return '';
+}
+
+function renderStationDots(a) {
+  // Welche APs hat dieser Auftrag?
+  const aps = new Set();
+  if(a.gruppen && a.gruppen.length>0) {
+    a.gruppen.forEach(g => { if(GRUPPEN[g.gruppe]) GRUPPEN[g.gruppe].aps.forEach(ap => aps.add(ap)); });
+  } else if(a.gruppe && GRUPPEN[a.gruppe]) {
+    GRUPPEN[a.gruppe].aps.forEach(ap => aps.add(ap));
+  }
+  if(aps.size === 0) return '';
+  return [...aps].map(ap => {
+    const apKey = ap.replace(/[^a-z0-9]/gi,'_');
+    const fertig = a.stationFertig && a.stationFertig[apKey];
+    const short = ap.replace('UP-Armatur','UP').replace('AP-Armatur','AP').replace('Zusammenbau','ZB').replace('Einbauelement','EB').replace('Heizung','HZ');
+    return `<span title="${ap}" style="display:inline-flex;align-items:center;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;background:${fertig?'#00c89622':'var(--surface2)'};color:${fertig?'var(--accent)':'var(--text3)'};border:1px solid ${fertig?'#00c89644':'var(--border)'}">${fertig?'✓':''} ${short}</span>`;
+  }).join('');
+}
+
+function renderDatumCell(a) {
+  return `<div style="display:flex;align-items:center;gap:5px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${formatDatum(a.datum)}</span>
+    <button class="btn-edit" style="padding:2px 6px;font-size:11px" onclick="editDatum('${a.id}')">✏</button>
+  </div>`;
+}
+
+function renderHalleVersandCell(a) {
+  const vClass=VERSAND_CLASS[a.versandart]||'';
+  const vIcon=VERSAND_ICONS[a.versandart]||'';
+  return `<div style="display:flex;align-items:center;gap:8px">
+    <span class="versand-badge ${vClass}" style="font-size:15px;padding:6px 12px;cursor:pointer" onclick="editHalleVersand('${a.id}')" title="Versandart ändern">${vIcon} ${a.versandart||''}</span>
+    <button class="btn-edit" style="padding:3px 8px;font-size:12px" onclick="editHalleVersand('${a.id}')">✏</button>
+  </div>`;
+}
+
+function editHalleVersand(id) {
+  const a=auftraege.find(x=>x.id===id); if(!a)return;
+  const cell=document.getElementById(`halle-versand-cell-${id}`);
+  if(!cell)return;
+  cell.innerHTML=`<div style="display:flex;align-items:center;gap:6px">
+    <select id="halleVersandSel-${id}" style="background:var(--surface2);border:1px solid var(--accent);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;outline:none;">
+      <option value="Paketdienst" ${a.versandart==='Paketdienst'?'selected':''}>📦 Paketdienst</option>
+      <option value="Spedition" ${a.versandart==='Spedition'?'selected':''}>🚛 Spedition</option>
+      <option value="Kundenabholung" ${a.versandart==='Kundenabholung'?'selected':''}>🏠 Kundenabholung</option>
+      <option value="IMS-Zustellung" ${a.versandart==='IMS-Zustellung'?'selected':''}>🚐 IMS-Zustellung</option>
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="saveHalleVersand('${id}')">✓</button>
+  </div>`;
+  document.getElementById(`halleVersandSel-${id}`).focus();
+}
+
+async function saveHalleVersand(id) {
+  const sel=document.getElementById(`halleVersandSel-${id}`);
+  if(!sel)return;
+  const a=auftraege.find(x=>x.id===id);
+  if(a){ a.versandart=sel.value; await saveToStorage(); renderHalle(); }
+}
+
+// ─── ARBEITSPLATZ ANSICHT ─────────────────────────────────────────────────
+function renderAP(ap) {
+  document.getElementById('apTabTitle').textContent = ap;
+  const list = document.getElementById('apTabList');
+  const countEl = document.getElementById('apTabCount');
+
+  const relevant = auftraegeForAP(ap)
+    .filter(a => !a.fertig)
+    .sort((a,b) => {
+      if(a.datum !== b.datum) return a.datum.localeCompare(b.datum);
+      // Innerhalb des Tages: nach Priorität
+      if(a.prio && b.prio) return a.prio - b.prio;
+      if(a.prio) return -1;
+      if(b.prio) return 1;
+      return a.nr.localeCompare(b.nr, undefined, {numeric:true});
+    });
+
+  countEl.textContent = `${relevant.length} Aufträge`;
+
+  if(relevant.length === 0) {
+    list.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine offenen Aufträge für ${ap}</div></div>`;
+    return;
+  }
+
+  // Gruppierung nach Datum
+  const nachDatum = {};
+  relevant.forEach(a => {
+    if(!nachDatum[a.datum]) nachDatum[a.datum] = [];
+    nachDatum[a.datum].push(a);
+  });
+
+  list.innerHTML='';
+  Object.keys(nachDatum).sort().forEach(datum => {
+    const isHeute = datum === toDateStr(new Date());
+    // Datums-Header
+    const header = document.createElement('div');
+    header.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;color:var(--text);padding:16px 0 10px;border-bottom:2px solid var(--border);margin-bottom:12px;';
+    header.textContent = `${getWochentag(datum)}, ${formatDatum(datum)}${isHeute?' – HEUTE':''}`;
+    list.appendChild(header);
+
+    // Kacheln-Grid
+    const grid = document.createElement('div');
+    grid.className = 'hallen-grid';
+    grid.style.marginBottom = '16px';
+
+    nachDatum[datum].forEach(a => {
+      // Stückzahl für diesen AP
+      let stkForAP = a.stk;
+      if(a.gruppen && a.gruppen.length>0) {
+        const rel = a.gruppen.filter(g => GRUPPEN[g.gruppe] && GRUPPEN[g.gruppe].aps.includes(ap));
+        if(rel.length>0) stkForAP = rel.reduce((s,g)=>s+(g.stk||0),0);
+      }
+
+      // Station fertig?
+      const apKey = ap.replace(/[^a-z0-9]/gi,'_');
+      const stationFertig = a.stationFertig && a.stationFertig[apKey];
+      const stationZeit = stationFertig ? formatZeit(stationFertig) : '';
+
+      // Timer state
+      const timerKey = `${a.id}_${apKey}`;
+      const timerData = a.timers && a.timers[timerKey];
+      const isRunning = timerData && timerData.start && !timerData.end;
+      const totalMin = timerData ? calcTotalMin(timerData) : 0;
+      const timerDisplay = totalMin > 0 ? formatMinutes(totalMin) : '–';
+
+      // Abhängigkeiten prüfen
+      const abhaengig = ABHAENGIGKEITEN[ap] || [];
+      const relevantAbh = abhaengig.filter(dep => {
+        // Nur APs die dieser Auftrag auch hat
+        const gruppen = a.gruppen && a.gruppen.length>0 ? a.gruppen : (a.gruppe ? [{gruppe:a.gruppe}] : []);
+        return gruppen.some(g => GRUPPEN[g.gruppe] && GRUPPEN[g.gruppe].aps.includes(dep));
+      });
+      const abhStatus = relevantAbh.map(dep => {
+        const depKey = dep.replace(/[^a-z0-9]/gi,'_');
+        const fertig = a.stationFertig && a.stationFertig[depKey];
+        return { name: dep, fertig };
+      });
+      const abhBlock = abhStatus.length > 0 ? `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Vorgänger</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${abhStatus.map(s=>`
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 8px;border-radius:4px;background:${s.fertig?'#00c89622':'#ffffff11'};color:${s.fertig?'var(--accent)':'var(--text2)'};border:1px solid ${s.fertig?'#00c89644':'var(--border)'}">
+                ${s.fertig?'✓':'○'} ${s.name}
+              </span>`).join('')}
+          </div>
+        </div>` : '';
+
+      const card = document.createElement('div');
+      const cardClass = getCardClass(a, stationFertig, isRunning);
+      card.className = `hallen-card${cardClass?' '+cardClass:''}`;
+      card.id = `ap-card-${a.id}-${apKey}`;
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
+          <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        </div>
+        <div class="hallen-kunde">${a.kunde}</div>
+        ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:10px">${a.notiz}</div>`:''}
+        <div style="margin-bottom:14px">
+          <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="font-size:13px;padding:5px 10px;width:auto;height:auto">${a.sklasse}</span>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--text);margin-bottom:16px">${stkForAP||'–'} <span style="font-size:16px;color:var(--text2)">Stk.</span></div>
+        ${abhBlock}
+        <!-- TIMER -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Zeit</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div id="timer-display-${timerKey}" style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:${isRunning?'var(--accent)':'var(--text)'}">
+              ${isRunning ? '00:00' : timerDisplay}
+            </div>
+            <div style="display:flex;gap:6px">
+              ${isRunning
+                ? `<button class="btn-fertig" style="padding:10px 16px;font-size:14px;background:var(--danger)" onclick="timerStop('${a.id}','${apKey}','${ap}')">⏹ Ende</button>`
+                : `<button class="btn-fertig" style="padding:10px 16px;font-size:14px" onclick="timerStart('${a.id}','${apKey}','${ap}')">▶ Beginn</button>`
+              }
+            </div>
+          </div>
+        </div>
+
+        ${stationFertig
+          ? `<div class="hallen-fertig-info">✓ ${ap} fertig</div>
+             <div class="fertig-zeit">${stationZeit}</div>
+             <button class="btn-edit" style="margin-top:8px;padding:4px 10px;font-size:12px" onclick="markStationUndo('${a.id}','${ap}','${apKey}')">Rückgängig</button>`
+          : `${AP_FOTO_REQUIRED.includes(ap) && a.sklasse==='S3' ? `
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="checkbox" id="foto-${a.id}-${apKey}"
+                    ${a.fotoDoku&&a.fotoDoku[apKey]?'checked':''}
+                    onchange="saveFotoDoku('${a.id}','${apKey}',this.checked)"
+                    style="width:20px;height:20px;cursor:pointer;accent-color:var(--accent)">
+                  <span style="font-size:14px;font-weight:500;color:var(--text)">📷 Fotodokumentation erstellt</span>
+                </label>
+              </div>
+             <button class="btn-fertig" style="width:100%;justify-content:center;padding:14px;font-size:14px;margin-top:4px;${!(a.fotoDoku&&a.fotoDoku[apKey])?'opacity:0.4;cursor:not-allowed;':''}"
+               ${!(a.fotoDoku&&a.fotoDoku[apKey])?'disabled':''} onclick="markStationFertig('${a.id}','${ap}','${apKey}')">✓ ${ap} fertig</button>
+             ` : `<button class="btn-fertig" style="width:100%;justify-content:center;padding:14px;font-size:14px;margin-top:4px" onclick="markStationFertig('${a.id}','${ap}','${apKey}')">✓ ${ap} fertig</button>`
+          }`
+        }`;
+      grid.appendChild(card);
+
+      // Start live ticker if running
+      if(isRunning) startLiveTicker(timerKey, timerData);
+    });
+
+    list.appendChild(grid);
+  });
+}
+
+// ─── TIMER ────────────────────────────────────────────────────────────────
+const liveTimers = {}; // interval handles
+
+function calcTotalMin(timerData) {
+  let total = timerData.totalMs || 0;
+  if(timerData.start && !timerData.end) {
+    total += Date.now() - new Date(timerData.start).getTime();
+  }
+  return Math.floor(total / 60000);
+}
+
+function calcTotalMs(timerData) {
+  let total = timerData.totalMs || 0;
+  if(timerData.start && !timerData.end) {
+    total += Date.now() - new Date(timerData.start).getTime();
+  }
+  return total;
+}
+
+function formatMinutes(min) {
+  if(min < 1) return '–';
+  if(min < 60) return `${min} Min`;
+  const h = Math.floor(min/60);
+  const m = min % 60;
+  return `${h}h ${m}min`;
+}
+
+function getTotalAuftragMin(a) {
+  if(!a.timers) return 0;
+  return Object.values(a.timers).reduce((sum, td) => sum + calcTotalMin(td), 0);
+}
+
+function formatElapsed(ms) {
+  const s = Math.floor(ms/1000);
+  const m = Math.floor(s/60);
+  const h = Math.floor(m/60);
+  return `${String(h).padStart(2,'0')}:${String(m%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+
+function startLiveTicker(timerKey, timerData) {
+  if(liveTimers[timerKey]) clearInterval(liveTimers[timerKey]);
+  liveTimers[timerKey] = setInterval(() => {
+    const el = document.getElementById(`timer-display-${timerKey}`);
+    if(!el) { clearInterval(liveTimers[timerKey]); return; }
+    el.textContent = formatElapsed(calcTotalMs(timerData));
+    el.style.color = 'var(--accent)';
+  }, 1000);
+}
+
+async function timerStart(id, apKey, ap) {
+  const a = auftraege.find(x=>x.id===id); if(!a) return;
+  if(!a.timers) a.timers = {};
+  const timerKey = `${id}_${apKey}`;
+  const existing = a.timers[timerKey] || {};
+  a.timers[timerKey] = { ...existing, start: new Date().toISOString(), end: null };
+  await saveToStorage();
+  renderAP(ap);
+}
+
+async function timerStop(id, apKey, ap) {
+  const a = auftraege.find(x=>x.id===id); if(!a) return;
+  const timerKey = `${id}_${apKey}`;
+  if(!a.timers || !a.timers[timerKey]) return;
+  const td = a.timers[timerKey];
+  const elapsed = td.start ? Date.now() - new Date(td.start).getTime() : 0;
+  a.timers[timerKey] = {
+    totalMs: (td.totalMs || 0) + elapsed,
+    start: null,
+    end: new Date().toISOString()
+  };
+  if(liveTimers[timerKey]) { clearInterval(liveTimers[timerKey]); delete liveTimers[timerKey]; }
+  await saveToStorage();
+  renderAP(ap);
+}
+
+async function saveFotoDoku(id, apKey, checked) {
+  const a = auftraege.find(x=>x.id===id); if(!a) return;
+  if(!a.fotoDoku) a.fotoDoku = {};
+  a.fotoDoku[apKey] = checked;
+  await saveToStorage();
+  // Fertig-Button aktivieren/deaktivieren ohne komplett neu zu rendern
+  const btn = document.querySelector(`button[onclick="markStationFertig('${id}','${document.getElementById('apTabTitle').textContent}','${apKey}')"]`);
+  if(btn) { btn.disabled = !checked; btn.style.opacity = checked?'1':'0.4'; btn.style.cursor = checked?'pointer':'not-allowed'; }
+}
+
+async function markStationFertig(id, ap, apKey) {
+  const a = auftraege.find(x=>x.id===id);
+  if(a) {
+    if(!a.stationFertig) a.stationFertig = {};
+    a.stationFertig[apKey] = new Date().toISOString();
+  }
+  await saveToStorage();
+  renderAP(ap);
+}
+
+async function markStationUndo(id, ap, apKey) {
+  const a = auftraege.find(x=>x.id===id);
+  if(a && a.stationFertig) delete a.stationFertig[apKey];
+  await saveToStorage();
+  renderAP(ap);
+}
+
+let offenSortCol = 'datum';
+let offenSortDir = 1; // 1=asc, -1=desc
+
+function sortOffen(col) {
+  if(offenSortCol === col) offenSortDir *= -1;
+  else { offenSortCol = col; offenSortDir = 1; }
+  // Update header indicators
+  ['nr','kunde','datum','versandart'].forEach(c => {
+    const el = document.getElementById('sort-'+c);
+    if(el) el.textContent = el.textContent.replace(/[↑↓↕]/g,'') + (c===col?(offenSortDir===1?'↑':'↓'):'↕');
+  });
+  renderOffen();
+}
+
+// ─── ALLE OFFENEN AUFTRÄGE ────────────────────────────────────────────────
+function renderOffen() {
+  const list = document.getElementById('offenList');
+  const countEl = document.getElementById('offenCount');
+
+  const offen = auftraege
+    .filter(a => !a.fertig)
+    .sort((a,b) => {
+      let va, vb;
+      if(offenSortCol==='nr') { va=a.nr; vb=b.nr; return va.localeCompare(vb,undefined,{numeric:true})*offenSortDir; }
+      if(offenSortCol==='kunde') { va=a.kunde||''; vb=b.kunde||''; return va.localeCompare(vb)*offenSortDir; }
+      if(offenSortCol==='datum') { va=a.datum||''; vb=b.datum||''; return va.localeCompare(vb)*offenSortDir; }
+      if(offenSortCol==='versandart') { va=a.versandart||''; vb=b.versandart||''; return va.localeCompare(vb)*offenSortDir; }
+      return 0;
+    });
+
+  countEl.textContent = `${offen.length} Aufträge offen`;
+
+  if(offen.length === 0) {
+    list.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine offenen Aufträge</div></div>`;
+    return;
+  }
+
+  list.innerHTML='';
+  offen.forEach(a => {
+    const vClass=VERSAND_CLASS[a.versandart]||'';
+    const vIcon=VERSAND_ICONS[a.versandart]||'';
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:110px 80px 1fr 110px 64px 110px;gap:10px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;align-items:center;';
+    row.innerHTML = `
+      <div class="auftrag-nr" style="font-size:12px">${a.nr}</div>
+      <div id="stk-cell-offen-${a.id}">${renderStkCell(a)}</div>
+      <div>
+        <div class="auftrag-kunde">${a.kunde}</div>
+        ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${formatDatum(a.datum)}</div>
+      <div><span class="s-badge badge-${a.sklasse.toLowerCase()}">${a.sklasse}</span></div>
+      <div><span class="versand-badge ${vClass}">${vIcon} ${a.versandart||'–'}</span></div>`;
+    list.appendChild(row);
+  });
+}
+
+// ─── GF ÜBERSICHT ─────────────────────────────────────────────────────────
+function renderGF() {
+  const base = new Date();
+  base.setDate(base.getDate() + gfDatumOffset);
+  const zieldatum = toDateStr(base);
+  const heute = toDateStr(new Date());
+  const isHeute = zieldatum === heute;
+
+  document.getElementById('gfDatum').textContent =
+    `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''}`;
+
+  // Kapazitätsampeln – ausgewählter Tag wird hervorgehoben
+  const woche = getWoche();
+  const kapDiv = document.getElementById('gfKapazitaet');
+  kapDiv.innerHTML = '';
+  woche.forEach(datum => {
+    const einh = getKapazitaet(datum);
+    const pct = Math.min(Math.round(einh/150*100), 100);
+    const ampel = getKapAmpel(einh);
+    const count = auftraege.filter(a=>a.datum===datum).length;
+    const fertig = auftraege.filter(a=>a.datum===datum&&a.fertig).length;
+    const isSelected = datum === zieldatum;
+    const card = document.createElement('div');
+    card.className = 'kap-card';
+    card.style.cssText = `border-color:${isSelected?'var(--accent)':''}; cursor:pointer;${isSelected?'background:var(--surface2)':''}`;
+    card.onclick = () => { gfDatumOffset = Math.round((new Date(datum)-new Date(heute))/(1000*60*60*24)); renderGF(); };
+    card.innerHTML = `
+      <div class="kap-card-tag">${getWochentag(datum)}${datum===heute?' · HEUTE':''}</div>
+      <div class="kap-card-datum" style="color:${isSelected?'var(--accent)':'var(--text)'}">${datum.split('-')[2]}.</div>
+      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">${fertig}/${count}</span>
+        <div class="ampel ampel-${ampel}"></div>
+      </div>`;
+    kapDiv.appendChild(card);
+  });
+
+  // Aufträge des gewählten Tages – Drag & Drop
+  const list = document.getElementById('gfList');
+  document.querySelector('#tab-gf [style*="letter-spacing"]') && (document.querySelector('#tab-gf [style*="letter-spacing"]').textContent = `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)} – Priorität (ziehen zum Verschieben)`);
+  const tages = auftraege
+    .filter(a=>a.datum===zieldatum)
+    .sort((a,b)=>(a.prio||99)-(b.prio||99));
+
+  if(tages.length===0){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Keine Aufträge für ${formatDatum(zieldatum)}</div></div>`;
+    return;
+  }
+
+  list.innerHTML='';
+  let dragSrc = null;
+
+  // Use a grid for cards
+  const grid = document.createElement('div');
+  grid.className = 'hallen-grid';
+  list.appendChild(grid);
+
+  tages.forEach(a => {
+    const vClass=VERSAND_CLASS[a.versandart]||'';
+    const vIcon=VERSAND_ICONS[a.versandart]||'';
+    const ueberfaellig = a.datum < heute && !a.fertig;
+    const isLight = document.body.classList.contains('light');
+    const cardColor = ueberfaellig
+      ? (isLight?'card-ueberfaellig':'card-ueberfaellig')
+      : a.fertig ? 'card-fertig' : '';
+
+    const totalAuftragMin = getTotalAuftragMin(a);
+    const allStarts = a.timers ? Object.values(a.timers).filter(t=>t.totalMs>0||t.start).map(t=>t.start||t.end).filter(Boolean) : [];
+    const ersteZeit = allStarts.length>0 ? allStarts.sort()[0] : null;
+    const ersteZeitStr = ersteZeit ? formatDateTime(ersteZeit) : null;
+    const fertigZeitStr = a.fertigAm ? formatDateTime(a.fertigAm) : null;
+
+    const card = document.createElement('div');
+    card.className = `hallen-card${cardColor?' '+cardColor:''} gf-row`;
+    card.draggable = true;
+    card.dataset.id = a.id;
+    card.style.cursor = 'grab';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--warn);line-height:1">${String(a.prio||'–').padStart(2,'0')}</span>
+        <div>
+          <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+          <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-top:4px">${a.sklasse}</span>
+        </div>
+        <div style="margin-left:auto">
+          ${a.fertig
+            ?`<span class="status-badge status-fertig">✓ Fertig</span>`
+            :ueberfaellig
+              ?`<span class="status-badge" style="background:#ff445522;color:var(--danger)">⚠ Überfällig</span>`
+              :`<span class="status-badge status-offen">○ Offen</span>`}
+        </div>
+      </div>
+      <div class="hallen-kunde">${a.kunde}${a.notiz?`<span style="font-size:12px;color:var(--warn);margin-left:8px">${a.notiz}</span>`:''}</div>
+      <div style="margin:10px 0 8px">
+        <span class="versand-badge ${vClass}" style="font-size:13px">${vIcon} ${a.versandart||''}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px">${renderStationDots(a)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          ${a.stk?`<div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--text)">${a.stk} <span style="font-size:14px;color:var(--text2)">Stk</span></div>`:''}
+          ${totalAuftragMin>0?`<div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3)">⏱ ${formatMinutes(totalAuftragMin)}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          ${ersteZeitStr?`<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3)">▶ ${ersteZeitStr}</div>`:''}
+          ${fertigZeitStr?`<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent2)">✓ ${fertigZeitStr}</div>`:''}
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text3);text-align:center;font-family:'IBM Plex Mono',monospace">⠿ ziehen zum Sortieren</div>`;
+
+    // Drag events
+    card.addEventListener('dragstart', e => {
+      dragSrc = card;
+      card.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', () => {
+      card.style.opacity = '1';
+      grid.querySelectorAll('.gf-row').forEach(r=>r.classList.remove('drag-over'));
+    });
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if(card !== dragSrc) {
+        grid.querySelectorAll('.gf-row').forEach(r=>r.classList.remove('drag-over'));
+        card.classList.add('drag-over');
+      }
+    });
+    card.addEventListener('drop', async e => {
+      e.preventDefault();
+      if(dragSrc && dragSrc !== card) {
+        const cards = [...grid.querySelectorAll('.gf-row')];
+        const srcIdx = cards.indexOf(dragSrc);
+        const tgtIdx = cards.indexOf(card);
+        const ids = cards.map(c=>c.dataset.id);
+        ids.splice(srcIdx, 1);
+        ids.splice(tgtIdx, 0, dragSrc.dataset.id);
+        ids.forEach((id, i) => {
+          const auftrag = auftraege.find(x=>x.id===id);
+          if(auftrag) auftrag.prio = i+1;
+        });
+        await saveToStorage();
+        renderGF();
+        renderAll();
+      }
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function renderVersandCell(a) {
+  const vClass=VERSAND_CLASS[a.versandart]||'';
+  const vIcon=VERSAND_ICONS[a.versandart]||'';
+  return `<div style="display:flex;align-items:center;gap:4px">
+    <span class="versand-badge ${vClass}" style="cursor:pointer" onclick="editVersand('${a.id}')" title="Versandart ändern">${vIcon} ${a.versandart||'–'}</span>
+  </div>`;
+}
+
+function editVersand(id) {
+  const a=auftraege.find(x=>x.id===id); if(!a)return;
+  const cell=document.getElementById(`versand-cell-${id}`);
+  cell.innerHTML=`<div style="display:flex;align-items:center;gap:4px">
+    <select class="inline-edit" id="versandSelect-${id}" style="padding:4px 6px;font-size:12px">
+      <option value="Paketdienst" ${a.versandart==='Paketdienst'?'selected':''}>📦 Paketdienst</option>
+      <option value="Spedition" ${a.versandart==='Spedition'?'selected':''}>🚛 Spedition</option>
+      <option value="Kundenabholung" ${a.versandart==='Kundenabholung'?'selected':''}>🏠 Abholung</option>
+      <option value="IMS-Zustellung" ${a.versandart==='IMS-Zustellung'?'selected':''}>🚐 IMS</option>
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="saveVersand('${id}')">✓</button>
+  </div>`;
+  document.getElementById(`versandSelect-${id}`).focus();
+}
+
+async function saveVersand(id) {
+  const sel=document.getElementById(`versandSelect-${id}`);
+  if(!sel)return;
+  const a=auftraege.find(x=>x.id===id);
+  if(a){ a.versandart=sel.value; await saveToStorage(); renderAll(); }
+}
+
+function renderPrioCell(a) {
+  const p = a.prio ? String(a.prio).padStart(2,'0') : '––';
+  return `<div style="display:flex;align-items:center;gap:4px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:${a.prio?'var(--warn)':'var(--text3)'};cursor:pointer;line-height:1" onclick="editPrio('${a.id}')" title="Priorität ändern">${p}</span>
+  </div>`;
+}
+
+function editPrio(id) {
+  const a=auftraege.find(x=>x.id===id); if(!a)return;
+  const cell=document.getElementById(`prio-cell-${id}`);
+  cell.innerHTML=`<div style="display:flex;align-items:center;gap:4px">
+    <input class="inline-edit" type="number" min="1" max="99" value="${a.prio||''}" id="prioInput-${id}"
+      style="width:46px;text-align:center;font-size:14px;font-weight:600">
+    <button class="btn btn-primary btn-sm" onclick="savePrio('${id}')">✓</button>
+  </div>`;
+  const inp=document.getElementById(`prioInput-${id}`);
+  inp.focus(); inp.select();
+  inp.onkeydown=e=>{ if(e.key==='Enter') savePrio(id); if(e.key==='Escape') renderAuftraege(); };
+}
+
+async function savePrio(id) {
+  const input=document.getElementById(`prioInput-${id}`);
+  if(!input) return;
+  const newPrio = parseInt(input.value);
+  if(isNaN(newPrio)||newPrio<1) { renderAuftraege(); return; }
+
+  // Alle Aufträge desselben Tages holen, sortiert nach aktueller Prio
+  const a = auftraege.find(x=>x.id===id);
+  if(!a) return;
+  const tagesAuftraege = auftraege
+    .filter(x=>x.datum===a.datum && x.id!==id)
+    .sort((x,y)=>(x.prio||999)-(y.prio||999));
+
+  // Ziel-Auftrag auf neue Prio setzen
+  a.prio = newPrio;
+
+  // Alle anderen neu einreihen um den neuen Platz herum
+  let counter=1;
+  tagesAuftraege.forEach(x=>{
+    if(counter===newPrio) counter++; // Platz für neuen freilassen
+    x.prio=counter++;
+  });
+
+  // Nochmal sauber durchnummerieren (01,02,03...)
+  const alle = auftraege
+    .filter(x=>x.datum===a.datum)
+    .sort((x,y)=>x.prio-y.prio);
+  alle.forEach((x,i)=>x.prio=i+1);
+
+  await saveToStorage();
+  renderAll();
+}
+
+function renderStkCell(a) {
+  return `<div style="display:flex;align-items:center;gap:5px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--text)">${a.stk||'–'}</span>
+    <button class="btn-edit" style="padding:2px 6px;font-size:11px" onclick="editStk('${a.id}')">✏</button>
+  </div>`;
+}
+
+function editStk(id) {
+  const a=auftraege.find(x=>x.id===id); if(!a)return;
+  const cell=document.getElementById(`stk-cell-${id}`);
+  cell.innerHTML=`<div style="display:flex;align-items:center;gap:5px">
+    <input class="inline-edit" type="number" value="${a.stk||''}" id="stkInput-${id}" style="width:60px;text-align:center" min="1">
+    <button class="btn btn-primary btn-sm" onclick="saveStk('${id}')">✓</button>
+  </div>`;
+  const inp = document.getElementById(`stkInput-${id}`);
+  inp.focus(); inp.select();
+  inp.onkeydown = e => { if(e.key==='Enter') saveStk(id); if(e.key==='Escape') renderAuftraege(); };
+}
+
+async function saveStk(id) {
+  const input=document.getElementById(`stkInput-${id}`);
+  if(!input||!input.value)return;
+  const a=auftraege.find(x=>x.id===id);
+  if(a){ a.stk=parseInt(input.value); await saveToStorage(); renderAll(); }
+}
+
+function editDatum(id) {
+  const a=auftraege.find(x=>x.id===id); if(!a)return;
+  const cell=document.getElementById(`datum-cell-${id}`);
+  cell.innerHTML=`<div style="display:flex;align-items:center;gap:5px">
+    <input class="inline-edit" type="date" value="${a.datum}" id="datumInput-${id}" style="width:130px">
+    <button class="btn btn-primary btn-sm" onclick="saveDatum('${id}')">✓</button>
+    <button class="btn-danger" onclick="renderAuftraege()">✕</button>
+  </div>`;
+  const inp = document.getElementById(`datumInput-${id}`);
+  inp.focus();
+  inp.onkeydown = e => { if(e.key==='Enter') saveDatum(id); if(e.key==='Escape') renderAuftraege(); };
+}
+
+async function saveDatum(id) {
+  const input=document.getElementById(`datumInput-${id}`);
+  if(!input||!input.value)return;
+  const a=auftraege.find(x=>x.id===id);
+  if(a){
+    a.datum=input.value;
+    await saveToStorage();
+    renderAll(); // selectedDatum bleibt unverändert
+  }
+}
+
+// ─── HALLE ────────────────────────────────────────────────────────────────
+function renderHalle() {
+  const base = new Date();
+  base.setDate(base.getDate() + versandOffset);
+  const zieldatum = toDateStr(base);
+  const heute = toDateStr(new Date());
+  const isHeute = zieldatum === heute;
+
+  document.getElementById('versandDatum').textContent =
+    `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''}`;
+
+  const grid = document.getElementById('hallenGrid');
+  const tages = auftraege.filter(a=>a.datum===zieldatum).sort((a,b)=>a.nr.localeCompare(b.nr, undefined, {numeric:true}));
+  const offen = tages.filter(a=>!a.fertig);
+  const fertigH = tages.filter(a=>a.fertig);
+
+  if(tages.length===0){
+    grid.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine Aufträge für ${formatDatum(zieldatum)}</div></div>`;
+    return;
+  }
+  grid.innerHTML='';
+  [...offen,...fertigH].forEach(a=>{
+    const vIcon=VERSAND_ICONS[a.versandart]||'';
+    const vClass=VERSAND_CLASS[a.versandart]||'';
+    const versandKey = `${a.id}_Versand`;
+    const versandTimer = a.timers && a.timers[versandKey];
+    const versandRunning = versandTimer && versandTimer.start && !versandTimer.end;
+    const versandMin = versandTimer ? calcTotalMin(versandTimer) : 0;
+    const card=document.createElement('div');
+    const cardClass = getCardClass(a, false, versandRunning);
+    card.className=`hallen-card${cardClass?' '+cardClass:''}`;
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
+        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+      </div>
+      <div class="hallen-kunde">${a.kunde}</div>
+      ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:8px">${a.notiz}</div>`:''}
+      <div style="margin-bottom:14px" id="halle-versand-cell-${a.id}">
+        ${renderHalleVersandCell(a)}
+      </div>
+      ${a.stk?`<div style="font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--text);margin-bottom:16px">${a.stk} <span style="font-size:16px;color:var(--text2)">Stk.</span></div>`:''}
+      <!-- VERSAND TIMER -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Versandzeit</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div id="timer-display-${versandKey}" style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:${versandRunning?'var(--accent)':versandMin>0?'var(--text)':'var(--text3)'}">
+            ${versandRunning?'00:00':versandMin>0?formatMinutes(versandMin):'–'}
+          </div>
+          <div style="display:flex;gap:6px">
+            ${versandRunning
+              ?`<button class="btn-fertig" style="padding:8px 12px;font-size:13px;background:var(--danger)" onclick="timerStop('${a.id}','Versand','Versand')">⏹ Ende</button>`
+              :`<button class="btn-fertig" style="padding:8px 12px;font-size:13px" onclick="timerStart('${a.id}','Versand','Versand')">▶ Beginn</button>`
+            }
+          </div>
+        </div>
+      </div>
+      ${a.fertig
+        ?`<div style="margin-bottom:8px">
+            <div class="hallen-fertig-info">✓ Versandbereit</div>
+            <div class="fertig-zeit">${formatZeit(a.fertigAm)}</div>
+            <div style="margin-top:10px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Versandeinheit</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--text)" id="pakete-label-${a.id}">${a.pakete&&a.paketeTyp?`${a.pakete} ${a.paketeTyp}`:a.pakete||'–'}</span>
+                <button class="btn-edit" style="padding:2px 8px;font-size:12px" onclick="editPakete('${a.id}')">✏</button>
+              </div>
+            </div>
+          </div>`
+        :`<div style="margin-bottom:10px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Versandeinheit</div>
+            <div style="display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:10px">
+              <select id="paketeTyp-${a.id}"
+                style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:15px;outline:none;"
+                onfocus="this.style.borderColor='var(--accent)'"
+                onblur="this.style.borderColor='var(--border)'">
+                <option value="Pakete" ${(a.paketeTyp||'Pakete')==='Pakete'?'selected':''}>📦 Pakete</option>
+                <option value="Paletten" ${a.paketeTyp==='Paletten'?'selected':''}>🪵 Paletten</option>
+                <option value="Halbpaletten" ${a.paketeTyp==='Halbpaletten'?'selected':''}>▪️ Halbpaletten</option>
+              </select>
+              <input type="number" min="1" placeholder="Anz." id="pakete-${a.id}"
+                style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;outline:none;text-align:center;"
+                value="${a.pakete||''}"
+                onfocus="this.style.borderColor='var(--accent)'"
+                onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <button class="btn-fertig" style="width:100%;justify-content:center;padding:16px;font-size:15px" onclick="markFertigHalle('${a.id}')">✓ Fertig – Versandbereit</button>
+          </div>`}`;
+    if(versandRunning) startLiveTicker(versandKey, versandTimer);
+    grid.appendChild(card);
+  });
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────
+function addGruppeRow(gruppeVal='', stkVal='') {
+  const rows = document.getElementById('gruppenRows');
+  const idx = rows.children.length;
+  const div = document.createElement('div');
+  div.className = 'gruppe-row';
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 100px auto;gap:8px;margin-bottom:8px;align-items:center;';
+  div.innerHTML = `
+    <select class="form-input gruppe-sel" style="font-size:13px">
+      <option value="">– keine –</option>
+      <option value="0" ${gruppeVal==='0'?'selected':''}>Gruppe 0 – CNC, AP-Armatur, Zusammenbau, Nachbearbeitung</option>
+      <option value="1" ${gruppeVal==='1'?'selected':''}>Gruppe 1 – CNC, UP-Armatur 1+2, Zusammenbau, Nachbearbeitung</option>
+      <option value="2" ${gruppeVal==='2'?'selected':''}>Gruppe 2 – Heizung</option>
+      <option value="3" ${gruppeVal==='3'?'selected':''}>Gruppe 3 – CNC, AP, UP-1+2, CNC, Heizung</option>
+      <option value="4" ${gruppeVal==='4'?'selected':''}>Gruppe 4 – CNC, AP, UP-1+2, CNC, Heizung</option>
+      <option value="5" ${gruppeVal==='5'?'selected':''}>Gruppe 5 – CNC, UP-1+2, CNC, Einbauelement</option>
+      <option value="6" ${gruppeVal==='6'?'selected':''}>Gruppe 6 – Versand</option>
+    </select>
+    <input type="number" class="form-input gruppe-stk" placeholder="Stk." min="1" value="${stkVal}" style="text-align:center;font-size:14px;font-weight:600">
+    <button type="button" class="btn-danger" onclick="this.parentElement.remove()" style="padding:6px 10px">✕</button>`;
+  rows.appendChild(div);
+}
+
+function getGruppenData() {
+  const rows = document.querySelectorAll('.gruppe-row');
+  const result = [];
+  rows.forEach(row => {
+    const g = row.querySelector('.gruppe-sel').value;
+    const s = parseInt(row.querySelector('.gruppe-stk').value)||0;
+    if(g) result.push({ gruppe: g, stk: s });
+  });
+  return result;
+}
+
+function getNextPrio(datum) {
+  const prios = auftraege.filter(x=>x.datum===datum).map(x=>x.prio||0);
+  return prios.length > 0 ? Math.max(...prios)+1 : 1;
+}
+
+function openModal() {
+  editingId=null;
+  document.getElementById('modalTitle').textContent='Neuen Auftrag erfassen';
+  document.getElementById('modalSaveBtn').textContent='Speichern';
+  document.getElementById('inp-datum').value=selectedDatum;
+  document.getElementById('inp-prio').value=getNextPrio(selectedDatum);
+  document.getElementById('gruppenRows').innerHTML='';
+  addGruppeRow();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+// Update prio prefill when datum changes
+document.addEventListener('DOMContentLoaded', ()=>{
+  const datumInp = document.getElementById('inp-datum');
+  if(datumInp) datumInp.addEventListener('change', ()=>{
+    if(!editingId) document.getElementById('inp-prio').value=getNextPrio(datumInp.value);
+  });
+});
+
+function openEdit(id) {
+  const a=auftraege.find(x=>x.id===id); if(!a)return;
+  editingId=id;
+  document.getElementById('modalTitle').textContent='Auftrag bearbeiten';
+  document.getElementById('modalSaveBtn').textContent='Aktualisieren';
+  document.getElementById('inp-nr').value=a.nr;
+  document.getElementById('inp-datum').value=a.datum;
+  document.getElementById('inp-kunde').value=a.kunde;
+  document.getElementById('inp-sklasse').value=a.sklasse;
+  document.getElementById('inp-versandart').value=a.versandart||'Paketdienst';
+  document.getElementById('inp-notiz').value=a.notiz||'';
+  document.getElementById('inp-prio').value=a.prio||'';
+  // Gruppen wiederherstellen
+  document.getElementById('gruppenRows').innerHTML='';
+  const gruppen = a.gruppen && a.gruppen.length > 0 ? a.gruppen : (a.gruppe ? [{gruppe:a.gruppe, stk:a.stk||0}] : []);
+  if(gruppen.length > 0) gruppen.forEach(g=>addGruppeRow(g.gruppe, g.stk));
+  else addGruppeRow();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  clearForm(); editingId=null;
+}
+
+function clearForm() {
+  ['nr','kunde','notiz'].forEach(f=>document.getElementById('inp-'+f).value='');
+  document.getElementById('inp-prio').value='';
+  document.getElementById('inp-sklasse').value='S2';
+  document.getElementById('inp-versandart').value='Paketdienst';
+  document.getElementById('gruppenRows').innerHTML='';
+}
+
+async function saveAuftrag() {
+  const nr=document.getElementById('inp-nr').value.trim();
+  const kunde=document.getElementById('inp-kunde').value.trim();
+  const datum=document.getElementById('inp-datum').value;
+  const sklasse=document.getElementById('inp-sklasse').value;
+  const versandart=document.getElementById('inp-versandart').value;
+  const notiz=document.getElementById('inp-notiz').value.trim();
+  const prioInput=parseInt(document.getElementById('inp-prio').value);
+  const gruppen=getGruppenData();
+  // Gesamt-Stückzahl = Summe aller Gruppen
+  const stk=gruppen.reduce((s,g)=>s+(g.stk||0),0);
+  if(!nr||!kunde||!datum){ alert('Bitte Auftragsnummer, Kunde und Versanddatum ausfüllen.'); return; }
+
+  if(editingId) {
+    const a=auftraege.find(x=>x.id===editingId);
+    if(a) Object.assign(a,{nr,kunde,datum,sklasse,versandart,notiz,stk,gruppen,prio:prioInput||a.prio});
+  } else {
+    const newPrio = prioInput || getNextPrio(datum);
+    auftraege.filter(x=>x.datum===datum&&x.prio>=newPrio).forEach(x=>x.prio++);
+    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,stk,gruppen,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString()});
+    auftraege.filter(x=>x.datum===datum).sort((a,b)=>a.prio-b.prio).forEach((x,i)=>x.prio=i+1);
+  }
+  selectedDatum=datum;
+  await saveToStorage(); renderAll(); closeModal();
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────
+async function markFertig(id) {
+  const a=auftraege.find(x=>x.id===id);
+  if(a){ a.fertig=true; a.fertigAm=new Date().toISOString(); }
+  await saveToStorage(); renderAll();
+}
+function editPakete(id) {
+  const a=auftraege.find(x=>x.id===id); if(!a)return;
+  const lbl=document.getElementById(`pakete-label-${id}`);
+  if(!lbl)return;
+  lbl.outerHTML=`<div style="display:flex;align-items:center;gap:6px">
+    <select id="paketeTypEdit-${id}" style="background:var(--surface2);border:1px solid var(--accent);border-radius:5px;padding:4px 8px;color:var(--text);font-size:13px;outline:none;">
+      <option value="Pakete" ${(a.paketeTyp||'Pakete')==='Pakete'?'selected':''}>📦 Pakete</option>
+      <option value="Paletten" ${a.paketeTyp==='Paletten'?'selected':''}>🪵 Paletten</option>
+      <option value="Halbpaletten" ${a.paketeTyp==='Halbpaletten'?'selected':''}>▪️ Halbpaletten</option>
+    </select>
+    <input class="inline-edit" type="number" min="1" value="${a.pakete||''}" id="paketeInput-${id}" style="width:60px;text-align:center;font-size:16px">
+    <button class="btn btn-primary btn-sm" onclick="savePakete('${id}')">✓</button>
+  </div>`;
+  const inp=document.getElementById(`paketeInput-${id}`);
+  if(inp){ inp.focus(); inp.select(); inp.onkeydown=e=>{ if(e.key==='Enter') savePakete(id); }; }
+}
+
+async function savePakete(id) {
+  const input=document.getElementById(`paketeInput-${id}`);
+  const typSel=document.getElementById(`paketeTypEdit-${id}`);
+  if(!input)return;
+  const a=auftraege.find(x=>x.id===id);
+  if(a){
+    a.pakete=parseInt(input.value)||0;
+    if(typSel) a.paketeTyp=typSel.value;
+    await saveToStorage(); renderHalle();
+  }
+}
+
+async function markFertigHalle(id) {
+  const a=auftraege.find(x=>x.id===id);
+  if(a){
+    a.fertig=true;
+    a.fertigAm=new Date().toISOString();
+    const paketeInput=document.getElementById(`pakete-${id}`);
+    const paketeTypInput=document.getElementById(`paketeTyp-${id}`);
+    if(paketeInput&&paketeInput.value) a.pakete=parseInt(paketeInput.value);
+    if(paketeTypInput) a.paketeTyp=paketeTypInput.value;
+  }
+  await saveToStorage(); renderHalle(); renderWoche();
+}
+async function deleteAuftrag(id) {
+  if(!confirm('Auftrag löschen?'))return;
+  auftraege=auftraege.filter(x=>x.id!==id);
+  await saveToStorage(); renderAll();
+}
+
+function renderAll() { renderWoche(); renderAuftraege(); }
+
+// ─── AUTOCOMPLETE ─────────────────────────────────────────────────────────
+function getNrSuggestions(val) {
+  if(!val||val.length<4)return[];
+  const used=auftraege.map(a=>a.nr).filter(n=>n.startsWith(val));
+  const results=[...new Set(used)];
+  const vInt=parseInt(val);
+  if(!isNaN(vInt)){
+    for(let n=Math.max(2023500,vInt*Math.pow(10,7-val.length));n<=2030000&&results.length<8;n++){
+      const s=String(n); if(s.startsWith(val)&&!results.includes(s))results.push(s);
+    }
+  }
+  return results.slice(0,8);
+}
+function getKundeSuggestions(val) {
+  if(!val||val.length<2)return[];
+  const v=val.toUpperCase();
+  const alle=[...new Set([...KUNDEN,...auftraege.map(a=>a.kunde)])];
+  return alle.filter(k=>k.toUpperCase().includes(v)).slice(0,8);
+}
+let acIdx={nr:-1,kunde:-1};
+function acShow(field) {
+  const inp=document.getElementById('inp-'+field);
+  const dd=document.getElementById('ac-'+field);
+  const val=inp.value.trim();
+  const suggestions=field==='nr'?getNrSuggestions(val):getKundeSuggestions(val);
+  if(suggestions.length===0){dd.classList.add('hidden');return;}
+  acIdx[field]=-1;
+  dd.innerHTML=suggestions.map(s=>{
+    const h=s.replace(new RegExp(`(${val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>');
+    return `<div class="ac-item" data-val="${s}" onmousedown="acSelect('${field}','${s}')">${h}</div>`;
+  }).join('');
+  dd.classList.remove('hidden');
+}
+function acHide(field){ setTimeout(()=>document.getElementById('ac-'+field).classList.add('hidden'),150); }
+function acSelect(field,val){ document.getElementById('inp-'+field).value=val; document.getElementById('ac-'+field).classList.add('hidden'); }
+function acKey(e,field){
+  const dd=document.getElementById('ac-'+field);
+  const items=dd.querySelectorAll('.ac-item');
+  if(dd.classList.contains('hidden')||items.length===0)return;
+  if(e.key==='ArrowDown'){e.preventDefault();acIdx[field]=Math.min(acIdx[field]+1,items.length-1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();acIdx[field]=Math.max(acIdx[field]-1,-1);}
+  else if(e.key==='Enter'&&acIdx[field]>=0){e.preventDefault();acSelect(field,items[acIdx[field]].dataset.val);return;}
+  else if(e.key==='Escape'){dd.classList.add('hidden');return;}
+  items.forEach((item,i)=>item.classList.toggle('selected',i===acIdx[field]));
+  if(acIdx[field]>=0)items[acIdx[field]].scrollIntoView({block:'nearest'});
+}
+
+// ─── START ────────────────────────────────────────────────────────────────
+initDate();
+initTheme();
+initBin().then(() => {
+  loadFromStorage();
+  startPolling();
+});
+</script>
+</body>
+</html>
