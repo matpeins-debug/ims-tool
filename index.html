@@ -170,16 +170,7 @@
   .empty { text-align:center; padding:60px 20px; color:var(--text3); }
   .empty-icon { font-size:40px; margin-bottom:12px; }
   /* GF DRAG & DROP */
-  .gf-row {
-    display:flex; align-items:center; gap:14px;
-    padding:14px 18px; background:var(--surface); border:1px solid var(--border);
-    border-radius:10px; margin-bottom:8px; cursor:grab; transition:all 0.15s;
-    user-select:none;
-  }
-  .gf-row:hover { border-color:var(--text3); }
-  .gf-row.dragging { opacity:0.4; border:2px dashed var(--accent); }
-  .gf-row.drag-over { border-color:var(--accent); background:var(--surface2); transform:scale(1.01); }
-  .gf-row.fertig { opacity:0.45; }
+  .drag-over { border-color:var(--accent) !important; background:var(--surface2) !important; transform:scale(1.01); }
   .gf-prio { font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:700; color:var(--warn); min-width:48px; }
   .gf-drag-handle { font-size:20px; color:var(--text3); cursor:grab; padding:0 4px; }
   .gf-nr { font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--text2); min-width:80px; }
