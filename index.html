@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IMS Produktionssystem</title>
+<title>IMS Produktionsplaner</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -248,8 +248,8 @@
 <div class="tabs">
   <div class="tab active" onclick="switchTab('planung')">Planung & Übersicht</div>
   <div class="tab" onclick="switchTab('gf')">📊 GF-Übersicht</div>
-  <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('offen')">📋 Alle offenen</div>
+  <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
   <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
   <div class="tab" onclick="switchTab('ap-UP-Armatur 1')">🔩 UP-Armatur 1</div>
@@ -316,15 +316,13 @@
 <div id="tab-offen" class="main hidden">
   <div class="section-header">
     <div class="section-title">Alle offenen Aufträge</div>
-    <div id="offenCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
-  </div>
-  <div style="display:grid;grid-template-columns:110px 80px 1fr 110px 64px 110px;gap:10px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);margin-bottom:6px;">
-    <div class="sort-col" onclick="sortOffen('nr')" style="cursor:pointer" id="sort-nr">Auftrag ↕</div>
-    <div>Stück</div>
-    <div class="sort-col" onclick="sortOffen('kunde')" style="cursor:pointer" id="sort-kunde">Kunde ↕</div>
-    <div class="sort-col" onclick="sortOffen('datum')" style="cursor:pointer" id="sort-datum">Versanddatum ↕</div>
-    <div>S</div>
-    <div class="sort-col" onclick="sortOffen('versandart')" style="cursor:pointer" id="sort-versandart">Versandart ↕</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div id="offenCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3)">Sortieren:</div>
+      <button class="btn btn-ghost btn-sm" onclick="sortOffen('datum')">Datum ↕</button>
+      <button class="btn btn-ghost btn-sm" onclick="sortOffen('nr')">Auftrag ↕</button>
+      <button class="btn btn-ghost btn-sm" onclick="sortOffen('kunde')">Kunde ↕</button>
+    </div>
   </div>
   <div id="offenList"></div>
 </div>
@@ -524,12 +522,9 @@ function downloadCSV() {
 }
 
 function getKapazitaet(datum) {
-  return auftraege.filter(a=>a.datum===datum).reduce((sum,a)=>{
-    const w = a.sklasse==='S3'?1.25:1;
-    return sum + (parseInt(a.stk)||1)*w;
-  },0);
+  return auftraege.filter(a=>a.datum===datum).length;
 }
-function getKapAmpel(e) { const p=e/150; return p<0.75?'ok':p<0.95?'warn':'voll'; }
+function getKapAmpel(e) { const p=e/10; return p<0.75?'ok':p<0.95?'warn':'voll'; }
 
 function getWoche() {
   const heute=new Date(); const day=heute.getDay();
@@ -679,7 +674,7 @@ function renderWoche() {
     else lbl.textContent=wocheOffset>0?`+${wocheOffset} Wochen`:`${wocheOffset} Wochen`;
   }
   woche.forEach(datum=>{
-    const einh=getKapazitaet(datum); const pct=Math.min(einh/150*100,100);
+    const einh=getKapazitaet(datum); const pct=Math.min(count/10*100,100);
     const ampel=getKapAmpel(einh);
     const count=auftraege.filter(a=>a.datum===datum).length;
     const fertig=auftraege.filter(a=>a.datum===datum&&a.fertig).length;
@@ -692,7 +687,7 @@ function renderWoche() {
       <div class="tag-datum">${datum.split('-')[2]}.</div>
       <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
       <div class="tag-stats">
-        <div class="tag-count"><strong>${fertig}</strong>/${count} Aufträge</div>
+        <div class="tag-count"><strong>${count}</strong>/10</div>
         <div class="ampel ampel-${ampel}"></div>
       </div>`;
     grid.appendChild(card);
@@ -732,7 +727,7 @@ function renderAuftraege() {
     <div class="stat-chip"><div class="stat-label">Gesamt</div><div class="stat-value">${filtered.length}</div></div>
     <div class="stat-chip"><div class="stat-label">Offen</div><div class="stat-value orange">${offen}</div></div>
     <div class="stat-chip"><div class="stat-label">Fertig</div><div class="stat-value green">${fertig}</div></div>
-    <div class="stat-chip"><div class="stat-label">Kapazität gesamt</div><div class="stat-value ${vc}">${Math.round(einh)} / 150</div></div>
+    <div class="stat-chip"><div class="stat-label">Kapazität Aufträge</div><div class="stat-value ${vc}">${Math.round(einh)} <span style="font-size:14px;color:var(--text3)">/ 10</span></div></div>
     ${apChips}`;
 
   if(filtered.length===0){ list.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Keine Aufträge für diesen Tag</div></div>`; return; }
@@ -1139,22 +1134,37 @@ function renderOffen() {
   }
 
   list.innerHTML='';
+  const grid = document.createElement('div');
+  grid.className = 'hallen-grid';
+  list.appendChild(grid);
+
   offen.forEach(a => {
     const vClass=VERSAND_CLASS[a.versandart]||'';
     const vIcon=VERSAND_ICONS[a.versandart]||'';
-    const row = document.createElement('div');
-    row.style.cssText = 'display:grid;grid-template-columns:110px 80px 1fr 110px 64px 110px;gap:10px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;align-items:center;';
-    row.innerHTML = `
-      <div class="auftrag-nr" style="font-size:12px">${a.nr}</div>
-      <div id="stk-cell-offen-${a.id}">${renderStkCell(a)}</div>
-      <div>
-        <div class="auftrag-kunde">${a.kunde}</div>
-        ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
+    const heute = toDateStr(new Date());
+    const ueberfaellig = a.datum < heute;
+    const cardClass = ueberfaellig ? 'card-ueberfaellig' : '';
+    const card = document.createElement('div');
+    card.className = `hallen-card${cardClass?' '+cardClass:''}`;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
+        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${formatDatum(a.datum)}</div>
-      <div><span class="s-badge badge-${a.sklasse.toLowerCase()}">${a.sklasse}</span></div>
-      <div><span class="versand-badge ${vClass}">${vIcon} ${a.versandart||'–'}</span></div>`;
-    list.appendChild(row);
+      <div class="hallen-kunde">${a.kunde}${a.notiz?`<span style="font-size:12px;color:var(--warn);margin-left:8px">${a.notiz}</span>`:''}</div>
+      <div style="margin:8px 0">
+        <span class="versand-badge ${vClass}" style="font-size:13px">${vIcon} ${a.versandart||'–'}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px">${renderStationDots(a)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--text)">${a.stk||'–'} <span style="font-size:14px;color:var(--text2)">Stk</span></div>
+        <div style="text-align:right">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:${ueberfaellig?'var(--danger)':'var(--text2)'}">${formatDatum(a.datum)}</div>
+          ${ueberfaellig?`<div style="font-size:11px;color:var(--danger)">⚠ Überfällig</div>`:''}
+        </div>
+      </div>`;
+    grid.appendChild(card);
   });
 }
 
@@ -1189,7 +1199,7 @@ function renderGF() {
       <div class="kap-card-datum" style="color:${isSelected?'var(--accent)':'var(--text)'}">${datum.split('-')[2]}.</div>
       <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">${fertig}/${count}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">${fertig}/${count}<span style="color:var(--text3)">/10</span></span>
         <div class="ampel ampel-${ampel}"></div>
       </div>`;
     kapDiv.appendChild(card);
