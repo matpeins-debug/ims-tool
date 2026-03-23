@@ -579,8 +579,9 @@ async function loadFromStorage() {
     if (!document.getElementById('tab-offen').classList.contains('hidden')) renderOffen();
     if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').textContent);
   } catch(e) {
+    console.error('Storage error:', e);
     const local = localStorage.getItem('ims_auftraege_local');
-    if (local) auftraege = JSON.parse(local);
+    if (local) { try { auftraege = JSON.parse(local); } catch(e2){} }
     setSyncStatus('','Nur lokal');
     renderAll();
   }
@@ -1197,9 +1198,9 @@ function renderGF() {
     card.innerHTML = `
       <div class="kap-card-tag">${getWochentag(datum)}${datum===heute?' · HEUTE':''}</div>
       <div class="kap-card-datum" style="color:${isSelected?'var(--accent)':'var(--text)'}">${datum.split('-')[2]}.</div>
-      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
+      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${Math.min(count/10*100,100)}%"></div></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">${fertig}/${count}<span style="color:var(--text3)">/10</span></span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">${count}/10</span>
         <div class="ampel ampel-${ampel}"></div>
       </div>`;
     kapDiv.appendChild(card);
@@ -1260,7 +1261,7 @@ function renderGF() {
               :`<span class="status-badge status-offen">○ Offen</span>`}
         </div>
       </div>
-      <div class="hallen-kunde">${a.kunde}${a.notiz?`<span style="font-size:12px;color:var(--warn);margin-left:8px">${a.notiz}</span>`:''}</div>
+      <div class="hallen-kunde" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">${a.kunde}${a.notiz?`<div style="font-size:12px;color:var(--warn)">${a.notiz}</div>`:''}</div>
       <div style="margin:10px 0 8px">
         <span class="versand-badge ${vClass}" style="font-size:13px">${vIcon} ${a.versandart||''}</span>
       </div>
@@ -1588,7 +1589,8 @@ function openModal() {
   document.getElementById('modalTitle').textContent='Neuen Auftrag erfassen';
   document.getElementById('modalSaveBtn').textContent='Speichern';
   document.getElementById('inp-datum').value=selectedDatum;
-  document.getElementById('inp-prio').value=getNextPrio(selectedDatum);
+  const nextPrio = getNextPrio(selectedDatum);
+  document.getElementById('inp-prio').value = nextPrio;
   document.getElementById('gruppenRows').innerHTML='';
   addGruppeRow();
   document.getElementById('modalOverlay').classList.add('open');
@@ -1766,6 +1768,11 @@ function acKey(e,field){
 // ─── START ────────────────────────────────────────────────────────────────
 initDate();
 initTheme();
+// Sofort rendern mit lokalen Daten
+const localData = localStorage.getItem('ims_auftraege_local');
+if(localData) { try { auftraege = JSON.parse(localData); } catch(e){} }
+renderAll();
+// Dann JSONBin laden
 initBin().then(() => {
   loadFromStorage();
   startPolling();
