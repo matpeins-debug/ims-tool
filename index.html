@@ -1243,9 +1243,10 @@ function renderGF() {
     const fertigZeitStr = a.fertigAm ? formatDateTime(a.fertigAm) : null;
 
     const card = document.createElement('div');
-    card.className = `hallen-card${cardColor?' '+cardColor:''} gf-row`;
+    card.className = `hallen-card${cardColor?' '+cardColor:''}`;
     card.draggable = true;
     card.dataset.id = a.id;
+    card.dataset.gfrow = 'true';
     card.style.cursor = 'grab';
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -1287,20 +1288,20 @@ function renderGF() {
     });
     card.addEventListener('dragend', () => {
       card.style.opacity = '1';
-      grid.querySelectorAll('.gf-row').forEach(r=>r.classList.remove('drag-over'));
+      grid.querySelectorAll('[data-gfrow]').forEach(r=>r.classList.remove('drag-over'));
     });
     card.addEventListener('dragover', e => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       if(card !== dragSrc) {
-        grid.querySelectorAll('.gf-row').forEach(r=>r.classList.remove('drag-over'));
+        grid.querySelectorAll('[data-gfrow]').forEach(r=>r.classList.remove('drag-over'));
         card.classList.add('drag-over');
       }
     });
     card.addEventListener('drop', async e => {
       e.preventDefault();
       if(dragSrc && dragSrc !== card) {
-        const cards = [...grid.querySelectorAll('.gf-row')];
+        const cards = [...grid.querySelectorAll('[data-gfrow]')];
         const srcIdx = cards.indexOf(dragSrc);
         const tgtIdx = cards.indexOf(card);
         const ids = cards.map(c=>c.dataset.id);
