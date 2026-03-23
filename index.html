@@ -198,7 +198,7 @@
   ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 
   /* MOBILE */
-  @media (max-width: 768px) {
+  @media (max-width: 600px) {
     .header { padding:12px 16px; flex-wrap:wrap; gap:10px; }
     .logo { font-size:15px; }
     .header-date { display:none; }
@@ -675,10 +675,11 @@ function renderWoche() {
     else lbl.textContent=wocheOffset>0?`+${wocheOffset} Wochen`:`${wocheOffset} Wochen`;
   }
   woche.forEach(datum=>{
-    const einh=getKapazitaet(datum); const pct=Math.min(count/10*100,100);
-    const ampel=getKapAmpel(einh);
     const count=auftraege.filter(a=>a.datum===datum).length;
     const fertig=auftraege.filter(a=>a.datum===datum&&a.fertig).length;
+    const einh=getKapazitaet(datum);
+    const pct=Math.min(count/10*100,100);
+    const ampel=getKapAmpel(einh);
     const hasNew = auftraege.some(a=>a.datum===datum&&!a.fertig&&a.neu);
     const card=document.createElement('div');
     card.className=`tag-card${datum===heute?' heute':''}${datum===selectedDatum?' selected':''}`;
@@ -1223,7 +1224,7 @@ function renderGF() {
 
   // Use a grid for cards
   const grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;';
+  grid.className = 'hallen-grid';
   list.appendChild(grid);
 
   tages.forEach(a => {
