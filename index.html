@@ -221,6 +221,43 @@
 </head>
 <body>
 
+<!-- LOGIN -->
+<div id="loginScreen" style="display:flex;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 48px;width:340px;max-width:90vw;text-align:center;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:6px">IMS</div>
+    <div style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:var(--text2);margin-bottom:32px">Produktionsplaner</div>
+    <div style="margin-bottom:16px">
+      <input type="password" id="loginInput" placeholder="Passwort eingeben"
+        onkeydown="if(event.key==='Enter') checkLogin()"
+        style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:15px;outline:none;text-align:center;"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <div id="loginError" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none">Falsches Passwort</div>
+    <button onclick="checkLogin()" class="btn btn-primary" style="width:100%;padding:12px;font-size:15px;justify-content:center;">Anmelden</button>
+  </div>
+</div>
+
+<script>
+function checkLogin() {
+  const val = document.getElementById('loginInput').value;
+  if(val === 'imsflow') {
+    document.getElementById('loginScreen').style.display = 'none';
+    localStorage.setItem('ims_auth', 'imsflow');
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginInput').value = '';
+    document.getElementById('loginInput').focus();
+  }
+}
+// Auto-login if already authenticated
+if(localStorage.getItem('ims_auth') === 'imsflow') {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loginScreen').style.display = 'none';
+  });
+}
+</script>
+
 <div class="header">
   <div class="header-left">
     <div class="logo">IMS <span>Produktionsplaner</span></div>
