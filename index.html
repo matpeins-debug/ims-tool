@@ -447,16 +447,8 @@ function auftraegeForAP(ap) {
   // For parallel APs, also check the sibling group name
   const parallelGroup = AP_PARALLEL[ap];
   return auftraege.filter(a => {
-    const checkAp = (apName) => {
-      if(a.gruppen && a.gruppen.length>0)
-        return a.gruppen.some(g => GRUPPEN[g.gruppe] && GRUPPEN[g.gruppe].aps.some(a => a===apName || (parallelGroup && a===apName)));
-      if(a.gruppe && GRUPPEN[a.gruppe])
-        return GRUPPEN[a.gruppe].aps.some(a => a===apName);
-      return false;
-    };
-    // Check both the exact AP and any sibling parallel AP
     const siblings = Object.entries(AP_PARALLEL)
-      .filter(([k,v]) => v === (parallelGroup||ap) )
+      .filter(([k,v]) => v === (parallelGroup||ap))
       .map(([k]) => k);
     return [ap, ...siblings].some(name => {
       if(a.gruppen && a.gruppen.length>0)
@@ -470,13 +462,11 @@ function auftraegeForAP(ap) {
 const VERSAND_ICONS = { 'Spedition':'🚛','Paketdienst':'📦','Kundenabholung':'🏠','IMS-Zustellung':'🚐' };
 const VERSAND_CLASS = { 'Spedition':'versand-spedition','Paketdienst':'versand-paket','Kundenabholung':'versand-abholung','IMS-Zustellung':'versand-ims' };
 const KUNDEN = ['AMG ANLAGEN','AMT KIRCHBACH','ANDRITZHANS','ANTRETTER&RIXNE','APEM','APFELTHALER','AQUA INSTALLATI','ARLT PARSCHLUG','AUER STVALENTIN','BAD KONZEPT DE','BADFRITZE DE','BARTHEL LUX','BAYWA NESSEL DE','BERGER KÄRNTEN','BOGER DE','BRAUN BAIERS DE','BUCK DE','CAVERION GRAZ','CBS HOME DE','CHLEBECEK','CSAMAY KRIEGLAC','CURRLIN DE','DENGLER DE','DENZEL GRAZPUNT','DIEHL DE','DIENEUEN FOHNSD','DIENEUEN PASSAI','DOLINSCHEK','DONAURIES DE','DUCH','EB-HT KÖTTMANNS','EDIT ITTER','EGGER STVEIT','EHTECH KROTTEND','ELEKTRO LEUTSCH','ENERGIETECH OÖ','EOOS KNITTELFEL','EPPLE DE','FEIEL MURAU','FENDER SÖLDEN','FERSTL ST.JOHA','FG PURGSTALL','FICHTINGER NÖ','FLANYEK STAINZ','FLOWFIX','FORSTENLECHNERP','FRANK HARTH DE','FRIEDL FOHNSDOR','FRITZ GRAF VILL','FÖRSTER GRAZ','GAUTSCH DE','GCIHAUSTEC WIEN','GEYERLECHNER','GITEC PREDING','GK BUSINESS GRZ','GLUSCHITSCH','GOMERNIKPICHLER','GREGORITSCH','GREIBICH','GRIEBLER','GRILLENBERGERBA','GRÄTZHOFERBRUCK','GSCHWANDTNER BA','GURMANN','GUTMANN FÜRSTEN','H3 THONDORF','HAAS GROSSWILFE','HAAS WOLFERN','HABELERBAUER MA','HACK ANGER','HAMMERSCHMID PR','HARKAM WILDON','HAUSBÖCK PERG','HB BRETT DE','HDG WALDSCHOBER','HEAT TECHNIC HR','HEGA WOLFAU','HEINS DE','HELD','HENKEL DE','HENNEGRIFF DE','HEST WIEN','HILLER DE','HME GRAZ','HOFER DE','HOFSTÄTTER SEIE','HOLZAPFEL MUTTE','HSALMER','HSE GLEISDORF','HWS POPKEN DE','HWSI','ICS WIEN','IMS VERTRIEB','JANISCH ILZ','JANKER HAIDERER','JAUK GMBH','JENTRO BE','JUNGHOFER','KABICHER','KAMMERHOFER','KAPLENIG','KARNER BERNSTEI','KDS HAUSTECHNIK','KEMPTE BADISCHL','KGT KROBATH GEB','KIKINGER','KINDERMANN LEIB','KIV DE','KL INSTALL LEIB','KLAUSNER','KLAUSRIEGLER','KOGLER PLAINFEL','KOLLAR LILIENFE','KOLLER STMK','KOPP DE','KOSTKA LEOBEN','KRISTEK DE','KROBATHFELDBACH','KROBATHFÜRSTENF','KROBATHGRAZ','KROBATHSTRADEN','KROLL DE','KUMMER VÖLKERMA','KUPPEK','KÄPPLER DE','KÖNIG MONDSEE','LABAN','LACKNER KRIEGLA','LAGERHAUS ZWETT','LANG DE','LEEB ENERGIE','LESSIAK KÄRNTEN','LGS SALZBURG','LICHT LOIDL','LOINDL KÖSTENDO','LOIPERDINGER','LUMAR SLO','LUX NÖ','MAIER EFERDING','MAIER STEYR','MAUSS HAUST DE','MÖNIUS DE','MÜLLER KREMSMÜN','NEUBAUER EGGERS','NOVOTHERM','OBEXER','ON TECHNIK GNAS','PECAN','PERKO HAUSTECH','PETERSCHELKA','PICHLER GLEISDO','PLASSER','PUSAR','RANDLSHOFER DE','REITERER SCHWAN','RIEDER BADHALL','RIEDER WELS','ROMBERGER GURTE','ROTH GLEISDORF','SCHIMAUTZ GRAZ','SHARK STMK','STOLZ NUSSDORF','STRASCHEK RADKE','STROMMER STJOHA','STURM SALZBURG','THOMMA WERTACH','THUMFORT GRAZ','UNISAN HART','WIESERSCHERER','ZEIRINGER MURAU','ZIEGELBAUR DE','ZOTTER'];
-const STORAGE_KEY = 'ims_auftraege';
 
 // ─── STATE ────────────────────────────────────────────────────────────────
 let auftraege = [];
 let selectedDatum = toDateStr(new Date());
 let editingId = null;
-let lastKnownCount = 0;
 let syncInterval = null;
 let wocheOffset = 0;
 let gfDatumOffset = 0;
@@ -671,7 +661,6 @@ function renderWoche() {
     const einh=getKapazitaet(datum);
     const pct=Math.min(count/10*100,100);
     const ampel=getKapAmpel(einh);
-    const hasNew = auftraege.some(a=>a.datum===datum&&!a.fertig&&a.neu);
     const card=document.createElement('div');
     card.className=`tag-card${datum===heute?' heute':''}${datum===selectedDatum?' selected':''}`;
     card.onclick=()=>{selectedDatum=datum;renderAll();};
@@ -1043,7 +1032,8 @@ async function timerStart(id, apKey, ap) {
   const existing = a.timers[timerKey] || {};
   a.timers[timerKey] = { ...existing, start: new Date().toISOString(), end: null };
   await saveToStorage();
-  renderAP(ap);
+  if(ap==='Versand') renderHalle();
+  else renderAP(ap);
 }
 
 async function timerStop(id, apKey, ap) {
@@ -1059,7 +1049,8 @@ async function timerStop(id, apKey, ap) {
   };
   if(liveTimers[timerKey]) { clearInterval(liveTimers[timerKey]); delete liveTimers[timerKey]; }
   await saveToStorage();
-  renderAP(ap);
+  if(ap==='Versand') renderHalle();
+  else renderAP(ap);
 }
 
 async function saveFotoDoku(id, apKey, checked) {
@@ -1095,11 +1086,6 @@ let offenSortDir = 1; // 1=asc, -1=desc
 function sortOffen(col) {
   if(offenSortCol === col) offenSortDir *= -1;
   else { offenSortCol = col; offenSortDir = 1; }
-  // Update header indicators
-  ['nr','kunde','datum','versandart'].forEach(c => {
-    const el = document.getElementById('sort-'+c);
-    if(el) el.textContent = el.textContent.replace(/[↑↓↕]/g,'') + (c===col?(offenSortDir===1?'↑':'↓'):'↕');
-  });
   renderOffen();
 }
 
@@ -1178,7 +1164,7 @@ function renderGF() {
   kapDiv.innerHTML = '';
   woche.forEach(datum => {
     const einh = getKapazitaet(datum);
-    const pct = Math.min(Math.round(einh/150*100), 100);
+    const pct = Math.min(Math.round(count/10*100), 100);
     const ampel = getKapAmpel(einh);
     const count = auftraege.filter(a=>a.datum===datum).length;
     const fertig = auftraege.filter(a=>a.datum===datum&&a.fertig).length;
