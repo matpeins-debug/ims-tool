@@ -239,7 +239,6 @@
 <div class="tabs">
   <div class="tab active" onclick="switchTab('planung')">Planung & Übersicht</div>
   <div class="tab" onclick="switchTab('gf')">📊 GF-Übersicht</div>
-  <div class="tab" onclick="switchTab('offen')">📋 Alle offenen</div>
   <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
   <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
@@ -403,6 +402,15 @@ const GRUPPEN = {
   '5': { name:'Gruppe 5', aps:['CNC','UP-Armatur 1','UP-Armatur 2','CNC','Einbauelement'] },
   '6': { name:'Gruppe 6', aps:['Versand'] },
 };
+const BLOCKIERUNG_GRUENDE = [
+  'Material fehlt',
+  'Maßabklärung',
+  'Technische Zeichnung fehlt',
+  'Maschine defekt',
+  'Kapazität nicht verfügbar',
+  'Kundenrückfrage offen',
+];
+
 const AP_PARALLEL = {
   'UP-Armatur 1': 'UP-Armatur', 'UP-Armatur 2': 'UP-Armatur',
   'Zusammenbau': 'Zusammenbau', 'Nachbearbeitung': 'Zusammenbau',
@@ -734,13 +742,15 @@ function renderAuftraege() {
           ? GRUPPEN[a.gruppe].aps.map(ap=>`<span class="ap-chip">${ap}${a.stk?` <strong>${a.stk}</strong>`:''}</span>`).join('')
           : '');
     const row=document.createElement('div');
-    row.className=`auftrag-row${a.fertig?' fertig':''}`;
+    row.className=`auftrag-row${a.fertig?' fertig':''}${a.blockierung?' card-ueberfaellig':''}`;
+    row.style.cssText = a.blockierung ? 'border-color:#ff445544;background:#1f0a0a;' : '';
     row.innerHTML=`
       <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
       <div class="auftrag-nr" style="font-size:12px">${a.nr}</div>
       <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
+        ${a.blockierung?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:2px">⚠ ${a.blockierung}</div>`:''}
         ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
         ${apText?`<div class="ap-chips" style="margin-top:4px">${apText}</div>`:''}
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${renderStationDots(a)}</div>
@@ -766,6 +776,7 @@ function getCardClass(a, stationFertig, isRunning) {
   const heute = toDateStr(new Date());
   const ueberfaellig = a.datum < heute && !a.fertig;
   if(ueberfaellig) return 'card-ueberfaellig';
+  if(a.blockierung) return 'card-ueberfaellig';
   if(stationFertig !== undefined ? stationFertig : a.fertig) return 'card-fertig';
   if(isRunning) return 'card-aktiv';
   return '';
@@ -951,7 +962,18 @@ function renderAP(ap) {
           ? `<div class="hallen-fertig-info">✓ ${ap} fertig</div>
              <div class="fertig-zeit">${stationZeit}</div>
              <button class="btn-edit" style="margin-top:8px;padding:4px 10px;font-size:12px" onclick="markStationUndo('${a.id}','${ap}','${apKey}')">Rückgängig</button>`
-          : `${AP_FOTO_REQUIRED.includes(ap) && a.sklasse==='S3' ? `
+          : `
+            <!-- BLOCKIERUNG -->
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">⚠ Blockierungsgrund</div>
+              <select id="blockierung-${a.id}"
+                onchange="saveBlockierung('${a.id}',this.value)"
+                style="width:100%;background:${a.blockierung?'#1f0a0a':'var(--surface)'};border:1px solid ${a.blockierung?'var(--danger)':'var(--border)'};border-radius:6px;padding:8px 10px;color:${a.blockierung?'var(--danger)':'var(--text2)'};font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;">
+                <option value="">– kein Blockierungsgrund –</option>
+                ${BLOCKIERUNG_GRUENDE.map(g=>`<option value="${g}" ${a.blockierung===g?'selected':''}>${g}</option>`).join('')}
+              </select>
+            </div>
+            ${AP_FOTO_REQUIRED.includes(ap) && a.sklasse==='S3' ? `
               <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
                 <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
                   <input type="checkbox" id="foto-${a.id}-${apKey}"
@@ -1051,6 +1073,14 @@ async function timerStop(id, apKey, ap) {
   await saveToStorage();
   if(ap==='Versand') renderHalle();
   else renderAP(ap);
+}
+
+async function saveBlockierung(id, grund) {
+  const a = auftraege.find(x=>x.id===id); if(!a) return;
+  a.blockierung = grund || null;
+  await saveToStorage();
+  renderAll();
+  if(!document.getElementById('tab-gf').classList.contains('hidden')) renderGF();
 }
 
 async function saveFotoDoku(id, apKey, checked) {
@@ -1163,11 +1193,11 @@ function renderGF() {
   const kapDiv = document.getElementById('gfKapazitaet');
   kapDiv.innerHTML = '';
   woche.forEach(datum => {
-    const count = auftraege.filter(a=>a.datum===datum).length;
-    const fertig = auftraege.filter(a=>a.datum===datum&&a.fertig).length;
     const einh = getKapazitaet(datum);
     const pct = Math.min(Math.round(count/10*100), 100);
     const ampel = getKapAmpel(einh);
+    const count = auftraege.filter(a=>a.datum===datum).length;
+    const fertig = auftraege.filter(a=>a.datum===datum&&a.fertig).length;
     const isSelected = datum === zieldatum;
     const card = document.createElement('div');
     card.className = 'kap-card';
@@ -1209,7 +1239,7 @@ function renderGF() {
     const vIcon=VERSAND_ICONS[a.versandart]||'';
     const ueberfaellig = a.datum < heute && !a.fertig;
     const isLight = document.body.classList.contains('light');
-    const cardColor = ueberfaellig
+    const cardColor = ueberfaellig || a.blockierung
       ? (isLight?'card-ueberfaellig':'card-ueberfaellig')
       : a.fertig ? 'card-fertig' : '';
 
@@ -1241,6 +1271,7 @@ function renderGF() {
         </div>
       </div>
       <div class="hallen-kunde" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">${a.kunde}${a.notiz?`<div style="font-size:12px;color:var(--warn)">${a.notiz}</div>`:''}</div>
+      ${a.blockierung?`<div style="font-size:12px;color:var(--danger);font-weight:600;margin-bottom:6px">⚠ ${a.blockierung}</div>`:''}
       <div style="margin:10px 0 8px">
         <span class="versand-badge ${vClass}" style="font-size:13px">${vIcon} ${a.versandart||''}</span>
       </div>
