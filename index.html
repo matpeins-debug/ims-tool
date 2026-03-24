@@ -813,7 +813,7 @@ function renderAuftraege() {
     row.style.cssText = '';
     row.innerHTML=`
       <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
-      <div class="auftrag-nr" style="font-size:12px; cursor:pointer" data-id="${a.id}">${a.nr}</div>
+      <div class="auftrag-nr" style="font-size:12px; cursor:pointer" onclick="openAuftragDetail('${a.id}')">${a.nr}</div>
       <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
