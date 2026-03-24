@@ -1933,6 +1933,33 @@ document.addEventListener("click", function(e) {
   openAuftragDetail(id);
 });
 
+window.openAuftragDetail = function(id) {
+
+  console.log("geklickte ID:", id);
+
+  const auftrag = auftraege.find(x => x.id === id);
+
+  if (!auftrag) {
+    alert("Auftrag NICHT gefunden → anderer Reiter!");
+    return;
+  }
+
+  const modal = document.getElementById("detailModal");
+  const content = document.getElementById("detailContent");
+
+  content.innerHTML = `
+    <div><b>Auftrag:</b> ${auftrag.nr}</div>
+    <div><b>Kunde:</b> ${auftrag.kunde}</div>
+    <div><b>Datum:</b> ${auftrag.datum}</div>
+  `;
+
+  modal.style.display = "flex";
+};
+
+window.closeDetail = function() {
+  document.getElementById("detailModal").style.display = "none";
+};
+  
   
 </script>
 <div id="detailModal" class="modal-overlay">
