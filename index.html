@@ -693,7 +693,7 @@ function initDate() {
 
 async function loadCSV() {
   try {
-    const res = await fetch("positionen.csv"); // Datei im gleichen Ordner!
+    const res = await fetch("https://raw.githubusercontent.com/matpeins-debug/ims-tool/refs/heads/main/positionen.txt"); // Datei im gleichen Ordner!
     const text = await res.text();
 
     const rows = text.split("\n").slice(1);
