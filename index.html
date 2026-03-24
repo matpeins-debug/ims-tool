@@ -1923,5 +1923,14 @@ initBin().then(() => {
   startPolling();
 });
 </script>
+<div id="detailModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Auftragsdetails</div>
+    <div id="detailContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeDetail()">Schließen</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
