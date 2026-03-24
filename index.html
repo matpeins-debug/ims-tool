@@ -1163,11 +1163,11 @@ function renderGF() {
   const kapDiv = document.getElementById('gfKapazitaet');
   kapDiv.innerHTML = '';
   woche.forEach(datum => {
+    const count = auftraege.filter(a=>a.datum===datum).length;
+    const fertig = auftraege.filter(a=>a.datum===datum&&a.fertig).length;
     const einh = getKapazitaet(datum);
     const pct = Math.min(Math.round(count/10*100), 100);
     const ampel = getKapAmpel(einh);
-    const count = auftraege.filter(a=>a.datum===datum).length;
-    const fertig = auftraege.filter(a=>a.datum===datum&&a.fertig).length;
     const isSelected = datum === zieldatum;
     const card = document.createElement('div');
     card.className = 'kap-card';
