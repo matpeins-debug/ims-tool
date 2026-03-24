@@ -533,6 +533,7 @@ let syncInterval = null;
 let wocheOffset = 0;
 let gfDatumOffset = 0;
 let versandOffset = 0;
+let positionenDB = [];
 
 // ─── UTILS ────────────────────────────────────────────────────────────────
 function toDateStr(d) {
@@ -690,6 +691,31 @@ function initDate() {
   document.getElementById('inp-datum').value = toDateStr(heute);
 }
 
+async function loadCSV() {
+  try {
+    const res = await fetch("positionen.csv"); // Datei im gleichen Ordner!
+    const text = await res.text();
+
+    const rows = text.split("\n").slice(1);
+
+    positionenDB = rows.map(r => {
+      const [nr, pos, artikel, menge] = r.split(";");
+      return {
+        nr: nr?.trim(),
+        pos: pos?.trim(),
+        artikel: artikel?.trim(),
+        menge: menge?.trim()
+      };
+    });
+
+    console.log("Positionen geladen:", positionenDB.length);
+
+  } catch (e) {
+    console.error("CSV Fehler:", e);
+  }
+}
+
+  
 // ─── TABS ─────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   const allTabs = ['planung','versand','stoerung','gf','offen','ap'];
@@ -1923,6 +1949,15 @@ initBin().then(() => {
   startPolling();
 });
 
+initBin().then(() => {
+  loadFromStorage();
+  loadCSV(); // 👈 NEU
+  startPolling();
+});
+
+
+
+  
 // ─── ONEKLICK ────────────────────────────────────────────────────────────────
   
 document.addEventListener("click", function(e) {
@@ -1935,29 +1970,53 @@ document.addEventListener("click", function(e) {
 
 window.openAuftragDetail = function(id) {
 
-  console.log("geklickte ID:", id);
-
   const auftrag = auftraege.find(x => x.id === id);
 
   if (!auftrag) {
-    alert("Auftrag NICHT gefunden → anderer Reiter!");
+    alert("Auftrag NICHT gefunden");
     return;
   }
 
   const modal = document.getElementById("detailModal");
   const content = document.getElementById("detailContent");
 
+  // 👉 Positionen aus CSV holen
+  const pos = positionenDB.filter(p => p.nr === auftrag.nr);
+
+  let posHTML = "";
+
+  if (pos.length > 0) {
+    posHTML = `
+      <div style="margin-top:16px">
+        <b>Positionen:</b>
+        <table style="width:100%;margin-top:8px;font-size:13px">
+          <tr style="color:#888">
+            <td>Pos</td>
+            <td>Artikel</td>
+            <td>Menge</td>
+          </tr>
+          ${pos.map(p => `
+            <tr>
+              <td>${p.pos}</td>
+              <td>${p.artikel}</td>
+              <td>${p.menge}</td>
+            </tr>
+          `).join("")}
+        </table>
+      </div>
+    `;
+  } else {
+    posHTML = `<div style="margin-top:12px;color:#888">Keine Positionen gefunden</div>`;
+  }
+
   content.innerHTML = `
     <div><b>Auftrag:</b> ${auftrag.nr}</div>
     <div><b>Kunde:</b> ${auftrag.kunde}</div>
     <div><b>Datum:</b> ${auftrag.datum}</div>
+    ${posHTML}
   `;
 
   modal.style.display = "flex";
-};
-
-window.closeDetail = function() {
-  document.getElementById("detailModal").style.display = "none";
 };
   
   
