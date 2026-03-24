@@ -924,6 +924,12 @@ function renderAP(ap) {
   const relevant = auftraegeForAP(ap)
     .filter(a => !a.fertig)
     .sort((a,b) => {
+      const apKey = ap.replace(/[^a-z0-9]/gi,'_');
+      const aFertig = !!(a.stationFertig && a.stationFertig[apKey]);
+      const bFertig = !!(b.stationFertig && b.stationFertig[apKey]);
+      // Fertig gemeldete nach hinten
+      if(aFertig !== bFertig) return aFertig ? 1 : -1;
+      // Dann nach Datum
       if(a.datum !== b.datum) return a.datum.localeCompare(b.datum);
       // Innerhalb des Tages: nach Priorität
       if(a.prio && b.prio) return a.prio - b.prio;
