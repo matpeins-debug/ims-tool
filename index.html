@@ -120,7 +120,7 @@
   /* MODAL */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:100; align-items:center; justify-content:center; }
   .modal-overlay.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; width:520px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; width:560px; max-width:96vw; max-height:92vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; }
   .modal-title { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; color:var(--text); margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
   .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .form-full { grid-column:1/-1; }
@@ -240,6 +240,7 @@
   <div class="tab active" onclick="switchTab('planung')">Planung & Übersicht</div>
   <div class="tab" onclick="switchTab('gf')">📊 GF-Übersicht</div>
   <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
+  <div class="tab" onclick="switchTab('stoerung')" id="tab-btn-stoerung">⚠ Störungen</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
   <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
   <div class="tab" onclick="switchTab('ap-UP-Armatur 1')">🔩 UP-Armatur 1</div>
@@ -263,6 +264,14 @@
   <div class="woche-grid" id="wocheGrid"></div>
   <div class="section-header">
     <div id="tagFilterLabel" class="tag-filter-label"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="text" id="suchfeld" placeholder="🔍 Kunde oder Auftragsnr." 
+        oninput="renderAuftraege()"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:220px;"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border)'">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('suchfeld').value='';renderAuftraege()">✕</button>
+    </div>
   </div>
   <div class="stats-row" id="statsRow"></div>
   <div class="auftraege-header">
@@ -283,6 +292,14 @@
     </div>
   </div>
   <div class="hallen-grid" id="hallenGrid"></div>
+</div>
+
+<div id="tab-stoerung" class="main hidden">
+  <div class="section-header">
+    <div class="section-title">⚠ Störungen</div>
+    <div id="stoerungCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--danger)"></div>
+  </div>
+  <div class="hallen-grid" id="stoerungGrid"></div>
 </div>
 
 <div id="tab-gf" class="main hidden">
@@ -404,7 +421,6 @@ const GRUPPEN = {
 };
 const BLOCKIERUNG_GRUENDE = [
   'Material fehlt',
-  'Versanddatum verschoben',
   'Maßabklärung',
   'Technische Zeichnung fehlt',
   'Maschine defekt',
@@ -639,7 +655,7 @@ function initDate() {
 
 // ─── TABS ─────────────────────────────────────────────────────────────────
 function switchTab(tab) {
-  const allTabs = ['planung','versand','gf','offen','ap'];
+  const allTabs = ['planung','versand','stoerung','gf','offen','ap'];
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick')===`switchTab('${tab}')`));
   allTabs.forEach(t => document.getElementById('tab-'+t) && document.getElementById('tab-'+t).classList.add('hidden'));
   if(tab.startsWith('ap-')) {
@@ -651,6 +667,7 @@ function switchTab(tab) {
   if(tab==='versand') renderHalle();
   if(tab==='gf') renderGF();
   if(tab==='offen') renderOffen();
+  if(tab==='stoerung') renderStoerung();
 }
 
 // ─── WOCHE ────────────────────────────────────────────────────────────────
@@ -690,38 +707,50 @@ function renderAuftraege() {
   const list=document.getElementById('auftraegeList');
   const label=document.getElementById('tagFilterLabel');
   const statsRow=document.getElementById('statsRow');
-  const filtered=auftraege.filter(a=>a.datum===selectedDatum);
-  label.textContent=`Aufträge für ${getWochentag(selectedDatum)}, ${formatDatum(selectedDatum)}`;
+  const suche = (document.getElementById('suchfeld')?.value||'').toLowerCase().trim();
 
-  const offen=filtered.filter(a=>!a.fertig).length;
-  const fertig=filtered.filter(a=>a.fertig).length;
-  const einh=getKapazitaet(selectedDatum);
-  const ampel=getKapAmpel(einh);
-  const vc=ampel==='ok'?'green':ampel==='warn'?'orange':'danger';
-  const apKap = getAPKapazitaet(selectedDatum);
+  let filtered;
+  if(suche) {
+    filtered = auftraege.filter(a =>
+      (a.nr||'').toLowerCase().includes(suche) ||
+      (a.kunde||'').toLowerCase().includes(suche)
+    );
+    label.textContent = `Suchergebnisse für "${suche}" – ${filtered.length} Auftrag${filtered.length!==1?'e':''}`;
+    statsRow.innerHTML = '';
+  } else {
+    filtered = auftraege.filter(a=>a.datum===selectedDatum);
+    label.textContent = `Aufträge für ${getWochentag(selectedDatum)}, ${formatDatum(selectedDatum)}`;
+  }
 
-  const apChips = ARBEITSPLAETZE_PLANUNG.map(ap => {
-    const used = apKap[ap]||0;
-    const max = AP_KAPAZITAET[ap];
-    const pct = Math.min(used/max*100,100);
-    const col = pct<75?'var(--accent)':pct<95?'var(--warn)':'var(--danger)';
-    return `<div class="stat-chip" style="min-width:110px">
-      <div class="stat-label">${ap}</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:${col}">${used} <span style="font-size:11px;color:var(--text3)">/ ${max}</span></div>
-      <div style="height:3px;background:var(--surface2);border-radius:2px;margin-top:4px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:${col};border-radius:2px"></div>
-      </div>
-    </div>`;
-  }).join('');
+  if(!suche) {
+    const offen=filtered.filter(a=>!a.fertig).length;
+    const fertig=filtered.filter(a=>a.fertig).length;
+    const einh=getKapazitaet(selectedDatum);
+    const ampel=getKapAmpel(einh);
+    const vc=ampel==='ok'?'green':ampel==='warn'?'orange':'danger';
+    const apKap = getAPKapazitaet(selectedDatum);
+    const apChips = ARBEITSPLAETZE_PLANUNG.map(ap => {
+      const used = apKap[ap]||0;
+      const max = AP_KAPAZITAET[ap];
+      const pct = Math.min(used/max*100,100);
+      const col = pct<75?'var(--accent)':pct<95?'var(--warn)':'var(--danger)';
+      return `<div class="stat-chip" style="min-width:110px">
+        <div class="stat-label">${ap}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:${col}">${used} <span style="font-size:11px;color:var(--text3)">/ ${max}</span></div>
+        <div style="height:3px;background:var(--surface2);border-radius:2px;margin-top:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${col};border-radius:2px"></div>
+        </div>
+      </div>`;
+    }).join('');
+    statsRow.innerHTML=`
+      <div class="stat-chip"><div class="stat-label">Gesamt</div><div class="stat-value">${filtered.length}</div></div>
+      <div class="stat-chip"><div class="stat-label">Offen</div><div class="stat-value orange">${offen}</div></div>
+      <div class="stat-chip"><div class="stat-label">Fertig</div><div class="stat-value green">${fertig}</div></div>
+      <div class="stat-chip"><div class="stat-label">Kapazität Aufträge</div><div class="stat-value ${vc}">${Math.round(einh)} <span style="font-size:14px;color:var(--text3)">/ 10</span></div></div>
+      ${apChips}`;
+  }
 
-  statsRow.innerHTML=`
-    <div class="stat-chip"><div class="stat-label">Gesamt</div><div class="stat-value">${filtered.length}</div></div>
-    <div class="stat-chip"><div class="stat-label">Offen</div><div class="stat-value orange">${offen}</div></div>
-    <div class="stat-chip"><div class="stat-label">Fertig</div><div class="stat-value green">${fertig}</div></div>
-    <div class="stat-chip"><div class="stat-label">Kapazität Aufträge</div><div class="stat-value ${vc}">${Math.round(einh)} <span style="font-size:14px;color:var(--text3)">/ 10</span></div></div>
-    ${apChips}`;
-
-  if(filtered.length===0){ list.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Keine Aufträge für diesen Tag</div></div>`; return; }
+  if(filtered.length===0){ list.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">${suche?`Keine Aufträge für "${suche}" gefunden`:'Keine Aufträge für diesen Tag'}</div></div>`; return; }
 
   // Sortieren nach Priorität, dann nach Erfassungszeit
   filtered.sort((a,b)=>{
@@ -753,7 +782,6 @@ function renderAuftraege() {
         <div class="auftrag-kunde">${a.kunde}</div>
         ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:2px">⚠ ${Object.entries(a.blockierungen).map(([k,v])=>`${k}: ${v}`).join(' | ')}</div>`:''}
         ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
-        ${apText?`<div class="ap-chips" style="margin-top:4px">${apText}</div>`:''}
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${renderStationDots(a)}</div>
       </div>
       <div id="datum-cell-${a.id}">${renderDatumCell(a)}</div>
@@ -1547,6 +1575,7 @@ function renderHalle() {
                 <button class="btn-edit" style="padding:2px 8px;font-size:12px" onclick="editPakete('${a.id}')">✏</button>
               </div>
             </div>
+            <button class="btn-edit" style="margin-top:12px;width:100%;justify-content:center;padding:8px;font-size:13px" onclick="undoFertigHalle('${a.id}')">↩ Rückgängig</button>
           </div>`
         :`<div style="margin-bottom:10px">
             <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Versandeinheit</div>
@@ -1725,6 +1754,15 @@ async function savePakete(id) {
   }
 }
 
+async function undoFertigHalle(id) {
+  const a = auftraege.find(x=>x.id===id); if(!a) return;
+  a.fertig = false;
+  a.fertigAm = null;
+  await saveToStorage();
+  renderHalle();
+  renderAll();
+}
+
 async function markFertigHalle(id) {
   const a=auftraege.find(x=>x.id===id);
   if(a){
@@ -1743,7 +1781,49 @@ async function deleteAuftrag(id) {
   await saveToStorage(); renderAll();
 }
 
-function renderAll() { renderWoche(); renderAuftraege(); }
+function renderStoerung() {
+  const grid = document.getElementById('stoerungGrid');
+  const countEl = document.getElementById('stoerungCount');
+  const geblockt = auftraege.filter(a => a.blockierungen && Object.keys(a.blockierungen).length > 0 && !a.fertig);
+  countEl.textContent = geblockt.length > 0 ? `${geblockt.length} Auftrag${geblockt.length>1?'e':''} blockiert` : 'Keine Störungen';
+  if(geblockt.length === 0) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine Störungen</div></div>`;
+    updateStoerungBadge(); return;
+  }
+  grid.innerHTML = '';
+  geblockt.sort((a,b) => (a.datum||'').localeCompare(b.datum||'')).forEach(a => {
+    const vClass = VERSAND_CLASS[a.versandart]||'';
+    const vIcon = VERSAND_ICONS[a.versandart]||'';
+    const card = document.createElement('div');
+    card.className = 'hallen-card card-ueberfaellig';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
+        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
+      </div>
+      <div class="hallen-kunde">${a.kunde}</div>
+      <div style="margin:8px 0"><span class="versand-badge ${vClass}">${vIcon} ${a.versandart||''}</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:10px">${formatDatum(a.datum)}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${Object.entries(a.blockierungen).map(([ap,grund])=>`
+          <div style="background:#ff445511;border:1px solid #ff445533;border-radius:6px;padding:8px 10px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">${ap}</div>
+            <div style="font-size:13px;color:var(--danger);font-weight:600">⚠ ${grund}</div>
+          </div>`).join('')}
+      </div>`;
+    grid.appendChild(card);
+  });
+  updateStoerungBadge();
+}
+
+function updateStoerungBadge() {
+  const count = auftraege.filter(a => a.blockierungen && Object.keys(a.blockierungen).length > 0 && !a.fertig).length;
+  const btn = document.getElementById('tab-btn-stoerung');
+  if(btn) { btn.textContent = count > 0 ? `⚠ Störungen (${count})` : '⚠ Störungen'; btn.style.color = count > 0 ? 'var(--danger)' : ''; }
+}
+
+function renderAll() { renderWoche(); renderAuftraege(); updateStoerungBadge(); }
 
 // ─── AUTOCOMPLETE ─────────────────────────────────────────────────────────
 function getNrSuggestions(val) {
