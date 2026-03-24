@@ -533,7 +533,6 @@ let syncInterval = null;
 let wocheOffset = 0;
 let gfDatumOffset = 0;
 let versandOffset = 0;
-let positionenDB = [];
 
 // ─── UTILS ────────────────────────────────────────────────────────────────
 function toDateStr(d) {
@@ -691,31 +690,6 @@ function initDate() {
   document.getElementById('inp-datum').value = toDateStr(heute);
 }
 
-async function loadCSV() {
-  try {
-    const res = await fetch("https://raw.githubusercontent.com/matpeins-debug/ims-tool/refs/heads/main/positionen.txt"); // Datei im gleichen Ordner!
-    const text = await res.text();
-
-    const rows = text.split("\n").slice(1);
-
-    positionenDB = rows.map(r => {
-      const [nr, pos, artikel, menge] = r.split(";");
-      return {
-        nr: nr?.trim(),
-        pos: pos?.trim(),
-        artikel: artikel?.trim(),
-        menge: menge?.trim()
-      };
-    });
-
-    console.log("Positionen geladen:", positionenDB.length);
-
-  } catch (e) {
-    console.error("CSV Fehler:", e);
-  }
-}
-
-  
 // ─── TABS ─────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   const allTabs = ['planung','versand','stoerung','gf','offen','ap'];
@@ -839,7 +813,7 @@ function renderAuftraege() {
     row.style.cssText = '';
     row.innerHTML=`
       <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
-      <div class="auftrag-nr" style="font-size:12px; cursor:pointer" onclick="openAuftragDetail('${a.id}')">${a.nr}</div>
+      <div class="auftrag-nr" style="font-size:12px">${a.nr}</div>
       <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
@@ -1781,7 +1755,7 @@ async function saveAuftrag() {
   } else {
     const newPrio = prioInput || getNextPrio(datum);
     auftraege.filter(x=>x.datum===datum&&x.prio>=newPrio).forEach(x=>x.prio++);
-    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,stk,gruppen,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString(),positionen: [] });
+    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,stk,gruppen,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString()});
     auftraege.filter(x=>x.datum===datum).sort((a,b)=>a.prio-b.prio).forEach((x,i)=>x.prio=i+1);
   }
   selectedDatum=datum;
@@ -1948,91 +1922,6 @@ initBin().then(() => {
   loadFromStorage();
   startPolling();
 });
-
-initBin().then(() => {
-  loadFromStorage();
-  loadCSV(); // 👈 NEU
-  startPolling();
-});
-
-
-
-  
-// ─── ONEKLICK ────────────────────────────────────────────────────────────────
-  
-document.addEventListener("click", function(e) {
-  const el = e.target.closest(".auftrag-nr");
-  if (!el) return;
-
-  const id = el.getAttribute("data-id");
-  openAuftragDetail(id);
-});
-
-window.closeDetail = function() {
-document.getElementById("detailModal").style.display = "none";
-};
-  
-window.openAuftragDetail = function(id) {
-
-  const auftrag = auftraege.find(x => x.id === id);
-
-  if (!auftrag) {
-    alert("Auftrag NICHT gefunden");
-    return;
-  }
-
-  const modal = document.getElementById("detailModal");
-  const content = document.getElementById("detailContent");
-
-  // 👉 Positionen aus CSV holen
-  const pos = positionenDB.filter(p => p.nr === auftrag.nr);
-
-  let posHTML = "";
-
-  if (pos.length > 0) {
-    posHTML = `
-      <div style="margin-top:16px">
-        <b>Positionen:</b>
-        <table style="width:100%;margin-top:8px;font-size:13px">
-          <tr style="color:#888">
-            <td>Pos</td>
-            <td>Artikel</td>
-            <td>Menge</td>
-          </tr>
-          ${pos.map(p => `
-            <tr>
-              <td>${p.pos}</td>
-              <td>${p.artikel}</td>
-              <td>${p.menge}</td>
-            </tr>
-          `).join("")}
-        </table>
-      </div>
-    `;
-  } else {
-    posHTML = `<div style="margin-top:12px;color:#888">Keine Positionen gefunden</div>`;
-  }
-
-  content.innerHTML = `
-    <div><b>Auftrag:</b> ${auftrag.nr}</div>
-    <div><b>Kunde:</b> ${auftrag.kunde}</div>
-    <div><b>Datum:</b> ${auftrag.datum}</div>
-    ${posHTML}
-  `;
-
-  modal.style.display = "flex";
-};
-  
-  
 </script>
-<div id="detailModal" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">Auftragsdetails</div>
-    <div id="detailContent"></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeDetail()">Schließen</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
