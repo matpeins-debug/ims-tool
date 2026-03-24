@@ -405,7 +405,6 @@ const GRUPPEN = {
 const BLOCKIERUNG_GRUENDE = [
   'Material fehlt',
   'Maßabklärung',
-  'Termin verschoben',
   'Technische Zeichnung fehlt',
   'Maschine defekt',
   'Kapazität nicht verfügbar',
@@ -1492,7 +1491,7 @@ function renderHalle() {
     const versandRunning = versandTimer && versandTimer.start && !versandTimer.end;
     const versandMin = versandTimer ? calcTotalMin(versandTimer) : 0;
     const card=document.createElement('div');
-    const cardClass = getCardClass(a, false, versandRunning);
+    const cardClass = getCardClass(a, a.fertig, versandRunning);
     card.className=`hallen-card${cardClass?' '+cardClass:''}`;
     card.innerHTML=`
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
