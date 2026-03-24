@@ -742,8 +742,8 @@ function renderAuftraege() {
           ? GRUPPEN[a.gruppe].aps.map(ap=>`<span class="ap-chip">${ap}${a.stk?` <strong>${a.stk}</strong>`:''}</span>`).join('')
           : '');
     const row=document.createElement('div');
-    row.className=`auftrag-row${a.fertig?' fertig':''}${a.blockierung?' card-ueberfaellig':''}`;
-    row.style.cssText = a.blockierung ? 'border-color:#ff445544;background:#1f0a0a;' : '';
+    row.className=`auftrag-row${a.fertig?' fertig':''}`;
+    row.style.cssText = '';
     row.innerHTML=`
       <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
       <div class="auftrag-nr" style="font-size:12px">${a.nr}</div>
@@ -1193,11 +1193,11 @@ function renderGF() {
   const kapDiv = document.getElementById('gfKapazitaet');
   kapDiv.innerHTML = '';
   woche.forEach(datum => {
+    const count = auftraege.filter(a=>a.datum===datum).length;
+    const fertig = auftraege.filter(a=>a.datum===datum&&a.fertig).length;
     const einh = getKapazitaet(datum);
     const pct = Math.min(Math.round(count/10*100), 100);
     const ampel = getKapAmpel(einh);
-    const count = auftraege.filter(a=>a.datum===datum).length;
-    const fertig = auftraege.filter(a=>a.datum===datum&&a.fertig).length;
     const isSelected = datum === zieldatum;
     const card = document.createElement('div');
     card.className = 'kap-card';
