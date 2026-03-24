@@ -1,0 +1,4 @@
+Auftrag;Pos;Artikel;Menge
+2029999;1;Verteiler 6-fach;2
+2023501;2;Anschlussset;4
+2023502;1;Heizkreis;1
