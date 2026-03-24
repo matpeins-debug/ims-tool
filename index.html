@@ -1968,6 +1968,10 @@ document.addEventListener("click", function(e) {
   openAuftragDetail(id);
 });
 
+window.closeDetail = function() {
+document.getElementById("detailModal").style.display = "none";
+};
+  
 window.openAuftragDetail = function(id) {
 
   const auftrag = auftraege.find(x => x.id === id);
