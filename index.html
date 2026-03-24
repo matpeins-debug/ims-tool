@@ -750,7 +750,7 @@ function renderAuftraege() {
       <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
-        ${a.blockierung?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:2px">⚠ ${a.blockierung}</div>`:''}
+        ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:2px">⚠ ${Object.entries(a.blockierungen).map(([k,v])=>`${k}: ${v}`).join(' | ')}</div>`:''}
         ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
         ${apText?`<div class="ap-chips" style="margin-top:4px">${apText}</div>`:''}
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${renderStationDots(a)}</div>
@@ -778,6 +778,17 @@ function getCardClass(a, stationFertig, isRunning) {
   if(ueberfaellig) return 'card-ueberfaellig';
   if(a.blockierung) return 'card-ueberfaellig';
   if(stationFertig !== undefined ? stationFertig : a.fertig) return 'card-fertig';
+  if(isRunning) return 'card-aktiv';
+  return '';
+}
+
+// For AP cards only – checks per-AP blockierung
+function getAPCardClass(a, apKey, stationFertig, isRunning) {
+  const heute = toDateStr(new Date());
+  const ueberfaellig = a.datum < heute && !a.fertig;
+  if(ueberfaellig) return 'card-ueberfaellig';
+  if(a.blockierungen && a.blockierungen[apKey]) return 'card-ueberfaellig';
+  if(stationFertig) return 'card-fertig';
   if(isRunning) return 'card-aktiv';
   return '';
 }
@@ -927,7 +938,7 @@ function renderAP(ap) {
         </div>` : '';
 
       const card = document.createElement('div');
-      const cardClass = getCardClass(a, stationFertig, isRunning);
+      const cardClass = getAPCardClass(a, apKey, stationFertig, isRunning);
       card.className = `hallen-card${cardClass?' '+cardClass:''}`;
       card.id = `ap-card-${a.id}-${apKey}`;
       card.innerHTML = `
@@ -966,11 +977,11 @@ function renderAP(ap) {
             <!-- BLOCKIERUNG -->
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px">
               <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">⚠ Blockierungsgrund</div>
-              <select id="blockierung-${a.id}"
-                onchange="saveBlockierung('${a.id}',this.value)"
-                style="width:100%;background:${a.blockierung?'#1f0a0a':'var(--surface)'};border:1px solid ${a.blockierung?'var(--danger)':'var(--border)'};border-radius:6px;padding:8px 10px;color:${a.blockierung?'var(--danger)':'var(--text2)'};font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;">
+              <select id="blockierung-${a.id}-${apKey}"
+                onchange="saveBlockierung('${a.id}','${apKey}',this.value)"
+                style="width:100%;background:${a.blockierungen&&a.blockierungen[apKey]?'#1f0a0a':'var(--surface)'};border:1px solid ${a.blockierungen&&a.blockierungen[apKey]?'var(--danger)':'var(--border)'};border-radius:6px;padding:8px 10px;color:${a.blockierungen&&a.blockierungen[apKey]?'var(--danger)':'var(--text2)'};font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;">
                 <option value="">– kein Blockierungsgrund –</option>
-                ${BLOCKIERUNG_GRUENDE.map(g=>`<option value="${g}" ${a.blockierung===g?'selected':''}>${g}</option>`).join('')}
+                ${BLOCKIERUNG_GRUENDE.map(g=>`<option value="${g}" ${a.blockierungen&&a.blockierungen[apKey]===g?'selected':''}>${g}</option>`).join('')}
               </select>
             </div>
             ${AP_FOTO_REQUIRED.includes(ap) && a.sklasse==='S3' ? `
@@ -1075,9 +1086,14 @@ async function timerStop(id, apKey, ap) {
   else renderAP(ap);
 }
 
-async function saveBlockierung(id, grund) {
+async function saveBlockierung(id, apKey, grund) {
   const a = auftraege.find(x=>x.id===id); if(!a) return;
-  a.blockierung = grund || null;
+  if(!a.blockierungen) a.blockierungen = {};
+  if(grund) a.blockierungen[apKey] = grund;
+  else delete a.blockierungen[apKey];
+  // Global blockierung = any AP blocked
+  a.blockierung = Object.keys(a.blockierungen).length > 0
+    ? Object.values(a.blockierungen)[0] : null;
   await saveToStorage();
   renderAll();
   if(!document.getElementById('tab-gf').classList.contains('hidden')) renderGF();
@@ -1271,7 +1287,7 @@ function renderGF() {
         </div>
       </div>
       <div class="hallen-kunde" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">${a.kunde}${a.notiz?`<div style="font-size:12px;color:var(--warn)">${a.notiz}</div>`:''}</div>
-      ${a.blockierung?`<div style="font-size:12px;color:var(--danger);font-weight:600;margin-bottom:6px">⚠ ${a.blockierung}</div>`:''}
+      ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:12px;color:var(--danger);font-weight:600;margin-bottom:6px">⚠ ${Object.entries(a.blockierungen).map(([k,v])=>`${k}: ${v}`).join(' | ')}</div>`:''}
       <div style="margin:10px 0 8px">
         <span class="versand-badge ${vClass}" style="font-size:13px">${vIcon} ${a.versandart||''}</span>
       </div>
