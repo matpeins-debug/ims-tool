@@ -40,9 +40,9 @@
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
 .tabs { display:flex; gap:2px; padding:12px 24px 0; border-bottom:3px solid var(–border); background:var(–surface); box-shadow:0 2px 8px rgba(0,0,0,0.15); }
-.tab { padding:8px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(–text2); border-bottom:2px solid transparent; transition:all 0.15s; }
+.tab { padding:8px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(–text2); border-bottom:3px solid transparent; margin-bottom:-3px; transition:all 0.15s; }
 .tab:hover { color:var(–text); }
-.tab.active { color:var(–accent); border-bottom-color:var(–accent); }
+.tab.active { color:var(–accent); border-bottom:3px solid var(–accent); font-weight:600; }
 
 .main { padding:24px; background:var(–bg); min-height:calc(100vh - 120px); }
 
@@ -63,12 +63,12 @@
 .woche-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:28px; }
 .tag-card { background:var(–surface); border:1px solid var(–border); border-radius:10px; padding:14px; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden; }
 .tag-card:hover { border-color:var(–text3); }
-.tag-card.selected { border-color:var(–accent); background:var(–surface2); }
+.tag-card.selected { border-color:var(–accent); border-width:2px; background:var(–surface2); box-shadow:0 0 0 2px #00c89633; }
 .tag-card.selected .tag-name, .tag-card.selected .tag-datum, .tag-card.selected .tag-count { color:var(–text); }
 .tag-card.heute::before { content:‘HEUTE’; position:absolute; top:8px; right:8px; font-family:‘IBM Plex Mono’,monospace; font-size:9px; font-weight:600; color:var(–accent); background:#00c89622; padding:2px 6px; border-radius:3px; letter-spacing:1px; }
 .tag-name { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
 .tag-datum { font-size:20px; font-weight:600; color:var(–text); margin-bottom:10px; }
-.auftrag-row.fertig { opacity:0.55; border-color:var(–accent); }
+.auftrag-row { border-bottom:1px solid var(–border) !important; } .auftrag-row.fertig { opacity:0.55; border-color:var(–accent); }
 .kapazitaet-bar { height:4px; background:var(–surface2); border-radius:2px; overflow:hidden; margin-bottom:8px; }
 .kapazitaet-fill { height:100%; border-radius:2px; transition:width 0.3s; }
 .kap-ok { background:var(–accent); } .kap-warn { background:var(–warn); } .kap-voll { background:var(–danger); }
@@ -87,7 +87,7 @@
 .auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text3); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(–border); margin-bottom:6px; }
 .auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:11px 14px; background:var(–surface); border:1px solid var(–border); border-radius:8px; margin-bottom:6px; align-items:center; transition:all 0.15s; }
 .auftrag-row:hover { border-color:var(–text3); }
-.auftrag-row.fertig { opacity:0.55; border-color:var(–accent); }
+.auftrag-row { border-bottom:1px solid var(–border) !important; } .auftrag-row.fertig { opacity:0.55; border-color:var(–accent); }
 .auftrag-nr { font-family:‘IBM Plex Mono’,monospace; font-size:12px; font-weight:600; color:var(–text); }
 .auftrag-kunde { font-size:13px; font-weight:500; color:var(–text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .auftrag-notiz { font-size:11px; color:var(–text2); }
@@ -842,7 +842,7 @@ function renderWoche() {
       <div class="tag-datum">${datum.split('-')[2]}.</div>
       <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
       <div class="tag-stats">
-        <div class="tag-count"><strong>${count}</strong>/10</div>
+        <div class="tag-count"><strong style="color:${count>10?'var(--danger)':count>=8?'var(--warn)':'var(--text)'};">${count}</strong>/10</div>
         <div class="ampel ampel-${ampel}"></div>
       </div>`;
     grid.appendChild(card);
@@ -934,11 +934,13 @@ function renderAuftraege() {
         <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px">${a.kunde}</div>
         ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-bottom:4px">⚠ ${Object.values(a.blockierungen)[0]}</div>`:''}
         ${a.notiz?`<div style="font-size:11px;color:var(--warn);margin-bottom:4px">${a.notiz}</div>`:''}
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="display:flex;flex-wrap:wrap;gap:3px">${renderStationDots(a)}</div>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${a.stk||'–'} Stk</span>
             <span class="versand-badge ${vClass}" style="font-size:11px">${vIcon}</span>
+            <button class="btn-edit" onclick="openEdit('${a.id}')" style="padding:6px 10px;font-size:13px">✏</button>
+            <button class="btn-danger" onclick="deleteAuftrag('${a.id}')" style="padding:6px 8px;font-size:13px">✕</button>
           </div>
         </div>`;
       grid.appendChild(card);
