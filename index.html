@@ -1956,6 +1956,8 @@ function updateBearbeitungBadge() {
   const btn = document.getElementById('tab-btn-bearbeitung');
   if(btn) { btn.textContent = count > 0 ? `⚙ In Bearbeitung (${count})` : '⚙ In Bearbeitung'; btn.style.color = count > 0 ? 'var(--accent)' : ''; }
 }
+
+function updateStoerungBadge() {
   const count = auftraege.filter(a => a.blockierungen && Object.keys(a.blockierungen).length > 0 && !a.fertig).length;
   const btn = document.getElementById('tab-btn-stoerung');
   if(btn) { btn.textContent = count > 0 ? `⚠ Störungen (${count})` : '⚠ Störungen'; btn.style.color = count > 0 ? 'var(--danger)' : ''; }
