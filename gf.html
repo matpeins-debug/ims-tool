@@ -61,14 +61,16 @@
 .btn-fertig:disabled { background:var(–surface2); color:var(–text3); cursor:default; transform:none; }
 
 .woche-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:28px; }
-.tag-card { background:var(–surface); border:1px solid var(–border); border-radius:10px; padding:14px; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden; }
+.tag-card { background:var(–surface); border:1px solid var(–border); border-radius:8px; padding:8px; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden; }
 .tag-card:hover { border-color:var(–text3); }
 .tag-card.selected { border-color:var(–accent); border-width:2px; background:var(–surface2); box-shadow:0 0 0 2px #00c89633; }
 .tag-card.selected .tag-name, .tag-card.selected .tag-datum, .tag-card.selected .tag-count { color:var(–text); }
 .tag-card.heute::before { content:‘HEUTE’; position:absolute; top:8px; right:8px; font-family:‘IBM Plex Mono’,monospace; font-size:9px; font-weight:600; color:var(–accent); background:#00c89622; padding:2px 6px; border-radius:3px; letter-spacing:1px; }
 .tag-name { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
-.tag-datum { font-size:20px; font-weight:600; color:var(–text); margin-bottom:10px; }
-.auftrag-row:hover { background:var(–surface2); border-left-color:var(–accent); } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
+.tag-datum { font-size:18px; font-weight:600; color:var(–text); margin-bottom:6px; }
+.auftrag-row:hover { background:var(–surface2); border-left-color:var(–accent); }
+body.light .auftrag-row { border-bottom-color:#b0bace; }
+body.light .auftrag-row:nth-child(even) { background:#f0f3f8; } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
 .kapazitaet-bar { height:4px; background:var(–surface2); border-radius:2px; overflow:hidden; margin-bottom:8px; }
 .kapazitaet-fill { height:100%; border-radius:2px; transition:width 0.3s; }
 .kap-ok { background:var(–accent); } .kap-warn { background:var(–warn); } .kap-voll { background:var(–danger); }
@@ -85,9 +87,11 @@
 .tag-filter-label { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text2); }
 
 .auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text3); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(–border); margin-bottom:8px; background:#b8c4d8; border-radius:0; color:#3a4560; font-weight:600; }
-.auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:14px 16px; background:var(–surface); border:none; border-bottom:1px solid var(–border); border-left:3px solid transparent; border-radius:0; margin-bottom:0; align-items:center; transition:all 0.15s; }
+.auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:14px 16px; background:var(–surface); border:none; border-bottom:1px solid var(–border); border-left:4px solid transparent; border-radius:0; margin-bottom:0; align-items:center; transition:all 0.15s; }
 .auftrag-row:hover { border-color:var(–text3); }
-.auftrag-row:hover { background:var(–surface2); border-left-color:var(–accent); } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
+.auftrag-row:hover { background:var(–surface2); border-left-color:var(–accent); }
+body.light .auftrag-row { border-bottom-color:#b0bace; }
+body.light .auftrag-row:nth-child(even) { background:#f0f3f8; } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
 .auftrag-nr { font-family:‘IBM Plex Mono’,monospace; font-size:12px; font-weight:600; color:var(–text); }
 .auftrag-kunde { font-size:13px; font-weight:500; color:var(–text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .auftrag-notiz { font-size:11px; color:var(–text2); }
@@ -195,7 +199,7 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .mob-item:last-child { border-bottom:none; }
 
 /* WOCHENÜBERSICHT Farbband */
-.woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:12px; padding:16px; margin-bottom:20px; border:1px solid #00c89622; }
+.woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:10px; padding:8px 14px 12px; margin-bottom:14px; border:1px solid #00c89622; }
 
 /* TABLET */
 @media (max-width: 900px) {
@@ -357,21 +361,21 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 
 <div id="tab-planung" class="main">
   <div class="woche-section">
-    <div class="section-header" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
       <div class="section-title">Wochenübersicht</div>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px">
         <button class="btn btn-ghost btn-sm" onclick="wocheOffset--;renderAll()">← Vorige</button>
-        <span id="wocheLabel" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)"></span>
+        <span id="wocheLabel" style="font-size:12px;color:var(--text2)"></span>
         <button class="btn btn-ghost btn-sm" onclick="wocheOffset++;renderAll()">Nächste →</button>
         <button class="btn btn-ghost btn-sm" onclick="wocheOffset=0;renderAll()">Heute</button>
       </div>
     </div>
     <div class="woche-grid" id="wocheGrid"></div>
   </div>
-  <div class="section-header">
-    <div id="tagFilterLabel" class="tag-filter-label"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:16px 0 12px">
+    <div id="tagFilterLabel" style="font-size:15px;font-weight:700;color:var(--text)" class="tag-filter-label"></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <input type="text" id="suchfeld" placeholder="🔍 Kunde oder Auftragsnr." 
+      <input type="text" id="suchfeld" placeholder="🔍 Kunde oder Auftragsnr."
         oninput="renderAuftraege()"
         style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:220px;"
         onfocus="this.style.borderColor='var(--accent)'"
