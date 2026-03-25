@@ -150,26 +150,32 @@ border-bottom:1px solid var(–border);
 }
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .form-full { grid-column:1/-1; }
-.form-group { display:flex; flex-direction:column; gap:4px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
 .form-label { font-family:‘IBM Plex Sans’,sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(–text2); }
 .form-input {
 background:var(–surface2);
 border:1.5px solid var(–border);
 border-radius:6px;
-padding:8px 12px;
-color:var(–text);
+padding:10px 12px;
+color:var(–text) !important;
 font-family:‘IBM Plex Sans’,sans-serif;
 font-size:14px;
 outline:none;
 transition:border-color 0.15s, box-shadow 0.15s;
 width:100%;
 box-sizing:border-box;
+-webkit-text-fill-color:var(–text);
+appearance:none;
+-webkit-appearance:none;
 }
-.form-input:focus { border-color:var(–accent); box-shadow:0 0 0 2px rgba(0,200,150,0.12); }
-body.light .form-input { background:#eef1f7; border-color:#b0bace; }
-body.light .form-input:focus { background:#fff; }
-select.form-input { cursor:pointer; }
-select.form-input option { background:var(–surface2); color:var(–text); }
+.form-input:focus { border-color:var(–accent); box-shadow:0 0 0 2px rgba(0,200,150,0.15); }
+.form-input::placeholder { color:var(–text3); -webkit-text-fill-color:var(–text3); }
+select.form-input { cursor:pointer; background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%238890aa’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+select.form-input option { background:var(–surface); color:var(–text); }
+body.light .form-input { background:#f0f4fa; border-color:#b0bace; color:var(–text) !important; -webkit-text-fill-color:var(–text); }
+body.light .form-input:focus { background:#fff; border-color:var(–accent); }
+body.light .form-input::placeholder { color:#9099b0; -webkit-text-fill-color:#9099b0; }
+body.light select.form-input { background-color:#f0f4fa; background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%23555d78’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”); }
 .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; padding-top:14px; border-top:1px solid var(–border); }
 .modal-actions .btn-primary { padding:9px 24px; font-size:14px; }
 .modal-actions .btn-ghost { padding:9px 16px; font-size:14px; }
@@ -198,10 +204,10 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 
 /* AUTOCOMPLETE */
 .ac-wrapper { position:relative; }
-.ac-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(–surface); border:1px solid var(–accent); border-radius:6px; z-index:200; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.5); }
-.ac-item { padding:9px 12px; cursor:pointer; font-size:13px; color:var(–text); transition:background 0.1s; border-bottom:1px solid var(–border); }
+.ac-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(–surface); border:2px solid var(–accent); border-radius:8px; z-index:200; max-height:200px; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+.ac-item { padding:11px 14px; cursor:pointer; font-size:14px; color:var(–text); font-weight:500; transition:background 0.1s; border-bottom:1px solid var(–border); }
 .ac-item:last-child { border-bottom:none; }
-.ac-item:hover, .ac-item.selected { background:var(–surface2); color:var(–accent); }
+.ac-item:hover, .ac-item.selected { background:var(–surface2); color:var(–accent); font-weight:600; }
 .ac-item mark { background:none; color:var(–accent); font-weight:600; }
 
 .inline-edit { background:var(–surface2); border:1px solid var(–accent); border-radius:5px; padding:4px 8px; color:var(–text); font-family:‘IBM Plex Sans’,sans-serif; font-size:12px; outline:none; }
@@ -355,8 +361,8 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 <!-- DESKTOP TABS -->
 
 <div class="tabs" id="desktopTabs">
-  <div class="tab active" onclick="switchTab('planung')">👁 Übersicht</div>
-  <div class="tab" onclick="switchTab('gf')">📊 Planung</div>
+  <div class="tab active" onclick="switchTab('planung')">👁 Planung</div>
+  <div class="tab" onclick="switchTab('gf')">📊 Optimierung</div>
   <div class="tab" onclick="switchTab('bearbeitung')" id="tab-btn-bearbeitung">⚙ In Bearbeitung</div>
   <div class="tab" onclick="switchTab('stoerung')" id="tab-btn-stoerung">⚠ Störungen</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
@@ -375,12 +381,12 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 <div id="mobileNav" style="display:none;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;">
   <button onclick="toggleMobileMenu()" id="mobileMenuBtn"
     style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-    <span id="mobileMenuLabel">👁 Übersicht</span>
+    <span id="mobileMenuLabel">👁 Planung</span>
     <span>▾</span>
   </button>
   <div id="mobileMenuDropdown" style="display:none;position:absolute;left:12px;right:12px;top:calc(100% - 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;max-height:60vh;overflow-y:auto;">
-    <div onclick="switchTab('planung');closeMobileMenu('👁 Übersicht')" class="mob-item">👁 Übersicht</div>
-    <div onclick="switchTab('gf');closeMobileMenu('📊 Planung')" class="mob-item">📊 Planung</div>
+    <div onclick="switchTab('planung');closeMobileMenu('👁 Planung')" class="mob-item">👁 Planung</div>
+    <div onclick="switchTab('gf');closeMobileMenu('📊 Optimierung')" class="mob-item">📊 Optimierung</div>
     <div onclick="switchTab('bearbeitung');closeMobileMenu('⚙ In Bearbeitung')" class="mob-item" id="mob-btn-bearbeitung">⚙ In Bearbeitung</div>
     <div onclick="switchTab('stoerung');closeMobileMenu('⚠ Störungen')" class="mob-item" id="mob-btn-stoerung">⚠ Störungen</div>
     <div onclick="switchTab('ap-CNC');closeMobileMenu('🔧 CNC')" class="mob-item">🔧 CNC</div>
@@ -579,9 +585,9 @@ const GRUPPEN = {
   '0': { name:'Gruppe 0', aps:['CNC','AP-Armatur','Zusammenbau','Nachbearbeitung'] },
   '1': { name:'Gruppe 1', aps:['CNC','UP-Armatur 1','UP-Armatur 2','Zusammenbau','Nachbearbeitung'] },
   '2': { name:'Gruppe 2', aps:['Heizung'] },
-  '3': { name:'Gruppe 3', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','CNC','Heizung'] },
-  '4': { name:'Gruppe 4', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','CNC','Heizung'] },
-  '5': { name:'Gruppe 5', aps:['CNC','UP-Armatur 1','UP-Armatur 2','CNC','Einbauelement'] },
+  '3': { name:'Gruppe 3', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'] },
+  '4': { name:'Gruppe 4', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'] },
+  '5': { name:'Gruppe 5', aps:['CNC','UP-Armatur 1','UP-Armatur 2','Einbauelement'] },
   '6': { name:'Gruppe 6', aps:['Versand'] },
 };
 const BLOCKIERUNG_GRUENDE = [
@@ -909,7 +915,7 @@ function renderWoche() {
     card.className='kap-card';
     card.style.cssText=`cursor:pointer;flex:1;min-width:80px;
       ${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':''}
-      ${isHeute&&!isSelected?'border-color:var(--accent);border-style:dashed;':''}`;
+      ${isHeute&&!isSelected?'border-color:var(--accent);':''}`;
     card.onclick=()=>{selectedDatum=datum;renderAll();};
     card.innerHTML=`
       <div style="font-size:10px;font-weight:600;color:${isHeute?'var(--accent)':'var(--text2)'};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">
@@ -1257,8 +1263,8 @@ function renderAP(ap) {
         </div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--text);margin-bottom:16px">${stkForAP||'–'} <span style="font-size:16px;color:var(--text2)">Stk.</span></div>
         ${abhBlock}
-        <!-- TIMER -->
-        <div style="background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+        <!-- TIMER: hidden when fertig -->
+        ${!stationFertig ? `<div style="background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Zeit</div>
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div id="timer-display-${timerKey}" style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:${isRunning?'var(--accent)':'var(--text)'}">
@@ -1271,7 +1277,7 @@ function renderAP(ap) {
               }
             </div>
           </div>
-        </div>
+        </div>` : ''}
 
         ${stationFertig
           ? `<div class="hallen-fertig-info">✓ ${ap} fertig</div>
@@ -1549,16 +1555,14 @@ function renderGF() {
     const countColor = count>10?'var(--danger)':count>=8?'var(--warn)':'var(--text)';
     const card = document.createElement('div');
     card.className = 'kap-card';
-    card.style.cssText = `border-color:${isSelected?'var(--accent)':''};cursor:pointer;${isSelected?'background:rgba(0,200,150,0.1);border-width:2px;':''}`;
+    const isHeute = datum === heute;
+    card.style.cssText = `cursor:pointer;flex:1;min-width:80px;${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':isHeute?'border-color:var(--accent);':''}`;
     card.onclick = () => { gfDatumOffset = Math.round((new Date(datum)-new Date(heute))/(1000*60*60*24)); renderGF(); };
     card.innerHTML = `
-      <div class="kap-card-tag">${getWochentag(datum)}${datum===heute?' · HEUTE':''}</div>
-      <div class="kap-card-datum" style="color:${isSelected?'var(--accent)':'var(--text)'}">${datum.split('-')[2]}.</div>
-      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <span style="font-size:12px;font-weight:600;color:${countColor}">${count}<span style="font-weight:400;color:var(--text3)">/10</span></span>
-        <div class="ampel ampel-${ampel}"></div>
-      </div>`;
+      <div style="font-size:10px;font-weight:600;color:${isHeute?'var(--accent)':'var(--text2)'};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">${getWochentag(datum)}${isHeute?' ✦':''}</div>
+      <div style="font-size:18px;font-weight:700;color:${isSelected?'var(--accent)':isHeute?'var(--accent)':'var(--text)'};margin-bottom:4px">${datum.split('-')[2]}.</div>
+      ${pct>0?`<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:${pct}%;background:${ampel==='ok'?'var(--accent)':ampel==='warn'?'var(--warn)':'var(--danger)'};border-radius:2px"></div></div>`:`<div style="height:3px;margin-bottom:4px"></div>`}
+      <div style="font-size:11px;font-weight:600;color:${countColor}">${count}<span style="font-weight:400;color:var(--text3)">/10</span></div>`;
     kapDiv.appendChild(card);
   });
 
@@ -1913,9 +1917,9 @@ function addGruppeRow(gruppeVal='', stkVal='') {
       <option value="0" ${gruppeVal==='0'?'selected':''}>Gruppe 0 – CNC, AP-Armatur, Zusammenbau, Nachbearbeitung</option>
       <option value="1" ${gruppeVal==='1'?'selected':''}>Gruppe 1 – CNC, UP-Armatur 1+2, Zusammenbau, Nachbearbeitung</option>
       <option value="2" ${gruppeVal==='2'?'selected':''}>Gruppe 2 – Heizung</option>
-      <option value="3" ${gruppeVal==='3'?'selected':''}>Gruppe 3 – CNC, AP, UP-1+2, CNC, Heizung</option>
-      <option value="4" ${gruppeVal==='4'?'selected':''}>Gruppe 4 – CNC, AP, UP-1+2, CNC, Heizung</option>
-      <option value="5" ${gruppeVal==='5'?'selected':''}>Gruppe 5 – CNC, UP-1+2, CNC, Einbauelement</option>
+      <option value="3" ${gruppeVal==='3'?'selected':''}>Gruppe 3 – CNC, AP, UP-1+2, Heizung</option>
+      <option value="4" ${gruppeVal==='4'?'selected':''}>Gruppe 4 – CNC, AP, UP-1+2, Heizung</option>
+      <option value="5" ${gruppeVal==='5'?'selected':''}>Gruppe 5 – CNC, UP-1+2, Einbauelement</option>
       <option value="6" ${gruppeVal==='6'?'selected':''}>Gruppe 6 – Versand</option>
     </select>
     <input type="number" class="form-input gruppe-stk" placeholder="Stk." min="1" value="${stkVal}" style="text-align:center;font-size:14px;font-weight:600">
