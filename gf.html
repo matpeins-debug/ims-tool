@@ -913,9 +913,7 @@ function renderWoche() {
     const countColor=count>10?'var(--danger)':count>=8?'var(--warn)':'var(--text)';
     const card=document.createElement('div');
     card.className='kap-card';
-    card.style.cssText=`cursor:pointer;flex:1;min-width:80px;
-      ${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':''}
-      ${isHeute&&!isSelected?'border-color:var(--accent);':''}`;
+    card.style.cssText=`cursor:pointer;flex:1;min-width:0;${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':''}${isHeute&&!isSelected?'border-color:var(--accent);':''}`;
     card.onclick=()=>{selectedDatum=datum;renderAll();};
     card.innerHTML=`
       <div style="font-size:10px;font-weight:600;color:${isHeute?'var(--accent)':'var(--text2)'};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">
@@ -1556,7 +1554,7 @@ function renderGF() {
     const card = document.createElement('div');
     card.className = 'kap-card';
     const isHeute = datum === heute;
-    card.style.cssText = `cursor:pointer;flex:1;min-width:80px;${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':isHeute?'border-color:var(--accent);':''}`;
+    card.style.cssText = `cursor:pointer;flex:1;min-width:0;${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':isHeute?'border-color:var(--accent);':''}`;
     card.onclick = () => { gfDatumOffset = Math.round((new Date(datum)-new Date(heute))/(1000*60*60*24)); renderGF(); };
     card.innerHTML = `
       <div style="font-size:10px;font-weight:600;color:${isHeute?'var(--accent)':'var(--text2)'};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">${getWochentag(datum)}${isHeute?' ✦':''}</div>
