@@ -13,7 +13,7 @@
     --text:#e8eaf0; --text2:#8890aa; --text3:#555d78;
     --s0:#aa88ff; --s1:#0084ff; --s2:#00c896; --s3:#ff9944;
   }
-  body.light {
+  body.light { /* light mode */
     --bg:#dce3ee; --surface:#f5f7fb; --surface2:#e0e6f0; --border:#9aa5be;
     --accent:#00a87a; --accent2:#0066cc; --warn:#e09000; --danger:#d63040;
     --text:#1a1d27; --text2:#555d78; --text3:#9099b0;
@@ -39,10 +39,10 @@
 .sync-dot.loading { background:var(–warn); animation:pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-.tabs { display:flex; gap:4px; padding:12px 24px 0; border-bottom:3px solid var(–accent); background:var(–surface); box-shadow:0 2px 8px rgba(0,0,0,0.15); }
-.tab { padding:8px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(–text2); border-bottom:3px solid transparent; margin-bottom:-3px; transition:all 0.15s; }
+.tabs { display:flex; gap:4px; padding:0 24px; border-bottom:3px solid var(–accent); background:var(–surface); box-shadow:0 2px 8px rgba(0,0,0,0.15); align-items:stretch; }
+.tab { padding:14px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(–text2); border-bottom:3px solid transparent; margin-bottom:-3px; transition:all 0.15s; display:flex; align-items:center; }
 .tab:hover { color:var(–text); }
-.tab.active { color:var(–accent); border-bottom:3px solid var(–accent); font-weight:700; background:rgba(0,200,150,0.1); border-radius:6px 6px 0 0; }
+.tab.active { color:var(–accent); border-bottom:3px solid var(–accent); font-weight:700; background:rgba(0,200,150,0.12); }
 
 .main { padding:24px; background:var(–bg); min-height:calc(100vh - 120px); }
 
@@ -68,7 +68,7 @@
 .tag-card.heute::before { content:‘HEUTE’; position:absolute; top:8px; right:8px; font-family:‘IBM Plex Mono’,monospace; font-size:9px; font-weight:600; color:var(–accent); background:#00c89622; padding:2px 6px; border-radius:3px; letter-spacing:1px; }
 .tag-name { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
 .tag-datum { font-size:20px; font-weight:600; color:var(–text); margin-bottom:10px; }
-.auftrag-row { border-bottom:1px solid var(–border) !important; } .auftrag-row.fertig { opacity:0.55; border-color:var(–accent); }
+.auftrag-row:hover { background:var(–surface2); border-left-color:var(–accent); } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
 .kapazitaet-bar { height:4px; background:var(–surface2); border-radius:2px; overflow:hidden; margin-bottom:8px; }
 .kapazitaet-fill { height:100%; border-radius:2px; transition:width 0.3s; }
 .kap-ok { background:var(–accent); } .kap-warn { background:var(–warn); } .kap-voll { background:var(–danger); }
@@ -84,10 +84,10 @@
 .section-title { font-family:‘IBM Plex Mono’,monospace; font-size:11px; font-weight:600; color:var(–text3); text-transform:uppercase; letter-spacing:1.5px; }
 .tag-filter-label { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text2); }
 
-.auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text3); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(–border); margin-bottom:8px; background:var(–surface2); border-radius:6px; }
-.auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:14px 16px; background:var(–surface); border:1px solid var(–border); border-left:3px solid var(–border); border-radius:8px; margin-bottom:8px; align-items:center; transition:all 0.15s; }
+.auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text3); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(–border); margin-bottom:8px; background:#b8c4d8; border-radius:0; color:#3a4560; font-weight:600; }
+.auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:14px 16px; background:var(–surface); border:none; border-bottom:1px solid var(–border); border-left:3px solid transparent; border-radius:0; margin-bottom:0; align-items:center; transition:all 0.15s; }
 .auftrag-row:hover { border-color:var(–text3); }
-.auftrag-row { border-bottom:1px solid var(–border) !important; } .auftrag-row.fertig { opacity:0.55; border-color:var(–accent); }
+.auftrag-row:hover { background:var(–surface2); border-left-color:var(–accent); } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
 .auftrag-nr { font-family:‘IBM Plex Mono’,monospace; font-size:12px; font-weight:600; color:var(–text); }
 .auftrag-kunde { font-size:13px; font-weight:500; color:var(–text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .auftrag-notiz { font-size:11px; color:var(–text2); }
@@ -380,11 +380,13 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
     </div>
   </div>
   <div class="stats-row" id="statsRow"></div>
-  <div class="auftraege-header">
-    <div>Prio</div><div>Auftrag</div><div>Stück</div><div>Kunde</div>
-    <div>Versanddatum</div><div>S</div><div>Versandart</div><div>Status</div><div>Aktionen</div>
+  <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div class="auftraege-header">
+      <div>Prio</div><div>Auftrag</div><div>Stück</div><div>Kunde</div>
+      <div>Versanddatum</div><div>S</div><div>Versandart</div><div>Status</div><div>Aktionen</div>
+    </div>
+    <div id="auftraegeList"></div>
   </div>
-  <div id="auftraegeList"></div>
 </div>
 
 <div id="tab-versand" class="main hidden">
@@ -417,20 +419,21 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 </div>
 
 <div id="tab-gf" class="main hidden">
-  <div class="section-header">
-    <div class="section-title">GF-Übersicht</div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="gfDatumOffset--;renderGF()">← Zurück</button>
-      <span id="gfDatum" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></span>
-      <button class="btn btn-ghost btn-sm" onclick="gfDatumOffset++;renderGF()">Vor →</button>
-      <button class="btn btn-ghost btn-sm" onclick="gfDatumOffset=0;renderGF()">Heute</button>
-      <button class="btn btn-ghost btn-sm" onclick="downloadCSV()" style="border-color:var(--accent);color:var(--accent)">⬇ CSV Export</button>
+  <div class="woche-section">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div class="section-title">Wochenübersicht</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="gfWocheOffset--;renderGF()">← Vorige</button>
+        <span id="gfWocheLabel" style="font-size:12px;color:var(--text2)"></span>
+        <button class="btn btn-ghost btn-sm" onclick="gfWocheOffset++;renderGF()">Nächste →</button>
+        <button class="btn btn-ghost btn-sm" onclick="gfWocheOffset=0;gfDatumOffset=0;renderGF()">Heute</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadCSV()" style="border-color:var(--accent);color:var(--accent)">⬇ CSV</button>
+      </div>
     </div>
+    <!-- Kapazitätsampeln -->
+    <div id="gfKapazitaet" style="display:flex;gap:8px;flex-wrap:wrap"></div>
   </div>
-  <!-- Kapazitätsampeln -->
-  <div id="gfKapazitaet" style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap"></div>
-  <!-- Aufträge Drag & Drop -->
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px">Heute – Priorität (ziehen zum Verschieben)</div>
+  <div style="font-size:12px;color:var(--text2);margin:16px 0 8px;font-family:'IBM Plex Sans',sans-serif;" id="gfDatumLabel"></div>
   <div id="gfList"></div>
 </div>
 
@@ -611,6 +614,7 @@ let editingId = null;
 let syncInterval = null;
 let wocheOffset = 0;
 let gfDatumOffset = 0;
+let gfWocheOffset = 0;
 let versandOffset = 0;
 
 // ─── UTILS ────────────────────────────────────────────────────────────────
@@ -667,6 +671,13 @@ function getWoche() {
   const heute=new Date(); const day=heute.getDay();
   const diff=day===0?-6:1-day;
   const monday=new Date(heute); monday.setDate(heute.getDate()+diff+(wocheOffset*7));
+  return Array.from({length:5},(_,i)=>{ const d=new Date(monday); d.setDate(monday.getDate()+i); return toDateStr(d); });
+}
+
+function getWocheForDate(baseDate) {
+  const day=baseDate.getDay();
+  const diff=day===0?-6:1-day;
+  const monday=new Date(baseDate); monday.setDate(baseDate.getDate()+diff);
   return Array.from({length:5},(_,i)=>{ const d=new Date(monday); d.setDate(monday.getDate()+i); return toDateStr(d); });
 }
 
@@ -1151,7 +1162,17 @@ function renderAP(ap) {
       });
       const abhStatus = relevantAbh.map(dep => {
         const depKey = dep.replace(/[^a-z0-9]/gi,'_');
-        const fertig = a.stationFertig && a.stationFertig[depKey];
+        let fertig = a.stationFertig && a.stationFertig[depKey];
+        // Parallel APs: if sibling is fertig, this counts as fertig too
+        if(!fertig && AP_PARALLEL[dep]) {
+          const siblings = Object.entries(AP_PARALLEL)
+            .filter(([k,v]) => v === AP_PARALLEL[dep] && k !== dep)
+            .map(([k]) => k);
+          fertig = siblings.some(s => {
+            const sk = s.replace(/[^a-z0-9]/gi,'_');
+            return a.stationFertig && a.stationFertig[sk];
+          });
+        }
         return { name: dep, fertig };
       });
       const abhBlock = abhStatus.length > 0 ? `
@@ -1430,17 +1451,37 @@ function renderOffen() {
 
 // ─── GF ÜBERSICHT ─────────────────────────────────────────────────────────
 function renderGF() {
+  const heute = toDateStr(new Date());
+
+  // Week navigation
+  const wocheBase = new Date();
+  wocheBase.setDate(wocheBase.getDate() + gfWocheOffset * 7);
+  const woche = getWocheForDate(wocheBase);
+
+  // If selected datum not in current week, reset to first day of week
+  if(!woche.includes(toDateStr(new Date(new Date().setDate(new Date().getDate() + gfDatumOffset))))) {
+    gfDatumOffset = Math.round((new Date(woche[0]) - new Date(heute)) / (1000*60*60*24));
+  }
+
   const base = new Date();
   base.setDate(base.getDate() + gfDatumOffset);
   const zieldatum = toDateStr(base);
-  const heute = toDateStr(new Date());
   const isHeute = zieldatum === heute;
 
-  document.getElementById('gfDatum').textContent =
-    `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''}`;
+  // Update week label
+  const wocheLabel = document.getElementById('gfWocheLabel');
+  if(wocheLabel) {
+    if(gfWocheOffset===0) wocheLabel.textContent='Diese Woche';
+    else if(gfWocheOffset===1) wocheLabel.textContent='Nächste Woche';
+    else if(gfWocheOffset===-1) wocheLabel.textContent='Vorige Woche';
+    else wocheLabel.textContent = gfWocheOffset>0?`+${gfWocheOffset} Wochen`:`${gfWocheOffset} Wochen`;
+  }
 
-  // Kapazitätsampeln – ausgewählter Tag wird hervorgehoben
-  const woche = getWoche();
+  // Update datum label
+  const datumLabel = document.getElementById('gfDatumLabel');
+  if(datumLabel) datumLabel.textContent = `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''} · Priorität (ziehen zum Verschieben)`;
+
+  // Kapazitätsampeln
   const kapDiv = document.getElementById('gfKapazitaet');
   kapDiv.innerHTML = '';
   woche.forEach(datum => {
@@ -1450,24 +1491,24 @@ function renderGF() {
     const pct = Math.min(Math.round(count/10*100), 100);
     const ampel = getKapAmpel(einh);
     const isSelected = datum === zieldatum;
+    const countColor = count>10?'var(--danger)':count>=8?'var(--warn)':'var(--text)';
     const card = document.createElement('div');
     card.className = 'kap-card';
-    card.style.cssText = `border-color:${isSelected?'var(--accent)':''}; cursor:pointer;${isSelected?'background:var(--surface2)':''}`;
+    card.style.cssText = `border-color:${isSelected?'var(--accent)':''};cursor:pointer;${isSelected?'background:rgba(0,200,150,0.1);border-width:2px;':''}`;
     card.onclick = () => { gfDatumOffset = Math.round((new Date(datum)-new Date(heute))/(1000*60*60*24)); renderGF(); };
     card.innerHTML = `
       <div class="kap-card-tag">${getWochentag(datum)}${datum===heute?' · HEUTE':''}</div>
       <div class="kap-card-datum" style="color:${isSelected?'var(--accent)':'var(--text)'}">${datum.split('-')[2]}.</div>
-      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${Math.min(count/10*100,100)}%"></div></div>
+      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">${count}/10</span>
+        <span style="font-size:12px;font-weight:600;color:${countColor}">${count}<span style="font-weight:400;color:var(--text3)">/10</span></span>
         <div class="ampel ampel-${ampel}"></div>
       </div>`;
     kapDiv.appendChild(card);
   });
 
-  // Aufträge des gewählten Tages – Drag & Drop
+  // Aufträge des gewählten Tages
   const list = document.getElementById('gfList');
-  document.querySelector('#tab-gf [style*="letter-spacing"]') && (document.querySelector('#tab-gf [style*="letter-spacing"]').textContent = `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)} – Priorität (ziehen zum Verschieben)`);
   const tages = auftraege
     .filter(a=>a.datum===zieldatum)
     .sort((a,b)=>(a.prio||99)-(b.prio||99));
