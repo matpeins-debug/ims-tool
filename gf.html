@@ -93,8 +93,8 @@ body.light .auftrag-row:nth-child(even) { background:#f0f3f8; } .auftrag-row.fer
 body.light .auftrag-row { border-bottom-color:#b0bace; }
 body.light .auftrag-row:nth-child(even) { background:#f0f3f8; } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
 .auftrag-nr { font-family:‘IBM Plex Mono’,monospace; font-size:12px; font-weight:600; color:var(–text); }
-.auftrag-kunde { font-size:13px; font-weight:500; color:var(–text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.auftrag-notiz { font-size:11px; color:var(–text2); }
+.auftrag-kunde { font-size:14px; font-weight:700; color:var(–text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.auftrag-notiz { font-size:11px; color:var(–warn); font-weight:500; }
 
 .s-badge { display:inline-flex; align-items:center; justify-content:center; width:32px; height:20px; border-radius:4px; font-family:‘IBM Plex Mono’,monospace; font-size:11px; font-weight:600; }
 .badge-s0 { background:#aa88ff22; color:var(–s0); border:1px solid #aa88ff44; }
@@ -238,7 +238,7 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .gf-versand { min-width:130px; }
 .gf-status { min-width:90px; text-align:right; }
 
-.kap-card { background:var(–surface); border:1px solid var(–border); border-radius:8px; padding:7px 10px; flex:1; min-width:90px; }
+.kap-card { background:var(–surface); border:1px solid var(–border); border-radius:8px; padding:7px 10px; flex:1; min-width:90px; height:80px; display:flex; flex-direction:column; justify-content:space-between; }
 .kap-card-tag { font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
 .kap-card-datum { font-size:16px; font-weight:600; color:var(–text); margin-bottom:4px; }
 
@@ -252,7 +252,7 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .mob-item:last-child { border-bottom:none; }
 
 /* WOCHENÜBERSICHT Farbband */
-.woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:8px; padding:6px 12px 10px; margin-bottom:12px; border:1px solid #00c89622; }
+.woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:8px; padding:8px 12px 12px; margin-bottom:16px; border:1px solid #00c89622; min-height:120px; box-sizing:border-box; }
 
 /* TABLET */
 @media (max-width: 900px) {
@@ -372,14 +372,14 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 <!-- DESKTOP TABS -->
 
 <div class="tabs" id="desktopTabs">
-  <div class="tab active" onclick="switchTab('planung')">Übersicht</div>
+  <div class="tab active" onclick="switchTab('planung')">👁 Übersicht</div>
   <div class="tab" onclick="switchTab('gf')">📊 Planung</div>
   <div class="tab" onclick="switchTab('bearbeitung')" id="tab-btn-bearbeitung">⚙ In Bearbeitung</div>
   <div class="tab" onclick="switchTab('stoerung')" id="tab-btn-stoerung">⚠ Störungen</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
   <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
-  <div class="tab" onclick="switchTab('ap-UP-Armatur 1')">🔩 UP-Arm. 1</div>
-  <div class="tab" onclick="switchTab('ap-UP-Armatur 2')">🔩 UP-Arm. 2</div>
+  <div class="tab" onclick="switchTab('ap-UP-Armatur 1')">🔩 UP·1</div>
+  <div class="tab" onclick="switchTab('ap-UP-Armatur 2')">🔩 UP·2</div>
   <div class="tab" onclick="switchTab('ap-Zusammenbau')">🏗 Zusammenbau</div>
   <div class="tab" onclick="switchTab('ap-Nachbearbeitung')">🔨 Nachbearbeitung</div>
   <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
@@ -392,18 +392,18 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 <div id="mobileNav" style="display:none;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;">
   <button onclick="toggleMobileMenu()" id="mobileMenuBtn"
     style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-    <span id="mobileMenuLabel">📋 Übersicht</span>
+    <span id="mobileMenuLabel">👁 Übersicht</span>
     <span>▾</span>
   </button>
   <div id="mobileMenuDropdown" style="display:none;position:absolute;left:12px;right:12px;top:calc(100% - 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;max-height:60vh;overflow-y:auto;">
-    <div onclick="switchTab('planung');closeMobileMenu('📋 Übersicht')" class="mob-item">📋 Übersicht</div>
+    <div onclick="switchTab('planung');closeMobileMenu('👁 Übersicht')" class="mob-item">👁 Übersicht</div>
     <div onclick="switchTab('gf');closeMobileMenu('📊 Planung')" class="mob-item">📊 Planung</div>
     <div onclick="switchTab('bearbeitung');closeMobileMenu('⚙ In Bearbeitung')" class="mob-item" id="mob-btn-bearbeitung">⚙ In Bearbeitung</div>
     <div onclick="switchTab('stoerung');closeMobileMenu('⚠ Störungen')" class="mob-item" id="mob-btn-stoerung">⚠ Störungen</div>
     <div onclick="switchTab('ap-CNC');closeMobileMenu('🔧 CNC')" class="mob-item">🔧 CNC</div>
     <div onclick="switchTab('ap-AP-Armatur');closeMobileMenu('🔩 AP-Armatur')" class="mob-item">🔩 AP-Armatur</div>
-    <div onclick="switchTab('ap-UP-Armatur 1');closeMobileMenu('🔩 UP-Arm. 1')" class="mob-item">🔩 UP-Arm. 1</div>
-    <div onclick="switchTab('ap-UP-Armatur 2');closeMobileMenu('🔩 UP-Arm. 2')" class="mob-item">🔩 UP-Arm. 2</div>
+    <div onclick="switchTab('ap-UP-Armatur 1');closeMobileMenu('🔩 UP·1')" class="mob-item">🔩 UP·1</div>
+    <div onclick="switchTab('ap-UP-Armatur 2');closeMobileMenu('🔩 UP·2')" class="mob-item">🔩 UP·2</div>
     <div onclick="switchTab('ap-Zusammenbau');closeMobileMenu('🏗 Zusammenbau')" class="mob-item">🏗 Zusammenbau</div>
     <div onclick="switchTab('ap-Nachbearbeitung');closeMobileMenu('🔨 Nachbearbeitung')" class="mob-item">🔨 Nachbearbeitung</div>
     <div onclick="switchTab('versand');closeMobileMenu('🚚 Versand')" class="mob-item">🚚 Versand</div>
@@ -484,11 +484,14 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
         <span id="gfWocheLabel" style="font-size:12px;color:var(--text2)"></span>
         <button class="btn btn-ghost btn-sm" onclick="gfWocheOffset++;renderGF()">Nächste →</button>
         <button class="btn btn-ghost btn-sm" onclick="gfWocheOffset=0;gfDatumOffset=0;renderGF()">Heute</button>
-        <button class="btn btn-ghost btn-sm" onclick="downloadCSV()" style="border-color:var(--accent);color:var(--accent)">⬇ CSV</button>
-      </div>
-    </div>
-    <!-- Kapazitätsampeln -->
-    <div id="gfKapazitaet" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+
+```
+  </div>
+</div>
+<!-- Kapazitätsampeln -->
+<div id="gfKapazitaet" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+```
+
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:16px 0 12px">
     <div id="gfDatumLabel" style="font-size:16px;font-weight:800;color:var(--text);font-family:'IBM Plex Sans',sans-serif"></div>
