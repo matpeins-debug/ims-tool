@@ -14,7 +14,7 @@
     --s0:#aa88ff; --s1:#0084ff; --s2:#00c896; --s3:#ff9944;
   }
   body.light {
-    --bg:#e8edf4; --surface:#ffffff; --surface2:#dde3ed; --border:#b0b8cc;
+    --bg:#dce3ee; --surface:#f5f7fb; --surface2:#e0e6f0; --border:#9aa5be;
     --accent:#00a87a; --accent2:#0066cc; --warn:#e09000; --danger:#d63040;
     --text:#1a1d27; --text2:#555d78; --text3:#9099b0;
     --s0:#7755cc; --s1:#0066cc; --s2:#00a87a; --s3:#d97700;
@@ -39,10 +39,10 @@
 .sync-dot.loading { background:var(–warn); animation:pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-.tabs { display:flex; gap:2px; padding:12px 24px 0; border-bottom:3px solid var(–border); background:var(–surface); box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+.tabs { display:flex; gap:4px; padding:12px 24px 0; border-bottom:3px solid var(–accent); background:var(–surface); box-shadow:0 2px 8px rgba(0,0,0,0.15); }
 .tab { padding:8px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(–text2); border-bottom:3px solid transparent; margin-bottom:-3px; transition:all 0.15s; }
 .tab:hover { color:var(–text); }
-.tab.active { color:var(–accent); border-bottom:3px solid var(–accent); font-weight:600; }
+.tab.active { color:var(–accent); border-bottom:3px solid var(–accent); font-weight:700; background:rgba(0,200,150,0.1); border-radius:6px 6px 0 0; }
 
 .main { padding:24px; background:var(–bg); min-height:calc(100vh - 120px); }
 
@@ -84,8 +84,8 @@
 .section-title { font-family:‘IBM Plex Mono’,monospace; font-size:11px; font-weight:600; color:var(–text3); text-transform:uppercase; letter-spacing:1.5px; }
 .tag-filter-label { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text2); }
 
-.auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text3); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(–border); margin-bottom:6px; }
-.auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:11px 14px; background:var(–surface); border:1px solid var(–border); border-radius:8px; margin-bottom:6px; align-items:center; transition:all 0.15s; }
+.auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text3); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(–border); margin-bottom:8px; background:var(–surface2); border-radius:6px; }
+.auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:14px 16px; background:var(–surface); border:1px solid var(–border); border-left:3px solid var(–border); border-radius:8px; margin-bottom:8px; align-items:center; transition:all 0.15s; }
 .auftrag-row:hover { border-color:var(–text3); }
 .auftrag-row { border-bottom:1px solid var(–border) !important; } .auftrag-row.fertig { opacity:0.55; border-color:var(–accent); }
 .auftrag-nr { font-family:‘IBM Plex Mono’,monospace; font-size:12px; font-weight:600; color:var(–text); }
@@ -190,6 +190,12 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 ::-webkit-scrollbar-track { background:var(–bg); }
 ::-webkit-scrollbar-thumb { background:var(–border); border-radius:3px; }
 
+/* TABLET */
+@media (max-width: 900px) {
+.tabs { flex-wrap:wrap; padding:6px 10px 0; gap:2px; }
+.tab { padding:6px 12px; font-size:12px; margin-bottom:3px; }
+}
+
 .mob-item { padding:12px 16px; cursor:pointer; font-size:14px; color:var(–text); border-bottom:1px solid var(–border); transition:background 0.1s; }
 .mob-item:hover { background:var(–surface2); }
 .mob-item:last-child { border-bottom:none; }
@@ -197,7 +203,7 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 /* WOCHENÜBERSICHT Farbband */
 .woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:12px; padding:16px; margin-bottom:20px; border:1px solid #00c89622; }
 
-/* TABLET */
+/* TABLET/MOBILE NAV */
 @media (max-width: 900px) {
 #desktopTabs { display:none !important; }
 #mobileNav { display:block !important; }
@@ -214,41 +220,28 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .header-date { display:none; }
 .sync-status { font-size:10px; }
 .theme-toggle { padding:4px 8px; font-size:11px; }
-.btn.btn-primary { padding:6px 12px; font-size:12px; }
 
 ```
-/* Tabs – sehr kompakt, 3-4 pro Zeile */
+/* Tabs – sehr kompakt */
 .tabs { padding:4px 8px 0; gap:2px; border-bottom:none; }
 .tab { padding:5px 10px; font-size:11px; margin-bottom:2px; white-space:nowrap; }
 
 .main { padding:10px; }
-
-/* Wochenübersicht kompakter */
-.woche-grid { grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:10px; }
-.tag-card { padding:6px 4px; }
-.tag-name { font-size:8px; }
-.tag-datum { font-size:14px; margin-bottom:4px; }
-.tag-count { font-size:9px; }
-.kapazitaet-bar { margin-bottom:4px; }
-
-/* Ressourcenplanung ausblenden auf Smartphone */
-.stats-row { display:none; }
-
-.auftraege-header { display:none; }
-.auftrag-row { grid-template-columns:1fr; gap:4px; padding:10px; }
-.auftrag-row > div:nth-child(1) { display:none; }
-
 .hallen-grid { grid-template-columns:1fr; gap:10px; }
 .hallen-card { padding:14px; }
 .btn-fertig { padding:14px; font-size:15px; width:100%; justify-content:center; }
-.modal { padding:16px 12px; width:100%; max-width:100vw; border-radius:12px 12px 0 0; position:fixed; bottom:0; top:auto; max-height:85vh; }
+.section-header { flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.section-title { font-size:13px; }
+.auftraege-header { display:none; }
+.auftrag-row { grid-template-columns:1fr; gap:4px; padding:10px; }
+.stats-row { display:none; }
+.modal { padding:16px 12px; width:100%; max-width:100vw; border-radius:16px 16px 0 0; position:fixed; bottom:0; top:auto; max-height:88vh; background:var(--surface); border:none; border-top:2px solid var(--accent); box-shadow:0 -8px 32px rgba(0,0,0,0.4); }
+.modal-overlay.open { align-items:flex-end; background:rgba(0,0,0,0.6); }
+.form-input { font-size:16px; padding:12px; }
+.form-grid { grid-template-columns:1fr; }
 .modal-overlay.open { align-items:flex-end; }
 .form-grid { grid-template-columns:1fr; }
 .form-full { grid-column:1; }
-
-/* Sektion-Header kompakter */
-.section-header { flex-wrap:wrap; gap:6px; margin-bottom:12px; }
-.section-title { font-size:13px; }
 ```
 
 }
@@ -262,7 +255,7 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 <div id="loginScreen" style="display:flex;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 48px;width:340px;max-width:90vw;text-align:center;">
     <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:6px">IMS</div>
-    <div style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:var(--text2);margin-bottom:32px">GF-Übersicht</div>
+    <div style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:var(--text2);margin-bottom:32px">Produktionsplaner</div>
     <div style="margin-bottom:16px">
       <input type="password" id="loginInput" placeholder="Passwort eingeben"
         onkeydown="if(event.key==='Enter') checkLogin()"
@@ -278,16 +271,17 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 <script>
 function checkLogin() {
   const val = document.getElementById('loginInput').value;
-  if(val === 'imsbox') {
+  if(val === 'imsflow') {
     document.getElementById('loginScreen').style.display = 'none';
-    localStorage.setItem('ims_auth_gf', 'imsbox');
+    localStorage.setItem('ims_auth', 'imsflow');
   } else {
     document.getElementById('loginError').style.display = 'block';
     document.getElementById('loginInput').value = '';
     document.getElementById('loginInput').focus();
   }
 }
-if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
+// Auto-login if already authenticated
+if(localStorage.getItem('ims_auth') === 'imsflow') {
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginScreen').style.display = 'none';
   });
@@ -296,7 +290,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 
 <div class="header">
   <div class="header-left">
-    <div class="logo">IMS <span>GF-Cockpit</span></div>
+    <div class="logo">IMS <span>Mitarbeiter</span></div>
     <div class="header-date" id="headerDate"></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
@@ -305,17 +299,12 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
       <div class="sync-dot" id="syncDot"></div>
       <span id="syncLabel">Verbinde...</span>
     </div>
-    <button class="btn btn-primary" onclick="openModal()">+ Auftrag erfassen</button>
+    <button class="btn btn-primary" onclick="openModal()" style="display:none">+ Auftrag erfassen</button>
   </div>
 </div>
 
-<!-- DESKTOP TABS -->
-
 <div class="tabs" id="desktopTabs">
-  <div class="tab active" onclick="switchTab('planung')">Planung & Übersicht</div>
-  <div class="tab" onclick="switchTab('gf')">📊 GF-Übersicht</div>
-  <div class="tab" onclick="switchTab('bearbeitung')" id="tab-btn-bearbeitung">⚙ In Bearbeitung</div>
-  <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
+  <div class="tab active" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('stoerung')" id="tab-btn-stoerung">⚠ Störungen</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
   <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
@@ -327,18 +316,13 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
   <div class="tab" onclick="switchTab('ap-Einbauelement')">📦 Einbauelement</div>
 </div>
 
-<!-- MOBILE DROPDOWN -->
-
 <div id="mobileNav" style="display:none;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;">
   <button onclick="toggleMobileMenu()" id="mobileMenuBtn"
     style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-    <span id="mobileMenuLabel">📋 Planung & Übersicht</span>
+    <span id="mobileMenuLabel">🚚 Versand</span>
     <span>▾</span>
   </button>
   <div id="mobileMenuDropdown" style="display:none;position:absolute;left:12px;right:12px;top:calc(100% - 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;max-height:60vh;overflow-y:auto;">
-    <div onclick="switchTab('planung');closeMobileMenu('📋 Planung & Übersicht')" class="mob-item">📋 Planung & Übersicht</div>
-    <div onclick="switchTab('gf');closeMobileMenu('📊 GF-Übersicht')" class="mob-item">📊 GF-Übersicht</div>
-    <div onclick="switchTab('bearbeitung');closeMobileMenu('⚙ In Bearbeitung')" class="mob-item" id="mob-btn-bearbeitung">⚙ In Bearbeitung</div>
     <div onclick="switchTab('versand');closeMobileMenu('🚚 Versand')" class="mob-item">🚚 Versand</div>
     <div onclick="switchTab('stoerung');closeMobileMenu('⚠ Störungen')" class="mob-item" id="mob-btn-stoerung">⚠ Störungen</div>
     <div onclick="switchTab('ap-CNC');closeMobileMenu('🔧 CNC')" class="mob-item">🔧 CNC</div>
@@ -353,18 +337,16 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 </div>
 
 <div id="tab-planung" class="main">
-  <div class="woche-section">
-    <div class="section-header" style="margin-bottom:12px">
-      <div class="section-title">Wochenübersicht</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <button class="btn btn-ghost btn-sm" onclick="wocheOffset--;renderAll()">← Vorige</button>
-        <span id="wocheLabel" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)"></span>
-        <button class="btn btn-ghost btn-sm" onclick="wocheOffset++;renderAll()">Nächste →</button>
-        <button class="btn btn-ghost btn-sm" onclick="wocheOffset=0;renderAll()">Heute</button>
-      </div>
+  <div class="section-header">
+    <div class="section-title">Wochenübersicht</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset--;renderAll()">← Vorige</button>
+      <span id="wocheLabel" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)"></span>
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset++;renderAll()">Nächste →</button>
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset=0;renderAll()">Heute</button>
     </div>
-    <div class="woche-grid" id="wocheGrid"></div>
   </div>
+  <div class="woche-grid" id="wocheGrid"></div>
   <div class="section-header">
     <div id="tagFilterLabel" class="tag-filter-label"></div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -457,6 +439,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
     <div class="modal-title" id="modalTitle">Neuen Auftrag erfassen</div>
     <div class="form-grid">
       <div class="form-group">
@@ -791,7 +774,6 @@ function closeMobileMenu(label) {
   document.getElementById('mobileMenuDropdown').style.display = 'none';
   document.getElementById('mobileMenuLabel').textContent = label;
 }
-// Close dropdown when clicking outside
 document.addEventListener('click', e => {
   const nav = document.getElementById('mobileNav');
   if(nav && !nav.contains(e.target)) {
@@ -811,10 +793,7 @@ function switchTab(tab) {
     document.getElementById('tab-'+tab) && document.getElementById('tab-'+tab).classList.remove('hidden');
   }
   if(tab==='versand') renderHalle();
-  if(tab==='gf') renderGF();
-  if(tab==='offen') renderOffen();
   if(tab==='stoerung') renderStoerung();
-  if(tab==='bearbeitung') renderBearbeitung();
 }
 
 // ─── WOCHE ────────────────────────────────────────────────────────────────
@@ -908,48 +887,6 @@ function renderAuftraege() {
   });
 
   list.innerHTML='';
-  const isMobile = window.innerWidth <= 600;
-  if(isMobile) {
-    // Mobile: Kachelansicht
-    const grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:1fr;gap:8px;';
-    filtered.forEach(a => {
-      const vClass=VERSAND_CLASS[a.versandart]||'';
-      const vIcon=VERSAND_ICONS[a.versandart]||'';
-      const cardClass = getCardClass(a, undefined, false);
-      const card = document.createElement('div');
-      card.className = `hallen-card${cardClass?' '+cardClass:''}`;
-      card.style.padding = '12px';
-      card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text)">${a.nr}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span class="s-badge badge-${a.sklasse.toLowerCase()}">${a.sklasse}</span>
-            ${a.fertig?`<span class="status-badge status-fertig">✓</span>`:`<span class="status-badge status-offen">○</span>`}
-          </div>
-        </div>
-        <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px">${a.kunde}</div>
-        ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-bottom:4px">⚠ ${Object.values(a.blockierungen)[0]}</div>`:''}
-        ${a.notiz?`<div style="font-size:11px;color:var(--warn);margin-bottom:4px">${a.notiz}</div>`:''}
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-          <div style="display:flex;flex-wrap:wrap;gap:3px">${renderStationDots(a)}</div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${a.stk||'–'} Stk</span>
-            <span class="versand-badge ${vClass}" style="font-size:11px">${vIcon}</span>
-            <button class="btn-edit" onclick="openEdit('${a.id}')" style="padding:6px 10px;font-size:13px">✏</button>
-            <button class="btn-danger" onclick="deleteAuftrag('${a.id}')" style="padding:6px 8px;font-size:13px">✕</button>
-          </div>
-        </div>`;
-      grid.appendChild(card);
-    });
-    list.appendChild(grid);
-    return;
-  }
-
-  // Desktop: Tabellenzeilen wie gehabt
   filtered.forEach((a,i)=>{
     const vClass=VERSAND_CLASS[a.versandart]||'';
     const vIcon=VERSAND_ICONS[a.versandart]||'';
@@ -2147,6 +2084,7 @@ function acKey(e,field){
 // ─── START ────────────────────────────────────────────────────────────────
 initDate();
 initTheme();
+switchTab('versand');
 initBin().then(() => {
   loadFromStorage();
   startPolling();
