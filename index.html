@@ -276,6 +276,7 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
 <div class="tabs">
   <div class="tab active" onclick="switchTab('planung')">Planung & Übersicht</div>
   <div class="tab" onclick="switchTab('gf')">📊 GF-Übersicht</div>
+  <div class="tab" onclick="switchTab('bearbeitung')" id="tab-btn-bearbeitung">⚙ In Bearbeitung</div>
   <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('stoerung')" id="tab-btn-stoerung">⚠ Störungen</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
@@ -329,6 +330,14 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
     </div>
   </div>
   <div class="hallen-grid" id="hallenGrid"></div>
+</div>
+
+<div id="tab-bearbeitung" class="main hidden">
+  <div class="section-header">
+    <div class="section-title">⚙ In Bearbeitung</div>
+    <div id="bearbeitungCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent)"></div>
+  </div>
+  <div class="hallen-grid" id="bearbeitungGrid"></div>
 </div>
 
 <div id="tab-stoerung" class="main hidden">
@@ -548,13 +557,28 @@ function formatDateTime(iso) { if(!iso)return'–'; const d=new Date(iso); retur
 
 function downloadCSV() {
   const fertig = auftraege.filter(a=>a.fertig);
-  const rows = [['Auftragsnummer','Kunde','Versanddatum','Versandart','Stück','S-Klasse','Erste Zeit','Versand Fertig','Gesamtzeit (Min)','Notiz']];
+  const rows = [['Auftragsnummer','Kunde','Versanddatum','Versandart','Stück','S-Klasse','Erste Einstempelung','Letzte Ausstempelung Nachbearbeitung','Versand Fertig','Gesamtzeit (Min)','Durchlaufzeit (Min)','Notiz']];
   fertig.forEach(a => {
-    const allStarts = a.timers ? Object.values(a.timers).filter(t=>t.start||t.totalMs>0).map(t=>t.start).filter(Boolean) : [];
-    const ersteZeit = allStarts.length>0 ? formatDateTime(allStarts.sort()[0]) : '';
+    // Erste Einstempelung – frühester Start aller Stationen
+    const allStarts = a.timers
+      ? Object.values(a.timers).map(t=>t.start).filter(Boolean).sort()
+      : [];
+    const ersteEinstempelung = allStarts.length>0 ? formatDateTime(allStarts[0]) : '';
+
+    // Letzte Ausstempelung Nachbearbeitung
+    const nachbKey = Object.keys(a.timers||{}).find(k => k.includes('Nachbearbeitung'));
+    const nachbTimer = nachbKey ? a.timers[nachbKey] : null;
+    const letzteNachb = nachbTimer && nachbTimer.end ? formatDateTime(nachbTimer.end) : '';
+
+    // Durchlaufzeit: erste Einstempelung bis letzte Nachbearbeitung
+    let durchlaufMin = '';
+    if(allStarts.length>0 && nachbTimer && nachbTimer.end) {
+      durchlaufMin = Math.round((new Date(nachbTimer.end) - new Date(allStarts[0])) / 60000);
+    }
+
     const fertigZeit = a.fertigAm ? formatDateTime(a.fertigAm) : '';
     const totalMin = getTotalAuftragMin(a);
-    rows.push([a.nr, a.kunde, formatDatum(a.datum), a.versandart||'', a.stk||'', a.sklasse, ersteZeit, fertigZeit, totalMin, a.notiz||'']);
+    rows.push([a.nr, a.kunde, formatDatum(a.datum), a.versandart||'', a.stk||'', a.sklasse, ersteEinstempelung, letzteNachb, fertigZeit, totalMin, durchlaufMin, a.notiz||'']);
   });
   const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
@@ -620,6 +644,8 @@ async function loadFromStorage() {
     if (!document.getElementById('tab-versand').classList.contains('hidden')) renderHalle();
     if (!document.getElementById('tab-gf').classList.contains('hidden')) renderGF();
     if (!document.getElementById('tab-offen').classList.contains('hidden')) renderOffen();
+    if (!document.getElementById('tab-bearbeitung').classList.contains('hidden')) renderBearbeitung();
+    if (!document.getElementById('tab-stoerung').classList.contains('hidden')) renderStoerung();
     if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').textContent);
   } catch(e) {
     console.error('Storage error:', e);
@@ -692,7 +718,7 @@ function initDate() {
 
 // ─── TABS ─────────────────────────────────────────────────────────────────
 function switchTab(tab) {
-  const allTabs = ['planung','versand','stoerung','gf','offen','ap'];
+  const allTabs = ['planung','versand','bearbeitung','stoerung','gf','offen','ap'];
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick')===`switchTab('${tab}')`));
   allTabs.forEach(t => document.getElementById('tab-'+t) && document.getElementById('tab-'+t).classList.add('hidden'));
   if(tab.startsWith('ap-')) {
@@ -705,6 +731,7 @@ function switchTab(tab) {
   if(tab==='gf') renderGF();
   if(tab==='offen') renderOffen();
   if(tab==='stoerung') renderStoerung();
+  if(tab==='bearbeitung') renderBearbeitung();
 }
 
 // ─── WOCHE ────────────────────────────────────────────────────────────────
@@ -1860,13 +1887,81 @@ function renderStoerung() {
   updateStoerungBadge();
 }
 
-function updateStoerungBadge() {
+function renderBearbeitung() {
+  const grid = document.getElementById('bearbeitungGrid');
+  const countEl = document.getElementById('bearbeitungCount');
+
+  // Find all auftraege with at least one running timer
+  const aktiv = auftraege.filter(a => {
+    if(!a.timers) return false;
+    return Object.values(a.timers).some(t => t.start && !t.end);
+  });
+
+  countEl.textContent = aktiv.length > 0 ? `${aktiv.length} Auftrag${aktiv.length>1?'e':''} aktiv` : 'Keine aktiven Aufträge';
+
+  if(aktiv.length === 0) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">⚙</div><div class="empty-text">Aktuell keine Aufträge in Bearbeitung</div></div>`;
+    updateBearbeitungBadge(); return;
+  }
+
+  grid.innerHTML = '';
+  aktiv.sort((a,b) => (a.prio||99)-(b.prio||99)).forEach(a => {
+    const vClass = VERSAND_CLASS[a.versandart]||'';
+    const vIcon = VERSAND_ICONS[a.versandart]||'';
+
+    // Find all running timers for this auftrag
+    const laufend = Object.entries(a.timers||{})
+      .filter(([k,t]) => t.start && !t.end)
+      .map(([k,t]) => {
+        // Convert timerKey back to AP name
+        const apName = k.replace(`${a.id}_`,'').replace(/_/g,' ').replace(/(\d)/g,' $1').trim();
+        return { key: k, timerData: t, apName };
+      });
+
+    const card = document.createElement('div');
+    card.className = 'hallen-card card-aktiv';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
+        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
+      </div>
+      <div class="hallen-kunde">${a.kunde}</div>
+      <div style="margin:6px 0 10px"><span class="versand-badge ${vClass}">${vIcon} ${a.versandart||''}</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:12px">${formatDatum(a.datum)}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${laufend.map(({key, timerData, apName}) => `
+          <div style="background:var(--surface2);border:1px solid #00c89644;border-radius:8px;padding:10px 12px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${apName}</div>
+            <div id="bearbeitung-timer-${key}" style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--accent)">00:00:00</div>
+          </div>`).join('')}
+      </div>`;
+    grid.appendChild(card);
+
+    // Start live tickers
+    laufend.forEach(({key, timerData}) => {
+      if(liveTimers['b_'+key]) clearInterval(liveTimers['b_'+key]);
+      liveTimers['b_'+key] = setInterval(() => {
+        const el = document.getElementById(`bearbeitung-timer-${key}`);
+        if(!el) { clearInterval(liveTimers['b_'+key]); return; }
+        el.textContent = formatElapsed(calcTotalMs(timerData));
+      }, 1000);
+    });
+  });
+  updateBearbeitungBadge();
+}
+
+function updateBearbeitungBadge() {
+  const count = auftraege.filter(a => a.timers && Object.values(a.timers).some(t => t.start && !t.end)).length;
+  const btn = document.getElementById('tab-btn-bearbeitung');
+  if(btn) { btn.textContent = count > 0 ? `⚙ In Bearbeitung (${count})` : '⚙ In Bearbeitung'; btn.style.color = count > 0 ? 'var(--accent)' : ''; }
+}
   const count = auftraege.filter(a => a.blockierungen && Object.keys(a.blockierungen).length > 0 && !a.fertig).length;
   const btn = document.getElementById('tab-btn-stoerung');
   if(btn) { btn.textContent = count > 0 ? `⚠ Störungen (${count})` : '⚠ Störungen'; btn.style.color = count > 0 ? 'var(--danger)' : ''; }
 }
 
-function renderAll() { renderWoche(); renderAuftraege(); updateStoerungBadge(); }
+function renderAll() { renderWoche(); renderAuftraege(); updateStoerungBadge(); updateBearbeitungBadge(); }
 
 // ─── AUTOCOMPLETE ─────────────────────────────────────────────────────────
 function getNrSuggestions(val) {
