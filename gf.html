@@ -130,40 +130,33 @@ background:var(–surface);
 border:1px solid var(–border);
 border-top:3px solid var(–accent);
 border-radius:14px;
-padding:28px 32px;
-width:580px;
+padding:20px 24px;
+width:540px;
 max-width:96vw;
-max-height:92vh;
+max-height:90vh;
 overflow-y:auto;
 overflow-x:hidden;
 box-sizing:border-box;
-box-shadow:0 20px 60px rgba(0,0,0,0.5);
+box-shadow:0 20px 60px rgba(0,0,0,0.4);
 }
 .modal-title {
 font-family:‘IBM Plex Sans’,sans-serif;
-font-size:18px;
+font-size:16px;
 font-weight:700;
 color:var(–text);
-margin-bottom:24px;
-padding-bottom:16px;
-border-bottom:2px solid var(–border);
+margin-bottom:16px;
+padding-bottom:12px;
+border-bottom:1px solid var(–border);
 }
-.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .form-full { grid-column:1/-1; }
-.form-group { display:flex; flex-direction:column; gap:6px; }
-.form-label {
-font-family:‘IBM Plex Sans’,sans-serif;
-font-size:11px;
-font-weight:600;
-text-transform:uppercase;
-letter-spacing:0.8px;
-color:var(–text2);
-}
+.form-group { display:flex; flex-direction:column; gap:4px; }
+.form-label { font-family:‘IBM Plex Sans’,sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(–text2); }
 .form-input {
 background:var(–surface2);
 border:1.5px solid var(–border);
-border-radius:8px;
-padding:11px 14px;
+border-radius:6px;
+padding:8px 12px;
 color:var(–text);
 font-family:‘IBM Plex Sans’,sans-serif;
 font-size:14px;
@@ -172,24 +165,14 @@ transition:border-color 0.15s, box-shadow 0.15s;
 width:100%;
 box-sizing:border-box;
 }
-.form-input:focus {
-border-color:var(–accent);
-box-shadow:0 0 0 3px rgba(0,200,150,0.15);
-}
-body.light .form-input { background:#f0f3f8; border-color:#b0bace; }
+.form-input:focus { border-color:var(–accent); box-shadow:0 0 0 2px rgba(0,200,150,0.12); }
+body.light .form-input { background:#eef1f7; border-color:#b0bace; }
 body.light .form-input:focus { background:#fff; }
 select.form-input { cursor:pointer; }
 select.form-input option { background:var(–surface2); color:var(–text); }
-.modal-actions {
-display:flex;
-gap:12px;
-justify-content:flex-end;
-margin-top:24px;
-padding-top:20px;
-border-top:1px solid var(–border);
-}
-.modal-actions .btn-primary { padding:10px 28px; font-size:15px; }
-.modal-actions .btn-ghost { padding:10px 20px; font-size:15px; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; padding-top:14px; border-top:1px solid var(–border); }
+.modal-actions .btn-primary { padding:9px 24px; font-size:14px; }
+.modal-actions .btn-ghost { padding:9px 16px; font-size:14px; }
 .ap-section-title { font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
 .stk-row { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; }
 .stk-label { font-size:12px; color:var(–text2); }
@@ -920,19 +903,20 @@ function renderWoche() {
     const pct=Math.min(Math.round(count/10*100),100);
     const ampel=getKapAmpel(einh);
     const isSelected=datum===selectedDatum;
+    const isHeute=datum===heute;
     const countColor=count>10?'var(--danger)':count>=8?'var(--warn)':'var(--text)';
     const card=document.createElement('div');
     card.className='kap-card';
-    card.style.cssText=`cursor:pointer;flex:1;min-width:80px;${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':''}`;
+    card.style.cssText=`cursor:pointer;flex:1;min-width:80px;
+      ${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':''}
+      ${isHeute&&!isSelected?'border-color:var(--accent);border-style:dashed;':''}`;
     card.onclick=()=>{selectedDatum=datum;renderAll();};
     card.innerHTML=`
-      <div class="kap-card-tag">${getWochentag(datum)}${datum===heute?' · HEUTE':''}</div>
-      <div class="kap-card-datum" style="color:${isSelected?'var(--accent)':'var(--text)'}">${datum.split('-')[2]}.</div>
-      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <span style="font-size:12px;font-weight:600;color:${countColor}">${count}<span style="font-weight:400;color:var(--text3)">/10</span></span>
-        <div class="ampel ampel-${ampel}"></div>
-      </div>`;
+      <div style="font-size:10px;font-weight:600;color:${isHeute?'var(--accent)':'var(--text2)'};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">
+        ${getWochentag(datum)}${isHeute?' ✦':''}</div>
+      <div style="font-size:18px;font-weight:700;color:${isSelected?'var(--accent)':isHeute?'var(--accent)':'var(--text)'};margin-bottom:4px">${datum.split('-')[2]}.</div>
+      ${pct>0?`<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:${pct}%;background:var(--kap-${ampel},${ampel==='ok'?'var(--accent)':ampel==='warn'?'var(--warn)':'var(--danger)'});border-radius:2px"></div></div>`:`<div style="height:3px;margin-bottom:4px"></div>`}
+      <div style="font-size:11px;font-weight:600;color:${countColor}">${count}<span style="font-weight:400;color:var(--text3)">/10</span></div>`;
     grid.appendChild(card);
   });
 }
@@ -1274,7 +1258,7 @@ function renderAP(ap) {
         <div style="font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--text);margin-bottom:16px">${stkForAP||'–'} <span style="font-size:16px;color:var(--text2)">Stk.</span></div>
         ${abhBlock}
         <!-- TIMER -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Zeit</div>
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div id="timer-display-${timerKey}" style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:${isRunning?'var(--accent)':'var(--text)'}">
@@ -1283,7 +1267,7 @@ function renderAP(ap) {
             <div style="display:flex;gap:6px">
               ${isRunning
                 ? `<button class="btn-fertig" style="padding:10px 16px;font-size:14px;background:var(--danger)" onclick="timerStop('${a.id}','${apKey}','${ap}')">⏹ Ende</button>`
-                : `<button class="btn-fertig" style="padding:10px 16px;font-size:14px" onclick="timerStart('${a.id}','${apKey}','${ap}')">▶ Beginn</button>`
+                : `<button class="btn-fertig" style="padding:14px 20px;font-size:16px;font-weight:700;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(0,200,150,0.35)" onclick="timerStart('${a.id}','${apKey}','${ap}')">▶ Beginn</button>`
               }
             </div>
           </div>
