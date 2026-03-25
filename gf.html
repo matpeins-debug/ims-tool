@@ -370,7 +370,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
         <button class="btn btn-ghost btn-sm" onclick="wocheOffset=0;renderAll()">Heute</button>
       </div>
     </div>
-    <div class="woche-grid" id="wocheGrid"></div>
+    <div id="wocheGrid" style="display:flex;gap:8px;flex-wrap:wrap"></div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:16px 0 12px">
     <div id="tagFilterLabel" style="font-size:15px;font-weight:700;color:var(--text)" class="tag-filter-label"></div>
@@ -849,19 +849,21 @@ function renderWoche() {
   }
   woche.forEach(datum=>{
     const count=auftraege.filter(a=>a.datum===datum).length;
-    const fertig=auftraege.filter(a=>a.datum===datum&&a.fertig).length;
     const einh=getKapazitaet(datum);
-    const pct=Math.min(count/10*100,100);
+    const pct=Math.min(Math.round(count/10*100),100);
     const ampel=getKapAmpel(einh);
+    const isSelected=datum===selectedDatum;
+    const countColor=count>10?'var(--danger)':count>=8?'var(--warn)':'var(--text)';
     const card=document.createElement('div');
-    card.className=`tag-card${datum===heute?' heute':''}${datum===selectedDatum?' selected':''}`;
+    card.className='kap-card';
+    card.style.cssText=`cursor:pointer;flex:1;min-width:80px;${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':''}`;
     card.onclick=()=>{selectedDatum=datum;renderAll();};
     card.innerHTML=`
-      <div class="tag-name">${getWochentag(datum)}</div>
-      <div class="tag-datum">${datum.split('-')[2]}.</div>
+      <div class="kap-card-tag">${getWochentag(datum)}${datum===heute?' · HEUTE':''}</div>
+      <div class="kap-card-datum" style="color:${isSelected?'var(--accent)':'var(--text)'}">${datum.split('-')[2]}.</div>
       <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
-      <div class="tag-stats">
-        <div class="tag-count"><strong style="color:${count>10?'var(--danger)':count>=8?'var(--warn)':'var(--text)'};">${count}</strong>/10</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-size:12px;font-weight:600;color:${countColor}">${count}<span style="font-weight:400;color:var(--text3)">/10</span></span>
         <div class="ampel ampel-${ampel}"></div>
       </div>`;
     grid.appendChild(card);
