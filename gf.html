@@ -71,7 +71,7 @@
 .auftrag-row:hover { background:var(–surface2); border-left-color:var(–accent); }
 body.light .auftrag-row { border-bottom-color:#b0bace; }
 body.light .auftrag-row:nth-child(even) { background:#f0f3f8; } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
-.kapazitaet-bar { height:4px; background:var(–surface2); border-radius:2px; overflow:hidden; margin-bottom:8px; }
+.kapazitaet-bar { height:3px; background:var(–surface2); border-radius:2px; overflow:hidden; margin-bottom:4px; }
 .kapazitaet-fill { height:100%; border-radius:2px; transition:width 0.3s; }
 .kap-ok { background:var(–accent); } .kap-warn { background:var(–warn); } .kap-voll { background:var(–danger); }
 .tag-stats { display:flex; justify-content:space-between; align-items:center; }
@@ -185,9 +185,9 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .gf-versand { min-width:130px; }
 .gf-status { min-width:90px; text-align:right; }
 
-.kap-card { background:var(–surface); border:1px solid var(–border); border-radius:10px; padding:10px 12px; flex:1; min-width:100px; }
-.kap-card-tag { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
-.kap-card-datum { font-size:16px; font-weight:600; color:var(–text); margin-bottom:8px; }
+.kap-card { background:var(–surface); border:1px solid var(–border); border-radius:8px; padding:7px 10px; flex:1; min-width:90px; }
+.kap-card-tag { font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
+.kap-card-datum { font-size:16px; font-weight:600; color:var(–text); margin-bottom:4px; }
 
 .hidden { display:none; }
 ::-webkit-scrollbar { width:6px; }
@@ -199,7 +199,7 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .mob-item:last-child { border-bottom:none; }
 
 /* WOCHENÜBERSICHT Farbband */
-.woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:10px; padding:8px 14px 12px; margin-bottom:14px; border:1px solid #00c89622; }
+.woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:8px; padding:6px 12px 10px; margin-bottom:12px; border:1px solid #00c89622; }
 
 /* TABLET */
 @media (max-width: 900px) {
@@ -361,7 +361,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 
 <div id="tab-planung" class="main">
   <div class="woche-section">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
       <div class="section-title">Wochenübersicht</div>
       <div style="display:flex;align-items:center;gap:8px">
         <button class="btn btn-ghost btn-sm" onclick="wocheOffset--;renderAll()">← Vorige</button>
@@ -898,7 +898,8 @@ function renderAuftraege() {
     statsRow.innerHTML = '';
   } else {
     filtered = auftraege.filter(a=>a.datum===selectedDatum);
-    label.textContent = `Aufträge für ${getWochentag(selectedDatum)}, ${formatDatum(selectedDatum)}`;
+    const isHeuteLabel = selectedDatum === toDateStr(new Date());
+    label.innerHTML = `Aufträge für ${getWochentag(selectedDatum)}, ${formatDatum(selectedDatum)}${isHeuteLabel ? ' <span style="background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle">HEUTE</span>' : ''}`;
   }
 
   if(!suche) {
@@ -1193,7 +1194,7 @@ function renderAP(ap) {
         return { name: dep, fertig };
       });
       const abhBlock = abhStatus.length > 0 ? `
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Vorgänger</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             ${abhStatus.map(s=>`
@@ -1220,7 +1221,7 @@ function renderAP(ap) {
         <div style="font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--text);margin-bottom:16px">${stkForAP||'–'} <span style="font-size:16px;color:var(--text2)">Stk.</span></div>
         ${abhBlock}
         <!-- TIMER -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Zeit</div>
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div id="timer-display-${timerKey}" style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:${isRunning?'var(--accent)':'var(--text)'}">
@@ -1496,7 +1497,7 @@ function renderGF() {
 
   // Update datum label
   const datumLabel = document.getElementById('gfDatumLabel');
-  if(datumLabel) datumLabel.textContent = `Aufträge für ${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''}`;
+  if(datumLabel) datumLabel.innerHTML = `Aufträge für ${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' <span style="background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle">HEUTE</span>':''}`;
 
   // Kapazitätsampeln
   const kapDiv = document.getElementById('gfKapazitaet');
@@ -1814,7 +1815,7 @@ function renderHalle() {
       </div>
       ${a.stk?`<div style="font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--text);margin-bottom:16px">${a.stk} <span style="font-size:16px;color:var(--text2)">Stk.</span></div>`:''}
       <!-- VERSAND TIMER -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Versandzeit</div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div id="timer-display-${versandKey}" style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:${versandRunning?'var(--accent)':versandMin>0?'var(--text)':'var(--text3)'}">
