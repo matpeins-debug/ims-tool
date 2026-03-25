@@ -190,6 +190,10 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 ::-webkit-scrollbar-track { background:var(–bg); }
 ::-webkit-scrollbar-thumb { background:var(–border); border-radius:3px; }
 
+.mob-item { padding:12px 16px; cursor:pointer; font-size:14px; color:var(–text); border-bottom:1px solid var(–border); transition:background 0.1s; }
+.mob-item:hover { background:var(–surface2); }
+.mob-item:last-child { border-bottom:none; }
+
 /* WOCHENÜBERSICHT Farbband */
 .woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:12px; padding:16px; margin-bottom:20px; border:1px solid #00c89622; }
 
@@ -328,27 +332,23 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 <div id="mobileNav" style="display:none;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;">
   <button onclick="toggleMobileMenu()" id="mobileMenuBtn"
     style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-    <span id="mobileMenuLabel">Planung & Übersicht</span>
+    <span id="mobileMenuLabel">📋 Planung & Übersicht</span>
     <span>▾</span>
   </button>
-  <div id="mobileMenuDropdown" style="display:none;position:absolute;left:12px;right:12px;top:calc(100% - 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;">
-    ${[
-      ['planung','📋 Planung & Übersicht'],
-      ['gf','📊 GF-Übersicht'],
-      ['bearbeitung','⚙ In Bearbeitung'],
-      ['versand','🚚 Versand'],
-      ['stoerung','⚠ Störungen'],
-      ['ap-CNC','🔧 CNC'],
-      ['ap-AP-Armatur','🔩 AP-Armatur'],
-      ['ap-UP-Armatur 1','🔩 UP-Armatur 1'],
-      ['ap-UP-Armatur 2','🔩 UP-Armatur 2'],
-      ['ap-Heizung','🌡 Heizung'],
-      ['ap-Zusammenbau','🏗 Zusammenbau'],
-      ['ap-Nachbearbeitung','🔨 Nachbearbeitung'],
-      ['ap-Einbauelement','📦 Einbauelement'],
-    ].map(([tab,label])=>`<div onclick="switchTab('${tab}');closeMobileMenu('${label}')"
-      style="padding:12px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);transition:background 0.1s;"
-      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">${label}</div>`).join('')}
+  <div id="mobileMenuDropdown" style="display:none;position:absolute;left:12px;right:12px;top:calc(100% - 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;max-height:60vh;overflow-y:auto;">
+    <div onclick="switchTab('planung');closeMobileMenu('📋 Planung & Übersicht')" class="mob-item">📋 Planung & Übersicht</div>
+    <div onclick="switchTab('gf');closeMobileMenu('📊 GF-Übersicht')" class="mob-item">📊 GF-Übersicht</div>
+    <div onclick="switchTab('bearbeitung');closeMobileMenu('⚙ In Bearbeitung')" class="mob-item" id="mob-btn-bearbeitung">⚙ In Bearbeitung</div>
+    <div onclick="switchTab('versand');closeMobileMenu('🚚 Versand')" class="mob-item">🚚 Versand</div>
+    <div onclick="switchTab('stoerung');closeMobileMenu('⚠ Störungen')" class="mob-item" id="mob-btn-stoerung">⚠ Störungen</div>
+    <div onclick="switchTab('ap-CNC');closeMobileMenu('🔧 CNC')" class="mob-item">🔧 CNC</div>
+    <div onclick="switchTab('ap-AP-Armatur');closeMobileMenu('🔩 AP-Armatur')" class="mob-item">🔩 AP-Armatur</div>
+    <div onclick="switchTab('ap-UP-Armatur 1');closeMobileMenu('🔩 UP-Armatur 1')" class="mob-item">🔩 UP-Armatur 1</div>
+    <div onclick="switchTab('ap-UP-Armatur 2');closeMobileMenu('🔩 UP-Armatur 2')" class="mob-item">🔩 UP-Armatur 2</div>
+    <div onclick="switchTab('ap-Heizung');closeMobileMenu('🌡 Heizung')" class="mob-item">🌡 Heizung</div>
+    <div onclick="switchTab('ap-Zusammenbau');closeMobileMenu('🏗 Zusammenbau')" class="mob-item">🏗 Zusammenbau</div>
+    <div onclick="switchTab('ap-Nachbearbeitung');closeMobileMenu('🔨 Nachbearbeitung')" class="mob-item">🔨 Nachbearbeitung</div>
+    <div onclick="switchTab('ap-Einbauelement');closeMobileMenu('📦 Einbauelement')" class="mob-item">📦 Einbauelement</div>
   </div>
 </div>
 
