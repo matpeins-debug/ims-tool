@@ -185,7 +185,7 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .gf-versand { min-width:130px; }
 .gf-status { min-width:90px; text-align:right; }
 
-.kap-card { background:var(–surface); border:1px solid var(–border); border-radius:10px; padding:14px 18px; min-width:130px; }
+.kap-card { background:var(–surface); border:1px solid var(–border); border-radius:10px; padding:10px 12px; flex:1; min-width:100px; }
 .kap-card-tag { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
 .kap-card-datum { font-size:16px; font-weight:600; color:var(–text); margin-bottom:8px; }
 
@@ -437,7 +437,10 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
     <!-- Kapazitätsampeln -->
     <div id="gfKapazitaet" style="display:flex;gap:8px;flex-wrap:wrap"></div>
   </div>
-  <div style="font-size:12px;color:var(--text2);margin:16px 0 8px;font-family:'IBM Plex Sans',sans-serif;" id="gfDatumLabel"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:16px 0 12px">
+    <div id="gfDatumLabel" style="font-size:16px;font-weight:800;color:var(--text)"></div>
+    <button class="btn btn-ghost btn-sm" onclick="downloadCSV()" style="border-color:var(--accent);color:var(--accent)">⬇ CSV Export</button>
+  </div>
   <div id="gfList"></div>
 </div>
 
@@ -622,6 +625,14 @@ let gfWocheOffset = 0;
 let versandOffset = 0;
 
 // ─── UTILS ────────────────────────────────────────────────────────────────
+// Format Auftragsnummer: 2023·478 (thin space after 4th digit)
+function fmtNr(nr) {
+  if(!nr) return '';
+  const s = String(nr);
+  if(s.length <= 4) return s;
+  return s.slice(0,4) + '\u2009' + s.slice(4);
+}
+
 function toDateStr(d) {
   const y=d.getFullYear();
   const m=String(d.getMonth()+1).padStart(2,'0');
@@ -945,7 +956,7 @@ function renderAuftraege() {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
             ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text)">${a.nr}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text)">${fmtNr(a.nr)}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span class="s-badge badge-${a.sklasse.toLowerCase()}">${a.sklasse}</span>
@@ -986,7 +997,7 @@ function renderAuftraege() {
     row.style.cssText = '';
     row.innerHTML=`
       <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
-      <div class="auftrag-nr" style="font-size:12px">${a.nr}</div>
+      <div class="auftrag-nr" style="font-size:12px">${fmtNr(a.nr)}</div>
       <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
@@ -1199,7 +1210,7 @@ function renderAP(ap) {
       card.innerHTML = `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
           ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-          <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+          <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         </div>
         <div class="hallen-kunde">${a.kunde}</div>
         ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:10px">${a.notiz}</div>`:''}
@@ -1436,7 +1447,7 @@ function renderOffen() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
       <div class="hallen-kunde">${a.kunde}${a.notiz?`<span style="font-size:12px;color:var(--warn);margin-left:8px">${a.notiz}</span>`:''}</div>
@@ -1485,7 +1496,7 @@ function renderGF() {
 
   // Update datum label
   const datumLabel = document.getElementById('gfDatumLabel');
-  if(datumLabel) datumLabel.textContent = `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''} · Priorität (ziehen zum Verschieben)`;
+  if(datumLabel) datumLabel.textContent = `Aufträge für ${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''}`;
 
   // Kapazitätsampeln
   const kapDiv = document.getElementById('gfKapazitaet');
@@ -1557,7 +1568,7 @@ function renderGF() {
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn);line-height:1">${String(a.prio||'–').padStart(2,'0')}</span>
         <div>
-          <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+          <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
           <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-top:4px">${a.sklasse}</span>
         </div>
         <div style="margin-left:auto">
@@ -1794,7 +1805,7 @@ function renderHalle() {
     card.innerHTML=`
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
       ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:8px">${a.notiz}</div>`:''}
@@ -2052,7 +2063,7 @@ function renderStoerung() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
@@ -2106,7 +2117,7 @@ function renderBearbeitung() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
