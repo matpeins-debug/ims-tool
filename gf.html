@@ -203,8 +203,8 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .fertig-zeit { font-family:‘IBM Plex Mono’,monospace; font-size:11px; color:var(–text3); margin-top:4px; }
 
 /* AUTOCOMPLETE */
-.ac-wrapper { position:relative; }
-.ac-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(–surface); border:2px solid var(–accent); border-radius:8px; z-index:200; max-height:200px; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+.ac-wrapper { position:relative; z-index:10; }
+.ac-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(–surface); border:2px solid var(–accent); border-radius:8px; z-index:9999; max-height:200px; overflow-y:auto; box-shadow:0 12px 40px rgba(0,0,0,0.5); }
 .ac-item { padding:11px 14px; cursor:pointer; font-size:14px; color:var(–text); font-weight:500; transition:background 0.1s; border-bottom:1px solid var(–border); }
 .ac-item:last-child { border-bottom:none; }
 .ac-item:hover, .ac-item.selected { background:var(–surface2); color:var(–accent); font-weight:600; }
@@ -227,7 +227,7 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 .gf-versand { min-width:130px; }
 .gf-status { min-width:90px; text-align:right; }
 
-.kap-card { background:var(–surface); border:1px solid var(–border); border-radius:8px; padding:7px 10px; flex:1; min-width:90px; height:80px; display:flex; flex-direction:column; justify-content:space-between; }
+.kap-card { background:var(–surface); border:1px solid var(–border); border-radius:8px; padding:6px 8px; flex:1; min-width:0; display:flex; flex-direction:column; justify-content:space-between; }
 .kap-card-tag { font-family:‘IBM Plex Mono’,monospace; font-size:10px; color:var(–text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
 .kap-card-datum { font-size:16px; font-weight:600; color:var(–text); margin-bottom:4px; }
 
@@ -412,7 +412,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
         <button class="btn btn-ghost btn-sm" onclick="wocheOffset=0;renderAll()">Heute</button>
       </div>
     </div>
-    <div id="wocheGrid" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    <div id="wocheGrid" style="display:flex;gap:6px;flex-wrap:nowrap"></div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:16px 0 12px">
     <div id="tagFilterLabel" style="font-size:16px;font-weight:800;color:var(--text);font-family:'IBM Plex Sans',sans-serif" class="tag-filter-label"></div>
@@ -478,7 +478,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
   </div>
 </div>
 <!-- Kapazitätsampeln -->
-<div id="gfKapazitaet" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+<div id="gfKapazitaet" style="display:flex;gap:6px;flex-wrap:nowrap"></div>
 ```
 
   </div>
