@@ -260,7 +260,7 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
 
 <div class="header">
   <div class="header-left">
-    <div class="logo">IMS <span>Produktionsplaner</span></div>
+    <div class="logo">IMS <span>Mitarbeiter</span></div>
     <div class="header-date" id="headerDate"></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
@@ -269,15 +269,12 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
       <div class="sync-dot" id="syncDot"></div>
       <span id="syncLabel">Verbinde...</span>
     </div>
-    <button class="btn btn-primary" onclick="openModal()">+ Auftrag erfassen</button>
+    <button class="btn btn-primary" onclick="openModal()" style="display:none">+ Auftrag erfassen</button>
   </div>
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('planung')">Planung & Übersicht</div>
-  <div class="tab" onclick="switchTab('gf')">📊 GF-Übersicht</div>
-  <div class="tab" onclick="switchTab('bearbeitung')" id="tab-btn-bearbeitung">⚙ In Bearbeitung</div>
-  <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
+  <div class="tab active" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('stoerung')" id="tab-btn-stoerung">⚠ Störungen</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
   <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
@@ -728,10 +725,7 @@ function switchTab(tab) {
     document.getElementById('tab-'+tab) && document.getElementById('tab-'+tab).classList.remove('hidden');
   }
   if(tab==='versand') renderHalle();
-  if(tab==='gf') renderGF();
-  if(tab==='offen') renderOffen();
   if(tab==='stoerung') renderStoerung();
-  if(tab==='bearbeitung') renderBearbeitung();
 }
 
 // ─── WOCHE ────────────────────────────────────────────────────────────────
@@ -2022,6 +2016,7 @@ function acKey(e,field){
 // ─── START ────────────────────────────────────────────────────────────────
 initDate();
 initTheme();
+switchTab('versand');
 initBin().then(() => {
   loadFromStorage();
   startPolling();
