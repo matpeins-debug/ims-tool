@@ -1137,7 +1137,14 @@ function formatMinutes(min) {
 
 function getTotalAuftragMin(a) {
   if(!a.timers) return 0;
-  return Object.values(a.timers).reduce((sum, td) => sum + calcTotalMin(td), 0);
+  return Object.values(a.timers).reduce((sum, td) => {
+    let ms = td.totalMs || 0;
+    // Wenn Timer noch läuft, aktuelle Zeit dazurechnen
+    if(td.start && !td.end) {
+      ms += Date.now() - new Date(td.start).getTime();
+    }
+    return sum + Math.floor(ms / 60000);
+  }, 0);
 }
 
 function formatElapsed(ms) {
