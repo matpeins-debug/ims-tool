@@ -189,37 +189,56 @@ body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d6
 ::-webkit-scrollbar-track { background:var(–bg); }
 ::-webkit-scrollbar-thumb { background:var(–border); border-radius:3px; }
 
-/* TABS – zwei Zeilen auf kleinen Bildschirmen */
+/* TABLET */
 @media (max-width: 900px) {
-.tabs { flex-wrap:wrap; padding:8px 12px 0; gap:2px; }
-.tab { padding:7px 14px; font-size:12px; margin-bottom:4px; border-radius:6px 6px 0 0; }
+.tabs { flex-wrap:wrap; padding:6px 10px 0; gap:2px; }
+.tab { padding:6px 12px; font-size:12px; margin-bottom:3px; }
 }
 
-/* MOBILE */
+/* SMARTPHONE */
 @media (max-width: 600px) {
-.header { padding:12px 16px; flex-wrap:wrap; gap:10px; }
-.logo { font-size:15px; }
+.header { padding:8px 12px; gap:6px; }
+.logo { font-size:13px; }
 .header-date { display:none; }
 .sync-status { font-size:10px; }
-.tabs { padding:6px 10px 0; gap:2px; }
-.tab { padding:8px 12px; font-size:12px; flex:0 0 auto; }
-.main { padding:14px; }
-.woche-grid { grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:16px; }
-.tag-card { padding:8px; }
-.tag-name { font-size:9px; }
-.tag-datum { font-size:15px; margin-bottom:6px; }
-.tag-count { font-size:10px; }
+.theme-toggle { padding:4px 8px; font-size:11px; }
+.btn.btn-primary { padding:6px 12px; font-size:12px; }
+
+```
+/* Tabs – sehr kompakt, 3-4 pro Zeile */
+.tabs { padding:4px 8px 0; gap:2px; border-bottom:none; }
+.tab { padding:5px 10px; font-size:11px; margin-bottom:2px; white-space:nowrap; }
+
+.main { padding:10px; }
+
+/* Wochenübersicht kompakter */
+.woche-grid { grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:10px; }
+.tag-card { padding:6px 4px; }
+.tag-name { font-size:8px; }
+.tag-datum { font-size:14px; margin-bottom:4px; }
+.tag-count { font-size:9px; }
+.kapazitaet-bar { margin-bottom:4px; }
+
+/* Ressourcenplanung ausblenden auf Smartphone */
+.stats-row { display:none; }
+
 .auftraege-header { display:none; }
-.auftrag-row { grid-template-columns: 1fr; gap:6px; padding:12px; }
+.auftrag-row { grid-template-columns:1fr; gap:4px; padding:10px; }
 .auftrag-row > div:nth-child(1) { display:none; }
-.stats-row { gap:8px; }
-.stat-chip { padding:8px 12px; }
-.stat-value { font-size:16px; }
-.hallen-grid { grid-template-columns:1fr; }
+
+.hallen-grid { grid-template-columns:1fr; gap:10px; }
+.hallen-card { padding:14px; }
 .btn-fertig { padding:14px; font-size:15px; width:100%; justify-content:center; }
-.modal { padding:20px 16px; }
+.modal { padding:16px 12px; width:100%; max-width:100vw; border-radius:12px 12px 0 0; position:fixed; bottom:0; top:auto; max-height:85vh; }
+.modal-overlay.open { align-items:flex-end; }
 .form-grid { grid-template-columns:1fr; }
 .form-full { grid-column:1; }
+
+/* Sektion-Header kompakter */
+.section-header { flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.section-title { font-size:13px; }
+```
+
 }
 </style>
 
