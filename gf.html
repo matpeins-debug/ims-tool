@@ -1114,8 +1114,7 @@ function getAPCardClass(a, apKey, stationFertig, isRunning) {
   const heute = toDateStr(new Date());
   const ueberfaellig = a.datum < heute && !a.fertig;
   if(ueberfaellig) return 'card-ueberfaellig';
-  // Any blockierung on the auftrag = red for all stations
-  if(a.blockierungen && Object.keys(a.blockierungen).length > 0) return 'card-ueberfaellig';
+  if(a.blockierungen && a.blockierungen[apKey]) return 'card-ueberfaellig';
   if(stationFertig) return 'card-fertig';
   if(isRunning) return 'card-aktiv';
   return '';
@@ -1290,7 +1289,7 @@ function renderAP(ap) {
           <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         </div>
         <div class="hallen-kunde">${a.kunde}</div>
-        ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="background:#ff445522;border:1px solid var(--danger);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12px;color:var(--danger);font-weight:700">🔒 ${Object.values(a.blockierungen)[0]}</div>`:""}        ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:10px">⚡ ${a.notiz}</div>`:''}
+        ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:10px">⚡ ${a.notiz}</div>`:''}
         <div style="margin-bottom:14px">
           <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="font-size:13px;padding:5px 10px;width:auto;height:auto">${a.sklasse}</span>
         </div>
