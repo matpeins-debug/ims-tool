@@ -12,8 +12,8 @@
     --text:#e8eaf0; --text2:#8890aa; --text3:#555d78;
     --s0:#aa88ff; --s1:#0084ff; --s2:#00c896; --s3:#ff9944;
   }
-  body.light { /* light mode */
-    --bg:#dce3ee; --surface:#f5f7fb; --surface2:#e0e6f0; --border:#9aa5be;
+  body.light {
+    --bg:#f4f6f9; --surface:#ffffff; --surface2:#eef0f5; --border:#d0d5e0;
     --accent:#00a87a; --accent2:#0066cc; --warn:#e09000; --danger:#d63040;
     --text:#1a1d27; --text2:#555d78; --text3:#9099b0;
     --s0:#7755cc; --s1:#0066cc; --s2:#00a87a; --s3:#d97700;
@@ -27,7 +27,7 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'IBM Plex Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; }
 
-  .header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:2px solid var(--border); background:var(--surface); }
+  .header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface); }
   .header-left { display:flex; align-items:center; gap:16px; }
   .logo { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:600; color:var(--accent); }
   .logo span { color:var(--text2); font-weight:400; }
@@ -38,12 +38,12 @@
   .sync-dot.loading { background:var(--warn); animation:pulse 1s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  .tabs { display:flex; gap:4px; padding:0 24px; border-bottom:3px solid var(--accent); background:var(--surface); box-shadow:0 2px 8px rgba(0,0,0,0.15); align-items:stretch; }
-  .tab { padding:14px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(--text2); border-bottom:3px solid transparent; margin-bottom:-3px; transition:all 0.15s; display:flex; align-items:center; }
+  .tabs { display:flex; gap:2px; padding:12px 24px 0; border-bottom:1px solid var(--border); background:var(--surface); }
+  .tab { padding:8px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(--text2); border-bottom:2px solid transparent; transition:all 0.15s; }
   .tab:hover { color:var(--text); }
-  .tab.active { color:var(--accent); border-bottom:3px solid var(--accent); font-weight:700; background:rgba(0,200,150,0.12); }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
-  .main { padding:24px; background:var(--bg); min-height:calc(100vh - 120px); }
+  .main { padding:24px; }
 
   .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:6px; border:none; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; font-size:13px; font-weight:500; transition:all 0.15s; }
   .btn-primary { background:var(--accent); color:#000; }
@@ -60,17 +60,15 @@
   .btn-fertig:disabled { background:var(--surface2); color:var(--text3); cursor:default; transform:none; }
 
   .woche-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:28px; }
-  .tag-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden; }
+  .tag-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden; }
   .tag-card:hover { border-color:var(--text3); }
-  .tag-card.selected { border-color:var(--accent); border-width:2px; background:var(--surface2); box-shadow:0 0 0 2px #00c89633; }
+  .tag-card.selected { border-color:var(--accent); background:var(--surface2); }
   .tag-card.selected .tag-name, .tag-card.selected .tag-datum, .tag-card.selected .tag-count { color:var(--text); }
   .tag-card.heute::before { content:'HEUTE'; position:absolute; top:8px; right:8px; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:600; color:var(--accent); background:#00c89622; padding:2px 6px; border-radius:3px; letter-spacing:1px; }
   .tag-name { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
-  .tag-datum { font-size:18px; font-weight:600; color:var(--text); margin-bottom:6px; }
-  .auftrag-row:hover { background:var(--surface2); border-left-color:var(--accent); }
-  body.light .auftrag-row { border-bottom-color:#b0bace; }
-  body.light .auftrag-row:nth-child(even) { background:#f0f3f8; } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
-  .kapazitaet-bar { height:3px; background:var(--surface2); border-radius:2px; overflow:hidden; margin-bottom:4px; }
+  .tag-datum { font-size:20px; font-weight:600; color:var(--text); margin-bottom:10px; }
+  .auftrag-row.fertig { opacity:0.55; border-color:var(--accent); }
+  .kapazitaet-bar { height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; margin-bottom:8px; }
   .kapazitaet-fill { height:100%; border-radius:2px; transition:width 0.3s; }
   .kap-ok { background:var(--accent); } .kap-warn { background:var(--warn); } .kap-voll { background:var(--danger); }
   .tag-stats { display:flex; justify-content:space-between; align-items:center; }
@@ -85,15 +83,13 @@
   .section-title { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:1.5px; }
   .tag-filter-label { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text2); }
 
-  .auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--border); margin-bottom:8px; background:#b8c4d8; border-radius:0; color:#3a4560; font-weight:600; }
-  .auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:14px 16px; background:var(--surface); border:none; border-bottom:1px solid var(--border); border-left:4px solid transparent; border-radius:0; margin-bottom:0; align-items:center; transition:all 0.15s; }
+  .auftraege-header { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:8px 14px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+  .auftrag-row { display:grid; grid-template-columns:50px 100px 70px 1fr 100px 54px 100px 90px 120px; gap:8px; padding:11px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; align-items:center; transition:all 0.15s; }
   .auftrag-row:hover { border-color:var(--text3); }
-  .auftrag-row:hover { background:var(--surface2); border-left-color:var(--accent); }
-  body.light .auftrag-row { border-bottom-color:#b0bace; }
-  body.light .auftrag-row:nth-child(even) { background:#f0f3f8; } .auftrag-row.fertig { opacity:0.6; } .auftrag-row:last-child { border-bottom:none; }
+  .auftrag-row.fertig { opacity:0.55; border-color:var(--accent); }
   .auftrag-nr { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--text); }
-  .auftrag-kunde { font-size:14px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .auftrag-notiz { font-size:11px; color:var(--warn); font-weight:500; }
+  .auftrag-kunde { font-size:13px; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .auftrag-notiz { font-size:11px; color:var(--text2); }
 
   .s-badge { display:inline-flex; align-items:center; justify-content:center; width:32px; height:20px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
   .badge-s0 { background:#aa88ff22; color:var(--s0); border:1px solid #aa88ff44; }
@@ -121,41 +117,19 @@
   .stat-value.green { color:var(--accent); }
   .stat-value.orange { color:var(--warn); }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   /* MODAL */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:100; align-items:center; justify-content:center; }
   .modal-overlay.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:14px; padding:20px 24px; width:540px; max-width:96vw; max-height:90vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; box-shadow:0 20px 60px rgba(0,0,0,0.4); }
-  .modal-title { font-family:'IBM Plex Sans',sans-serif; font-size:16px; font-weight:700; color:var(--text); margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
-  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; width:560px; max-width:96vw; max-height:92vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; }
+  .modal-title { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; color:var(--text); margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .form-full { grid-column:1/-1; }
-  .form-group { display:flex; flex-direction:column; gap:5px; }
-  .form-label { font-family:'IBM Plex Sans',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text2); }
-  .form-input { background:var(--surface2); border:1.5px solid var(--border); border-radius:6px; padding:10px 12px; color:var(--text) !important; -webkit-text-fill-color:var(--text); font-family:'IBM Plex Sans',sans-serif; font-size:14px; outline:none; transition:border-color 0.15s, box-shadow 0.15s; width:100%; box-sizing:border-box; appearance:none; -webkit-appearance:none; }
-  .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,200,150,0.15); }
-  .form-input::placeholder { color:var(--text3); -webkit-text-fill-color:var(--text3); }
-  select.form-input { cursor:pointer !important; appearance:none !important; -webkit-appearance:none !important; -moz-appearance:none !important; background-color:var(--surface2) !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important; background-repeat:no-repeat !important; background-position:right 12px center !important; padding-right:32px !important; border-radius:6px !important; background-size:12px !important; }
-  select.form-input option { background:var(--surface); color:var(--text); }
-  body.light .form-input { background:#f0f4fa; border-color:#b0bace; color:var(--text) !important; -webkit-text-fill-color:var(--text); }
-  body.light .form-input:focus { background:#fff; border-color:var(--accent); }
-  body.light .form-input::placeholder { color:#9099b0; -webkit-text-fill-color:#9099b0; }
-  body.light select.form-input { background-color:#f0f4fa !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555d78' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important; color:var(--text) !important; border-color:#b0bace !important; }
-  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
-  .modal-actions .btn-primary { padding:9px 24px; font-size:14px; }
-  .modal-actions .btn-ghost { padding:9px 16px; font-size:14px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-label { font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); }
+  .form-input { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:9px 12px; color:var(--text); font-family:'IBM Plex Sans',sans-serif; font-size:13px; outline:none; transition:border-color 0.15s; }
+  .form-input:focus { border-color:var(--accent); }
+  select.form-input option { background:var(--surface2); }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
 
   .ap-section { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; }
   .ap-section-title { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
@@ -166,15 +140,14 @@
 
   /* HALLE */
   .hallen-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
-  .hallen-card { background:var(--surface); border:2px solid var(--border); border-radius:12px; padding:20px; transition:all 0.2s; box-shadow:0 3px 10px rgba(0,0,0,0.2); }
-  body.light .hallen-card { background:#f8fafc; border-color:#a0aabf; box-shadow:0 3px 10px rgba(0,0,0,0.12); }
-  .hallen-card.card-aktiv { background:#0a1f0a; border-color:#00c896; box-shadow:0 2px 12px #00c89633; }
-  .hallen-card.card-fertig { background:#0a0f2a; border-color:#0084ff; box-shadow:0 2px 12px #0084ff33; }
-  .hallen-card.card-ueberfaellig { background:#1f0a0a; border-color:#ff4455; box-shadow:0 2px 12px #ff445533; }
-  body.light .hallen-card.card-aktiv { background:#d4f5e9; border-color:#00a87a; border-width:2px; box-shadow:0 2px 12px #00a87a33; }
-  body.light .hallen-card.card-fertig { background:#d0e4ff; border-color:#0066cc; border-width:2px; box-shadow:0 2px 12px #0066cc33; }
-  body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d63040; border-width:2px; box-shadow:0 2px 12px #d6304033; }
-  .hallen-nr { font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .hallen-card { background:var(--surface); border:2px solid var(--border); border-radius:12px; padding:20px; transition:all 0.2s; }
+  .hallen-card.card-aktiv { background:#0a1f0a; border-color:#00c89644; }
+  .hallen-card.card-fertig { background:#0a0f2a; border-color:#0084ff44; }
+  .hallen-card.card-ueberfaellig { background:#1f0a0a; border-color:#ff445544; }
+  body.light .hallen-card.card-aktiv { background:#d4f5e9; border-color:#00a87a; border-width:2px; }
+  body.light .hallen-card.card-fertig { background:#d0e4ff; border-color:#0066cc; border-width:2px; }
+  body.light .hallen-card.card-ueberfaellig { background:#ffd6d6; border-color:#d63040; border-width:2px; }
+  .hallen-nr { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; color:var(--text); margin-bottom:4px; }
   .hallen-kunde { font-size:16px; font-weight:500; color:var(--text); margin-bottom:10px; }
   .hallen-meta { display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
   .hallen-ap { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:14px; }
@@ -182,11 +155,11 @@
   .fertig-zeit { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text3); margin-top:4px; }
 
   /* AUTOCOMPLETE */
-  .ac-wrapper { position:relative; isolation:isolate; }
-  .ac-dropdown { position:fixed; background:var(--surface); border:2px solid var(--accent); border-radius:8px; z-index:99999; max-height:200px; overflow-y:auto; box-shadow:0 12px 40px rgba(0,0,0,0.5); }
-  .ac-item { padding:11px 14px; cursor:pointer; font-size:14px; color:var(--text); font-weight:500; transition:background 0.1s; border-bottom:1px solid var(--border); }
+  .ac-wrapper { position:relative; }
+  .ac-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--surface); border:1px solid var(--accent); border-radius:6px; z-index:200; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.5); }
+  .ac-item { padding:9px 12px; cursor:pointer; font-size:13px; color:var(--text); transition:background 0.1s; border-bottom:1px solid var(--border); }
   .ac-item:last-child { border-bottom:none; }
-  .ac-item:hover, .ac-item.selected { background:var(--surface2); color:var(--accent); font-weight:600; }
+  .ac-item:hover, .ac-item.selected { background:var(--surface2); color:var(--accent); }
   .ac-item mark { background:none; color:var(--accent); font-weight:600; }
 
   .inline-edit { background:var(--surface2); border:1px solid var(--accent); border-radius:5px; padding:4px 8px; color:var(--text); font-family:'IBM Plex Sans',sans-serif; font-size:12px; outline:none; }
@@ -206,64 +179,41 @@
   .gf-versand { min-width:130px; }
   .gf-status { min-width:90px; text-align:right; }
 
-  .kap-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px 8px; flex:1; min-width:0; display:flex; flex-direction:column; justify-content:space-between; }
-  .kap-card-tag { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
-  .kap-card-datum { font-size:16px; font-weight:600; color:var(--text); margin-bottom:4px; }
+  .kap-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 18px; min-width:130px; }
+  .kap-card-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .kap-card-datum { font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px; }
 
   .hidden { display:none; }
   ::-webkit-scrollbar { width:6px; }
   ::-webkit-scrollbar-track { background:var(--bg); }
   ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 
-  /* TABLET */
-  @media (max-width: 900px) {
-    .tabs { flex-wrap:wrap; padding:6px 10px 0; gap:2px; }
-    .tab { padding:6px 12px; font-size:12px; margin-bottom:3px; }
-  }
-
-  .mob-item { padding:12px 16px; cursor:pointer; font-size:14px; color:var(--text); border-bottom:1px solid var(--border); transition:background 0.1s; }
-  .mob-item:hover { background:var(--surface2); }
-  .mob-item:last-child { border-bottom:none; }
-
-  /* WOCHENÜBERSICHT Farbband */
-  .woche-section { background:linear-gradient(135deg,#00c89608,#00c89614); border-radius:8px; padding:8px 12px 12px; margin-bottom:16px; border:1px solid #00c89622; min-height:120px; box-sizing:border-box; }
-
-  /* TABLET/MOBILE NAV */
-  @media (max-width: 900px) {
-    #desktopTabs { display:none !important; }
-    #mobileNav { display:block !important; }
-  }
-  @media (min-width: 901px) {
-    #mobileNav { display:none !important; }
-    #desktopTabs { display:flex !important; }
-  }
-
-  /* SMARTPHONE */
+  /* MOBILE */
   @media (max-width: 600px) {
-    .header { padding:8px 12px; gap:6px; }
-    .logo { font-size:13px; }
+    .header { padding:12px 16px; flex-wrap:wrap; gap:10px; }
+    .logo { font-size:15px; }
     .header-date { display:none; }
     .sync-status { font-size:10px; }
-    .theme-toggle { padding:4px 8px; font-size:11px; }
-
-    /* Tabs – sehr kompakt */
-    .tabs { padding:4px 8px 0; gap:2px; border-bottom:none; }
-    .tab { padding:5px 10px; font-size:11px; margin-bottom:2px; white-space:nowrap; }
-
-    .main { padding:10px; }
-    .hallen-grid { grid-template-columns:1fr; gap:10px; }
-    .hallen-card { padding:14px; }
-    .btn-fertig { padding:14px; font-size:15px; width:100%; justify-content:center; }
-    .section-header { flex-wrap:wrap; gap:6px; margin-bottom:12px; }
-    .section-title { font-size:13px; }
+    .tabs { padding:8px 16px 0; }
+    .tab { padding:6px 14px; font-size:12px; }
+    .main { padding:14px; }
+    .woche-grid { grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:16px; }
+    .tag-card { padding:8px; }
+    .tag-name { font-size:9px; }
+    .tag-datum { font-size:15px; margin-bottom:6px; }
+    .tag-count { font-size:10px; }
     .auftraege-header { display:none; }
-    .auftrag-row { grid-template-columns:1fr; gap:4px; padding:10px; }
-    .stats-row { display:none; }
-    .modal { padding:20px 16px; width:100%; max-width:100vw; border-radius:16px 16px 0 0; position:fixed; bottom:0; top:auto; max-height:88vh; box-shadow:0 -8px 32px rgba(0,0,0,0.4); border-top:3px solid var(--accent) !important; }
-    .modal-overlay.open { align-items:flex-end; background:rgba(0,0,0,0.6); }
-    .form-input { font-size:16px; padding:12px; }
-    .form-grid { grid-template-columns:1fr; }
-    .modal-overlay.open { align-items:flex-end; }
+    .auftrag-row {
+      grid-template-columns: 1fr;
+      gap:6px; padding:12px;
+    }
+    .auftrag-row > div:nth-child(1) { display:none; }
+    .stats-row { gap:8px; }
+    .stat-chip { padding:8px 12px; }
+    .stat-value { font-size:16px; }
+    .hallen-grid { grid-template-columns:1fr; }
+    .btn-fertig { padding:14px; font-size:15px; width:100%; justify-content:center; }
+    .modal { padding:20px 16px; }
     .form-grid { grid-template-columns:1fr; }
     .form-full { grid-column:1; }
   }
@@ -310,7 +260,7 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
 
 <div class="header">
   <div class="header-left">
-    <div class="logo">IMS <span>Mitarbeiter</span></div>
+    <div class="logo">IMS <span>Produktionsplaner</span></div>
     <div class="header-date" id="headerDate"></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
@@ -319,60 +269,41 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
       <div class="sync-dot" id="syncDot"></div>
       <span id="syncLabel">Verbinde...</span>
     </div>
-    <button class="btn btn-primary" onclick="openModal()" style="display:none">+ Auftrag erfassen</button>
+    <button class="btn btn-primary" onclick="openModal()">+ Auftrag erfassen</button>
   </div>
 </div>
 
-<div class="tabs" id="desktopTabs">
-  <div class="tab active" onclick="switchTab('versand')">🚚 Versand</div>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('planung')">Planung & Übersicht</div>
+  <div class="tab" onclick="switchTab('gf')">📊 GF-Übersicht</div>
+  <div class="tab" onclick="switchTab('bearbeitung')" id="tab-btn-bearbeitung">⚙ In Bearbeitung</div>
+  <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('stoerung')" id="tab-btn-stoerung">⚠ Störungen</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
   <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
-  <div class="tab" onclick="switchTab('ap-UP-Armatur 1')">🔩 UP·1</div>
-  <div class="tab" onclick="switchTab('ap-UP-Armatur 2')">🔩 UP·2</div>
+  <div class="tab" onclick="switchTab('ap-UP-Armatur 1')">🔩 UP-Armatur 1</div>
+  <div class="tab" onclick="switchTab('ap-UP-Armatur 2')">🔩 UP-Armatur 2</div>
+  <div class="tab" onclick="switchTab('ap-Heizung')">🌡 Heizung</div>
   <div class="tab" onclick="switchTab('ap-Zusammenbau')">🏗 Zusammenbau</div>
   <div class="tab" onclick="switchTab('ap-Nachbearbeitung')">🔨 Nachbearbeitung</div>
-  <div class="tab" onclick="switchTab('ap-Heizung')">🌡 Heizung</div>
   <div class="tab" onclick="switchTab('ap-Einbauelement')">📦 Einbauelement</div>
 </div>
 
-<div id="mobileNav" style="display:none;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;">
-  <button onclick="toggleMobileMenu()" id="mobileMenuBtn"
-    style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-    <span id="mobileMenuLabel">🚚 Versand</span>
-    <span>▾</span>
-  </button>
-  <div id="mobileMenuDropdown" style="display:none;position:absolute;left:12px;right:12px;top:calc(100% - 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;max-height:60vh;overflow-y:auto;">
-    <div onclick="switchTab('versand');closeMobileMenu('🚚 Versand')" class="mob-item">🚚 Versand</div>
-    <div onclick="switchTab('stoerung');closeMobileMenu('⚠ Störungen')" class="mob-item" id="mob-btn-stoerung">⚠ Störungen</div>
-    <div onclick="switchTab('ap-CNC');closeMobileMenu('🔧 CNC')" class="mob-item">🔧 CNC</div>
-    <div onclick="switchTab('ap-AP-Armatur');closeMobileMenu('🔩 AP-Armatur')" class="mob-item">🔩 AP-Armatur</div>
-    <div onclick="switchTab('ap-UP-Armatur 1');closeMobileMenu('🔩 UP·1')" class="mob-item">🔩 UP·1</div>
-    <div onclick="switchTab('ap-UP-Armatur 2');closeMobileMenu('🔩 UP·2')" class="mob-item">🔩 UP·2</div>
-    <div onclick="switchTab('ap-Zusammenbau');closeMobileMenu('🏗 Zusammenbau')" class="mob-item">🏗 Zusammenbau</div>
-    <div onclick="switchTab('ap-Nachbearbeitung');closeMobileMenu('🔨 Nachbearbeitung')" class="mob-item">🔨 Nachbearbeitung</div>
-    <div onclick="switchTab('ap-Heizung');closeMobileMenu('🌡 Heizung')" class="mob-item">🌡 Heizung</div>
-    <div onclick="switchTab('ap-Einbauelement');closeMobileMenu('📦 Einbauelement')" class="mob-item">📦 Einbauelement</div>
-  </div>
-</div>
-
 <div id="tab-planung" class="main">
-  <div class="woche-section">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-      <div class="section-title">Wochenübersicht</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="wocheOffset--;renderAll()">← Vorige</button>
-        <span id="wocheLabel" style="font-size:12px;color:var(--text2)"></span>
-        <button class="btn btn-ghost btn-sm" onclick="wocheOffset++;renderAll()">Nächste →</button>
-        <button class="btn btn-ghost btn-sm" onclick="wocheOffset=0;renderAll()">Heute</button>
-      </div>
+  <div class="section-header">
+    <div class="section-title">Wochenübersicht</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset--;renderAll()">← Vorige</button>
+      <span id="wocheLabel" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)"></span>
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset++;renderAll()">Nächste →</button>
+      <button class="btn btn-ghost btn-sm" onclick="wocheOffset=0;renderAll()">Heute</button>
     </div>
-    <div id="wocheGrid" style="display:flex;gap:6px;flex-wrap:nowrap"></div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:16px 0 12px">
-    <div id="tagFilterLabel" style="font-size:16px;font-weight:800;color:var(--text);font-family:'IBM Plex Sans',sans-serif" class="tag-filter-label"></div>
+  <div class="woche-grid" id="wocheGrid"></div>
+  <div class="section-header">
+    <div id="tagFilterLabel" class="tag-filter-label"></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <input type="text" id="suchfeld" placeholder="🔍 Kunde oder Auftragsnr."
+      <input type="text" id="suchfeld" placeholder="🔍 Kunde oder Auftragsnr." 
         oninput="renderAuftraege()"
         style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:220px;"
         onfocus="this.style.borderColor='var(--accent)'"
@@ -381,13 +312,11 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
     </div>
   </div>
   <div class="stats-row" id="statsRow"></div>
-  <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <div class="auftraege-header">
-      <div>Prio</div><div>Auftrag</div><div>Stück</div><div>Kunde</div>
-      <div>Versanddatum</div><div>S</div><div>Versandart</div><div>Status</div><div>Aktionen</div>
-    </div>
-    <div id="auftraegeList"></div>
+  <div class="auftraege-header">
+    <div>Prio</div><div>Auftrag</div><div>Stück</div><div>Kunde</div>
+    <div>Versanddatum</div><div>S</div><div>Versandart</div><div>Status</div><div>Aktionen</div>
   </div>
+  <div id="auftraegeList"></div>
 </div>
 
 <div id="tab-versand" class="main hidden">
@@ -454,12 +383,7 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
 <div id="tab-ap" class="main hidden">
   <div class="section-header">
     <div class="section-title" id="apTabTitle"></div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div id="apTabCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
-      <input type="text" id="apSuchfeld" placeholder="🔍 Suche..." oninput="renderAP(document.getElementById('apTabTitle').textContent)"
-        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:160px;"
-        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-    </div>
+    <div id="apTabCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
   </div>
   <div id="apTabList"></div>
 </div>
@@ -467,7 +391,6 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
     <div class="modal-title" id="modalTitle">Neuen Auftrag erfassen</div>
     <div class="form-grid">
       <div class="form-group">
@@ -475,7 +398,7 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
         <div class="ac-wrapper">
           <input class="form-input" id="inp-nr" type="text" placeholder="z.B. 2023500" autocomplete="off"
             oninput="acShow('nr')" onkeydown="acKey(event,'nr')" onfocus="acShow('nr')" onblur="acHide('nr')">
-          
+          <div class="ac-dropdown hidden" id="ac-nr"></div>
         </div>
       </div>
       <div class="form-group">
@@ -487,7 +410,7 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
         <div class="ac-wrapper">
           <input class="form-input" id="inp-kunde" type="text" placeholder="Kundenname" autocomplete="off"
             oninput="acShow('kunde')" onkeydown="acKey(event,'kunde')" onfocus="acShow('kunde')" onblur="acHide('kunde')">
-          
+          <div class="ac-dropdown hidden" id="ac-kunde"></div>
         </div>
       </div>
       <div class="form-group">
@@ -511,10 +434,6 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
       <div class="form-group">
         <label class="form-label">Priorität</label>
         <input class="form-input" id="inp-prio" type="number" min="1" max="99" placeholder="z.B. 01">
-      </div>
-      <div class="form-group form-full">
-        <label class="form-label">Kommission</label>
-        <input class="form-input" id="inp-kommission" type="text" placeholder="z.B. Kommission 2024-001">
       </div>
       <div class="form-group form-full">
         <label class="form-label">Notiz</label>
@@ -541,9 +460,9 @@ const GRUPPEN = {
   '0': { name:'Gruppe 0', aps:['CNC','AP-Armatur','Zusammenbau','Nachbearbeitung'] },
   '1': { name:'Gruppe 1', aps:['CNC','UP-Armatur 1','UP-Armatur 2','Zusammenbau','Nachbearbeitung'] },
   '2': { name:'Gruppe 2', aps:['Heizung'] },
-  '3': { name:'Gruppe 3', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'] },
-  '4': { name:'Gruppe 4', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'] },
-  '5': { name:'Gruppe 5', aps:['CNC','UP-Armatur 1','UP-Armatur 2','Einbauelement'] },
+  '3': { name:'Gruppe 3', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','CNC','Heizung'] },
+  '4': { name:'Gruppe 4', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','CNC','Heizung'] },
+  '5': { name:'Gruppe 5', aps:['CNC','UP-Armatur 1','UP-Armatur 2','CNC','Einbauelement'] },
   '6': { name:'Gruppe 6', aps:['Versand'] },
 };
 const BLOCKIERUNG_GRUENDE = [
@@ -625,13 +544,6 @@ let gfDatumOffset = 0;
 let versandOffset = 0;
 
 // ─── UTILS ────────────────────────────────────────────────────────────────
-function fmtNr(nr) {
-  if(!nr) return '';
-  const s = String(nr);
-  if(s.length <= 4) return s;
-  return s.slice(0,4) + '\u2009' + s.slice(4);
-}
-
 function toDateStr(d) {
   const y=d.getFullYear();
   const m=String(d.getMonth()+1).padStart(2,'0');
@@ -642,24 +554,6 @@ function formatDatum(str) { if(!str)return'–'; const[y,m,d]=str.split('-'); re
 function getWochentag(str) { return['So','Mo','Di','Mi','Do','Fr','Sa'][new Date(str).getDay()]; }
 function formatZeit(iso) { if(!iso)return''; const d=new Date(iso); return d.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'}); }
 function formatDateTime(iso) { if(!iso)return'–'; const d=new Date(iso); return d.toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'}); }
-
-function getDurchlaufzeit(a) {
-  if(!a.timers) return null;
-  const allStarts = Object.values(a.timers).map(t=>t.start).filter(Boolean).sort();
-  if(allStarts.length === 0) return null;
-  const ersteEinstempelung = new Date(allStarts[0]);
-  const ende = a.fertigAm ? new Date(a.fertigAm) : null;
-  if(!ende) return null;
-  const minuten = Math.round((ende - ersteEinstempelung) / 60000);
-  if(minuten < 0) return null;
-  return minuten;
-}
-function formatDurchlaufzeit(min) {
-  if(min === null || min === undefined) return '–';
-  if(min < 60) return `${min} Min`;
-  const h = Math.floor(min/60); const m = min % 60;
-  return m > 0 ? `${h}h ${m}min` : `${h}h`;
-}
 
 function downloadCSV() {
   const fertig = auftraege.filter(a=>a.fertig);
@@ -823,22 +717,6 @@ function initDate() {
 }
 
 // ─── TABS ─────────────────────────────────────────────────────────────────
-function toggleMobileMenu() {
-  const dd = document.getElementById('mobileMenuDropdown');
-  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
-}
-function closeMobileMenu(label) {
-  document.getElementById('mobileMenuDropdown').style.display = 'none';
-  document.getElementById('mobileMenuLabel').textContent = label;
-}
-document.addEventListener('click', e => {
-  const nav = document.getElementById('mobileNav');
-  if(nav && !nav.contains(e.target)) {
-    const dd = document.getElementById('mobileMenuDropdown');
-    if(dd) dd.style.display = 'none';
-  }
-});
-
 function switchTab(tab) {
   const allTabs = ['planung','versand','bearbeitung','stoerung','gf','offen','ap'];
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick')===`switchTab('${tab}')`));
@@ -850,7 +728,10 @@ function switchTab(tab) {
     document.getElementById('tab-'+tab) && document.getElementById('tab-'+tab).classList.remove('hidden');
   }
   if(tab==='versand') renderHalle();
+  if(tab==='gf') renderGF();
+  if(tab==='offen') renderOffen();
   if(tab==='stoerung') renderStoerung();
+  if(tab==='bearbeitung') renderBearbeitung();
 }
 
 // ─── WOCHE ────────────────────────────────────────────────────────────────
@@ -866,22 +747,21 @@ function renderWoche() {
   }
   woche.forEach(datum=>{
     const count=auftraege.filter(a=>a.datum===datum).length;
+    const fertig=auftraege.filter(a=>a.datum===datum&&a.fertig).length;
     const einh=getKapazitaet(datum);
-    const pct=Math.min(Math.round(count/10*100),100);
+    const pct=Math.min(count/10*100,100);
     const ampel=getKapAmpel(einh);
-    const isSelected=datum===selectedDatum;
-    const isHeute=datum===heute;
-    const countColor=count>10?'var(--danger)':count>=8?'var(--warn)':'var(--text)';
     const card=document.createElement('div');
-    card.className='kap-card';
-    card.style.cssText=`cursor:pointer;flex:1;min-width:0;${isSelected?'border-color:var(--accent);border-width:2px;background:rgba(0,200,150,0.1);':''}${isHeute&&!isSelected?'border-color:var(--accent);':''}`;
+    card.className=`tag-card${datum===heute?' heute':''}${datum===selectedDatum?' selected':''}`;
     card.onclick=()=>{selectedDatum=datum;renderAll();};
     card.innerHTML=`
-      <div style="font-size:10px;font-weight:600;color:${isHeute?'var(--accent)':'var(--text2)'};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">
-        ${getWochentag(datum)}${isHeute?' ✦':''}</div>
-      <div style="font-size:18px;font-weight:700;color:${isSelected?'var(--accent)':isHeute?'var(--accent)':'var(--text)'};margin-bottom:4px">${datum.split('-')[2]}.</div>
-      ${pct>0?`<div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:${pct}%;background:${ampel==='ok'?'var(--accent)':ampel==='warn'?'var(--warn)':'var(--danger)'};border-radius:2px"></div></div>`:`<div style="height:3px;margin-bottom:4px"></div>`}
-      <div style="font-size:11px;font-weight:600;color:${countColor}">${count}<span style="font-weight:400;color:var(--text3)">/10</span></div>`;
+      <div class="tag-name">${getWochentag(datum)}</div>
+      <div class="tag-datum">${datum.split('-')[2]}.</div>
+      <div class="kapazitaet-bar"><div class="kapazitaet-fill kap-${ampel}" style="width:${pct}%"></div></div>
+      <div class="tag-stats">
+        <div class="tag-count"><strong>${count}</strong>/10</div>
+        <div class="ampel ampel-${ampel}"></div>
+      </div>`;
     grid.appendChild(card);
   });
 }
@@ -903,8 +783,7 @@ function renderAuftraege() {
     statsRow.innerHTML = '';
   } else {
     filtered = auftraege.filter(a=>a.datum===selectedDatum);
-    const isHeuteLabel = selectedDatum === toDateStr(new Date());
-    label.innerHTML = `Aufträge für ${getWochentag(selectedDatum)}, ${formatDatum(selectedDatum)}${isHeuteLabel ? ' <span style="background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle">HEUTE</span>' : ''}`;
+    label.textContent = `Aufträge für ${getWochentag(selectedDatum)}, ${formatDatum(selectedDatum)}`;
   }
 
   if(!suche) {
@@ -961,12 +840,12 @@ function renderAuftraege() {
     row.style.cssText = '';
     row.innerHTML=`
       <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
-      <div class="auftrag-nr" style="font-size:12px">${fmtNr(a.nr)}</div>
+      <div class="auftrag-nr" style="font-size:12px">${a.nr}</div>
       <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
         ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:2px">⚠ ${Object.entries(a.blockierungen).map(([k,v])=>`${k}: ${v}`).join(' | ')}</div>`:''}
-        ${a.kommission?`<div style="font-size:11px;color:var(--warn);font-weight:700">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:11px;color:var(--text);font-weight:600">⚡ ${a.notiz}</div>`:''}
+        ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${renderStationDots(a)}</div>
       </div>
       <div id="datum-cell-${a.id}">${renderDatumCell(a)}</div>
@@ -1001,8 +880,7 @@ function getAPCardClass(a, apKey, stationFertig, isRunning) {
   const heute = toDateStr(new Date());
   const ueberfaellig = a.datum < heute && !a.fertig;
   if(ueberfaellig) return 'card-ueberfaellig';
-  // Any blockierung on the auftrag = red for all stations
-  if(a.blockierungen && Object.keys(a.blockierungen).length > 0) return 'card-ueberfaellig';
+  if(a.blockierungen && a.blockierungen[apKey]) return 'card-ueberfaellig';
   if(stationFertig) return 'card-fertig';
   if(isRunning) return 'card-aktiv';
   return '';
@@ -1026,7 +904,10 @@ function renderStationDots(a) {
 }
 
 function renderDatumCell(a) {
-  return `<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${formatDatum(a.datum)}</span>`;
+  return `<div style="display:flex;align-items:center;gap:5px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)">${formatDatum(a.datum)}</span>
+    <button class="btn-edit" style="padding:2px 6px;font-size:11px" onclick="editDatum('${a.id}')">✏</button>
+  </div>`;
 }
 
 function renderHalleVersandCell(a) {
@@ -1066,11 +947,9 @@ function renderAP(ap) {
   document.getElementById('apTabTitle').textContent = ap;
   const list = document.getElementById('apTabList');
   const countEl = document.getElementById('apTabCount');
-  const suche = (document.getElementById('apSuchfeld')?.value||'').toLowerCase().trim();
 
   const relevant = auftraegeForAP(ap)
     .filter(a => !a.fertig)
-    .filter(a => !suche || (a.nr||'').toLowerCase().includes(suche) || (a.kunde||'').toLowerCase().includes(suche))
     .sort((a,b) => {
       const apKey = ap.replace(/[^a-z0-9]/gi,'_');
       const aFertig = !!(a.stationFertig && a.stationFertig[apKey]);
@@ -1143,20 +1022,11 @@ function renderAP(ap) {
       });
       const abhStatus = relevantAbh.map(dep => {
         const depKey = dep.replace(/[^a-z0-9]/gi,'_');
-        let fertig = a.stationFertig && a.stationFertig[depKey];
-        if(!fertig && AP_PARALLEL[dep]) {
-          const siblings = Object.entries(AP_PARALLEL)
-            .filter(([k,v]) => v === AP_PARALLEL[dep] && k !== dep)
-            .map(([k]) => k);
-          fertig = siblings.some(s => {
-            const sk = s.replace(/[^a-z0-9]/gi,'_');
-            return a.stationFertig && a.stationFertig[sk];
-          });
-        }
+        const fertig = a.stationFertig && a.stationFertig[depKey];
         return { name: dep, fertig };
       });
       const abhBlock = abhStatus.length > 0 ? `
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Vorgänger</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             ${abhStatus.map(s=>`
@@ -1172,18 +1042,18 @@ function renderAP(ap) {
       card.id = `ap-card-${a.id}-${apKey}`;
       card.innerHTML = `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-          <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
+          ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
+          <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
         </div>
         <div class="hallen-kunde">${a.kunde}</div>
-        ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="background:#ff445522;border:1px solid var(--danger);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12px;color:var(--danger);font-weight:700">🔒 ${Object.values(a.blockierungen)[0]}</div>`:""}        ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:10px">⚡ ${a.notiz}</div>`:''}
+        ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:10px">${a.notiz}</div>`:''}
         <div style="margin-bottom:14px">
           <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="font-size:13px;padding:5px 10px;width:auto;height:auto">${a.sklasse}</span>
         </div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--text);margin-bottom:16px">${stkForAP||'–'} <span style="font-size:16px;color:var(--text2)">Stk.</span></div>
         ${abhBlock}
-        <!-- TIMER: hidden when fertig -->
-        ${!stationFertig ? `<div style="background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+        <!-- TIMER -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Zeit</div>
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div id="timer-display-${timerKey}" style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:${isRunning?'var(--accent)':'var(--text)'}">
@@ -1192,11 +1062,11 @@ function renderAP(ap) {
             <div style="display:flex;gap:6px">
               ${isRunning
                 ? `<button class="btn-fertig" style="padding:10px 16px;font-size:14px;background:var(--danger)" onclick="timerStop('${a.id}','${apKey}','${ap}')">⏹ Ende</button>`
-                : `<button class="btn-fertig" style="padding:14px 20px;font-size:16px;font-weight:700;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(0,200,150,0.35)" onclick="timerStart('${a.id}','${apKey}','${ap}')">▶ Beginn</button>`
+                : `<button class="btn-fertig" style="padding:10px 16px;font-size:14px" onclick="timerStart('${a.id}','${apKey}','${ap}')">▶ Beginn</button>`
               }
             </div>
           </div>
-        </div>` : ''}
+        </div>
 
         ${stationFertig
           ? `<div class="hallen-fertig-info">✓ ${ap} fertig</div>
@@ -1244,17 +1114,17 @@ const liveTimers = {}; // interval handles
 function calcTotalMin(timerData) {
   let total = timerData.totalMs || 0;
   if(timerData.start && !timerData.end) {
-    total += Math.max(0, Date.now() - new Date(timerData.start).getTime());
+    total += Date.now() - new Date(timerData.start).getTime();
   }
-  return Math.max(0, Math.floor(total / 60000));
+  return Math.floor(total / 60000);
 }
 
 function calcTotalMs(timerData) {
   let total = timerData.totalMs || 0;
   if(timerData.start && !timerData.end) {
-    total += Math.max(0, Date.now() - new Date(timerData.start).getTime());
+    total += Date.now() - new Date(timerData.start).getTime();
   }
-  return Math.max(0, total);
+  return total;
 }
 
 function formatMinutes(min) {
@@ -1278,7 +1148,6 @@ function getTotalAuftragMin(a) {
 }
 
 function formatElapsed(ms) {
-  if(!ms || ms < 0) ms = 0;
   const s = Math.floor(ms/1000);
   const m = Math.floor(s/60);
   const h = Math.floor(m/60);
@@ -1411,10 +1280,10 @@ function renderOffen() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
+        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
-      <div class="hallen-kunde">${a.kunde}</div>
+      <div class="hallen-kunde">${a.kunde}${a.notiz?`<span style="font-size:12px;color:var(--warn);margin-left:8px">${a.notiz}</span>`:''}</div>
       <div style="margin:8px 0">
         <span class="versand-badge ${vClass}" style="font-size:13px">${vIcon} ${a.versandart||'–'}</span>
       </div>
@@ -1510,9 +1379,9 @@ function renderGF() {
     card.style.cursor = 'grab';
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn);line-height:1">${String(a.prio||'–').padStart(2,'0')}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--warn);line-height:1">${String(a.prio||'–').padStart(2,'0')}</span>
         <div>
-          <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
+          <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
           <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-top:4px">${a.sklasse}</span>
         </div>
         <div style="margin-left:auto">
@@ -1666,7 +1535,10 @@ async function savePrio(id) {
 }
 
 function renderStkCell(a) {
-  return `<span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--text)">${a.stk||'–'}</span>`;
+  return `<div style="display:flex;align-items:center;gap:5px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--text)">${a.stk||'–'}</span>
+    <button class="btn-edit" style="padding:2px 6px;font-size:11px" onclick="editStk('${a.id}')">✏</button>
+  </div>`;
 }
 
 function editStk(id) {
@@ -1724,40 +1596,16 @@ function renderHalle() {
     `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''}`;
 
   const grid = document.getElementById('hallenGrid');
-  const isVersandbereit = (a) => {
-    if(a.stationFertig && Object.keys(a.stationFertig).some(k=>k.includes('Nachbearbeitung'))) return true;
-    if(a.gruppen && a.gruppen.some(g=>g.gruppe==='6')) return true;
-    if(a.gruppe === '6') return true;
-    return false;
-  };
-  const tagesAuftraege = auftraege.filter(a=>a.datum===zieldatum);
-  const versandbereitAndere = auftraege.filter(a=>a.datum!==zieldatum && !a.fertig && isVersandbereit(a));
-  const alle = [...tagesAuftraege, ...versandbereitAndere];
-  alle.sort((a,b) => {
-    const aV = isVersandbereit(a) && !a.fertig;
-    const bV = isVersandbereit(b) && !b.fertig;
-    if(aV && !bV) return -1;
-    if(!aV && bV) return 1;
-    if(a.datum !== b.datum) return a.datum.localeCompare(b.datum);
-    return a.nr.localeCompare(b.nr, undefined, {numeric:true});
-  });
-  const offen = alle.filter(a=>!a.fertig);
-  const fertigH = alle.filter(a=>a.fertig);
+  const tages = auftraege.filter(a=>a.datum===zieldatum).sort((a,b)=>a.nr.localeCompare(b.nr, undefined, {numeric:true}));
+  const offen = tages.filter(a=>!a.fertig);
+  const fertigH = tages.filter(a=>a.fertig);
 
-  if(alle.length===0){
-    grid.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine versandbereiten Aufträge</div></div>`;
+  if(tages.length===0){
+    grid.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine Aufträge für ${formatDatum(zieldatum)}</div></div>`;
     return;
   }
   grid.innerHTML='';
-  const versandbereitOffen = offen.filter(a=>isVersandbereit(a));
-  const nochNicht = offen.filter(a=>!isVersandbereit(a));
-  if(versandbereitOffen.length > 0) {
-    const hdr = document.createElement('div');
-    hdr.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);padding:4px 0 2px;border-bottom:2px solid var(--accent);margin-bottom:4px';
-    hdr.textContent = `✓ Versandbereit (${versandbereitOffen.length})`;
-    grid.appendChild(hdr);
-  }
-  [...versandbereitOffen,...nochNicht,...fertigH].forEach(a=>{
+  [...offen,...fertigH].forEach(a=>{
     const vIcon=VERSAND_ICONS[a.versandart]||'';
     const vClass=VERSAND_CLASS[a.versandart]||'';
     const versandKey = `${a.id}_Versand`;
@@ -1769,17 +1617,17 @@ function renderHalle() {
     card.className=`hallen-card${cardClass?' '+cardClass:''}`;
     card.innerHTML=`
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-        ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
+        ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
+        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
-      ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:8px">⚡ ${a.notiz}</div>`:''}
+      ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:8px">${a.notiz}</div>`:''}
       <div style="margin-bottom:14px" id="halle-versand-cell-${a.id}">
         ${renderHalleVersandCell(a)}
       </div>
       ${a.stk?`<div style="font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--text);margin-bottom:16px">${a.stk} <span style="font-size:16px;color:var(--text2)">Stk.</span></div>`:''}
       <!-- VERSAND TIMER -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Versandzeit</div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div id="timer-display-${versandKey}" style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:${versandRunning?'var(--accent)':versandMin>0?'var(--text)':'var(--text3)'}">
@@ -1843,9 +1691,9 @@ function addGruppeRow(gruppeVal='', stkVal='') {
       <option value="0" ${gruppeVal==='0'?'selected':''}>Gruppe 0 – CNC, AP-Armatur, Zusammenbau, Nachbearbeitung</option>
       <option value="1" ${gruppeVal==='1'?'selected':''}>Gruppe 1 – CNC, UP-Armatur 1+2, Zusammenbau, Nachbearbeitung</option>
       <option value="2" ${gruppeVal==='2'?'selected':''}>Gruppe 2 – Heizung</option>
-      <option value="3" ${gruppeVal==='3'?'selected':''}>Gruppe 3 – CNC, AP, UP-1+2, Heizung</option>
-      <option value="4" ${gruppeVal==='4'?'selected':''}>Gruppe 4 – CNC, AP, UP-1+2, Heizung</option>
-      <option value="5" ${gruppeVal==='5'?'selected':''}>Gruppe 5 – CNC, UP-1+2, Einbauelement</option>
+      <option value="3" ${gruppeVal==='3'?'selected':''}>Gruppe 3 – CNC, AP, UP-1+2, CNC, Heizung</option>
+      <option value="4" ${gruppeVal==='4'?'selected':''}>Gruppe 4 – CNC, AP, UP-1+2, CNC, Heizung</option>
+      <option value="5" ${gruppeVal==='5'?'selected':''}>Gruppe 5 – CNC, UP-1+2, CNC, Einbauelement</option>
       <option value="6" ${gruppeVal==='6'?'selected':''}>Gruppe 6 – Versand</option>
     </select>
     <input type="number" class="form-input gruppe-stk" placeholder="Stk." min="1" value="${stkVal}" style="text-align:center;font-size:14px;font-weight:600">
@@ -1900,7 +1748,6 @@ function openEdit(id) {
   document.getElementById('inp-sklasse').value=a.sklasse;
   document.getElementById('inp-versandart').value=a.versandart||'Paketdienst';
   document.getElementById('inp-notiz').value=a.notiz||'';
-  document.getElementById('inp-kommission').value=a.kommission||'';
   document.getElementById('inp-prio').value=a.prio||'';
   // Gruppen wiederherstellen
   document.getElementById('gruppenRows').innerHTML='';
@@ -1930,7 +1777,6 @@ async function saveAuftrag() {
   const sklasse=document.getElementById('inp-sklasse').value;
   const versandart=document.getElementById('inp-versandart').value;
   const notiz=document.getElementById('inp-notiz').value.trim();
-  const kommission=document.getElementById('inp-kommission').value.trim();
   const prioInput=parseInt(document.getElementById('inp-prio').value);
   const gruppen=getGruppenData();
   // Gesamt-Stückzahl = Summe aller Gruppen
@@ -1939,11 +1785,11 @@ async function saveAuftrag() {
 
   if(editingId) {
     const a=auftraege.find(x=>x.id===editingId);
-    if(a) Object.assign(a,{nr,kunde,datum,sklasse,versandart,notiz,kommission,stk,gruppen,prio:prioInput||a.prio});
+    if(a) Object.assign(a,{nr,kunde,datum,sklasse,versandart,notiz,stk,gruppen,prio:prioInput||a.prio});
   } else {
     const newPrio = prioInput || getNextPrio(datum);
     auftraege.filter(x=>x.datum===datum&&x.prio>=newPrio).forEach(x=>x.prio++);
-    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,kommission,stk,gruppen,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString()});
+    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,stk,gruppen,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString()});
     auftraege.filter(x=>x.datum===datum).sort((a,b)=>a.prio-b.prio).forEach((x,i)=>x.prio=i+1);
   }
   selectedDatum=datum;
@@ -2030,7 +1876,7 @@ function renderStoerung() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
+        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
@@ -2074,32 +1920,27 @@ function renderBearbeitung() {
     const laufend = Object.entries(a.timers||{})
       .filter(([k,t]) => t.start && !t.end)
       .map(([k,t]) => {
-        const apKey = k.replace(`${a.id}_`,'');
-        const allAPs = Object.values(GRUPPEN).flatMap(g=>g.aps);
-        const apName = allAPs.find(ap => ap.replace(/[^a-z0-9]/gi,'_') === apKey) || apKey.replace(/_/g,' ');
+        // Convert timerKey back to AP name
+        const apName = k.replace(`${a.id}_`,'').replace(/_/g,' ').replace(/(\d)/g,' $1').trim();
         return { key: k, timerData: t, apName };
       });
 
     const card = document.createElement('div');
     card.className = 'hallen-card card-aktiv';
     card.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px">
-          ${a.prio?`<span style="font-size:14px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--text)">${fmtNr(a.nr)}</span>
-        </div>
-        <span class="s-badge badge-${a.sklasse.toLowerCase()}">${a.sklasse}</span>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
+        <div class="hallen-nr" style="margin-bottom:0">${a.nr}</div>
+        <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
-      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">${a.kunde}</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:14px">${formatDatum(a.datum)}</div>
+      <div class="hallen-kunde">${a.kunde}</div>
+      <div style="margin:6px 0 10px"><span class="versand-badge ${vClass}">${vIcon} ${a.versandart||''}</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:12px">${formatDatum(a.datum)}</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${laufend.map(({key, timerData, apName}) => `
-          <div style="background:var(--surface);border:1.5px solid var(--accent);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
-            <div>
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:4px">${apName}</div>
-              <div id="bearbeitung-timer-${key}" style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--text)">00:00:00</div>
-            </div>
-            <div style="font-size:28px">⚙</div>
+          <div style="background:var(--surface2);border:1px solid #00c89644;border-radius:8px;padding:10px 12px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${apName}</div>
+            <div id="bearbeitung-timer-${key}" style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--accent)">00:00:00</div>
           </div>`).join('')}
       </div>`;
     grid.appendChild(card);
@@ -2126,7 +1967,7 @@ function updateBearbeitungBadge() {
 function updateStoerungBadge() {
   const count = auftraege.filter(a => a.blockierungen && Object.keys(a.blockierungen).length > 0 && !a.fertig).length;
   const btn = document.getElementById('tab-btn-stoerung');
-  if(btn) { btn.textContent = count > 0 ? `⚠(${count}) Störungen` : '⚠ Störungen'; btn.style.color = count > 0 ? 'var(--danger)' : ''; }
+  if(btn) { btn.textContent = count > 0 ? `⚠ Störungen (${count})` : '⚠ Störungen'; btn.style.color = count > 0 ? 'var(--danger)' : ''; }
 }
 
 function renderAll() { renderWoche(); renderAuftraege(); updateStoerungBadge(); updateBearbeitungBadge(); }
@@ -2159,22 +2000,12 @@ function acShow(field) {
   if(suggestions.length===0){dd.classList.add('hidden');return;}
   acIdx[field]=-1;
   dd.innerHTML=suggestions.map(s=>{
-    const escaped=val.replace(/[-.*+?^${}()|[\]\\]/g,'\\$&');
-    const h=s.replace(new RegExp('('+escaped+')', 'gi'),'<mark>$1</mark>');
+    const h=s.replace(new RegExp(`(${val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>');
     return `<div class="ac-item" data-val="${s}" onmousedown="acSelect('${field}','${s}')">${h}</div>`;
   }).join('');
-  const pos=()=>{
-    const r=inp.getBoundingClientRect();
-    dd.style.top=(r.bottom+2)+'px';
-    dd.style.left=r.left+'px';
-    dd.style.width=r.width+'px';
-  };
-  pos();
   dd.classList.remove('hidden');
-  const modal=document.querySelector('.modal');
-  if(modal){modal._acListener=pos;modal.addEventListener('scroll',pos,{passive:true});}
 }
-function acHide(field){ setTimeout(()=>{ document.getElementById('ac-'+field).classList.add('hidden'); const modal=document.querySelector('.modal'); if(modal&&modal._acListener){modal.removeEventListener('scroll',modal._acListener);} },150); }
+function acHide(field){ setTimeout(()=>document.getElementById('ac-'+field).classList.add('hidden'),150); }
 function acSelect(field,val){ document.getElementById('inp-'+field).value=val; document.getElementById('ac-'+field).classList.add('hidden'); }
 function acKey(e,field){
   const dd=document.getElementById('ac-'+field);
@@ -2191,15 +2022,10 @@ function acKey(e,field){
 // ─── START ────────────────────────────────────────────────────────────────
 initDate();
 initTheme();
-switchTab('versand');
 initBin().then(() => {
   loadFromStorage();
   startPolling();
 });
 </script>
-
-<!-- AUTOCOMPLETE DROPDOWNS - global, outside modal -->
-<div class="ac-dropdown hidden" id="ac-nr" style="position:fixed;z-index:99999"></div>
-<div class="ac-dropdown hidden" id="ac-kunde" style="position:fixed;z-index:99999"></div>
 </body>
 </html>
