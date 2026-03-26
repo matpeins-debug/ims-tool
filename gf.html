@@ -183,12 +183,12 @@
   }
   .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,200,150,0.15); }
   .form-input::placeholder { color:var(--text3); -webkit-text-fill-color:var(--text3); }
-  select.form-input { cursor:pointer; appearance:none; -webkit-appearance:none; -moz-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; border-radius:6px; }
+  select.form-input { cursor:pointer !important; appearance:none !important; -webkit-appearance:none !important; -moz-appearance:none !important; background-color:var(--surface2) !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important; background-repeat:no-repeat !important; background-position:right 12px center !important; padding-right:32px !important; border-radius:6px !important; background-size:12px !important; }
   select.form-input option { background:var(--surface); color:var(--text); }
   body.light .form-input { background:#f0f4fa; border-color:#b0bace; color:var(--text) !important; -webkit-text-fill-color:var(--text); }
   body.light .form-input:focus { background:#fff; border-color:var(--accent); }
   body.light .form-input::placeholder { color:#9099b0; -webkit-text-fill-color:#9099b0; }
-  body.light select.form-input { background-color:#f0f4fa; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555d78' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  body.light select.form-input { background-color:#f0f4fa !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555d78' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important; color:var(--text) !important; border-color:#b0bace !important; }
   .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
   .modal-actions .btn-primary { padding:9px 24px; font-size:14px; }
   .modal-actions .btn-ghost { padding:9px 16px; font-size:14px; }
@@ -1042,7 +1042,7 @@ function renderAuftraege() {
         </div>
         <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px">${a.kunde}</div>
         ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-bottom:4px">⚠ ${Object.values(a.blockierungen)[0]}</div>`:''}
-        ${a.notiz?`<div style="font-size:11px;color:var(--warn);margin-bottom:4px">${a.notiz}</div>`:''}
+        ${a.kommission?`<div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:2px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:11px;color:var(--text3);margin-bottom:4px">${a.notiz}</div>`:''}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="display:flex;flex-wrap:wrap;gap:3px">${renderStationDots(a)}</div>
           <div style="display:flex;align-items:center;gap:6px">
@@ -1079,7 +1079,7 @@ function renderAuftraege() {
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
         ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:2px">⚠ ${Object.entries(a.blockierungen).map(([k,v])=>`${k}: ${v}`).join(' | ')}</div>`:''}
-        ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
+        ${a.kommission?`<div style="font-size:11px;color:var(--warn);font-weight:700">📋 ${a.kommission}</div>`:''}${a.notiz?`<div class="auftrag-notiz" style="color:var(--text3)">${a.notiz}</div>`:''}
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${renderStationDots(a)}</div>
       </div>
       <div id="datum-cell-${a.id}">${renderDatumCell(a)}</div>
@@ -1289,7 +1289,7 @@ function renderAP(ap) {
           <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         </div>
         <div class="hallen-kunde">${a.kunde}</div>
-        ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:10px">${a.notiz}</div>`:''}
+        ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px">${a.notiz}</div>`:''}
         <div style="margin-bottom:14px">
           <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="font-size:13px;padding:5px 10px;width:auto;height:auto">${a.sklasse}</span>
         </div>
@@ -1527,7 +1527,7 @@ function renderOffen() {
         <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
-      <div class="hallen-kunde">${a.kunde}${a.notiz?`<span style="font-size:12px;color:var(--warn);margin-left:8px">${a.notiz}</span>`:''}</div>
+      <div class="hallen-kunde">${a.kunde}</div>
       <div style="margin:8px 0">
         <span class="versand-badge ${vClass}" style="font-size:13px">${vIcon} ${a.versandart||'–'}</span>
       </div>
@@ -1935,7 +1935,7 @@ function renderHalle() {
         <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
-      ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:8px">${a.notiz}</div>`:''}
+      ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">${a.notiz}</div>`:''}
       <div style="margin-bottom:14px" id="halle-versand-cell-${a.id}">
         ${renderHalleVersandCell(a)}
       </div>
