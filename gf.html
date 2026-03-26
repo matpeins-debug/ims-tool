@@ -523,62 +523,59 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
         <div class="ac-wrapper">
           <input class="form-input" id="inp-nr" type="text" placeholder="z.B. 2023500" autocomplete="off"
             oninput="acShow('nr')" onkeydown="acKey(event,'nr')" onfocus="acShow('nr')" onblur="acHide('nr')">
-
-```
+          <div class="ac-dropdown hidden" id="ac-nr"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Versanddatum *</label>
+        <input class="form-input" id="inp-datum" type="date">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Kunde *</label>
+        <div class="ac-wrapper">
+          <input class="form-input" id="inp-kunde" type="text" placeholder="Kundenname" autocomplete="off"
+            oninput="acShow('kunde')" onkeydown="acKey(event,'kunde')" onfocus="acShow('kunde')" onblur="acHide('kunde')">
+          <div class="ac-dropdown hidden" id="ac-kunde"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">S-Klasse *</label>
+        <select class="form-input" id="inp-sklasse">
+          <option value="S1">S1 – Kleinserie</option>
+          <option value="S2" selected>S2 – Standard</option>
+          <option value="S3">S3 – Sonder</option>
+          <option value="S0">S0 – Handel</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Versandart *</label>
+        <select class="form-input" id="inp-versandart">
+          <option value="Paketdienst">📦 Paketdienst</option>
+          <option value="Spedition">🚛 Spedition</option>
+          <option value="Kundenabholung">🏠 Kundenabholung</option>
+          <option value="IMS-Zustellung">🚐 IMS-Zustellung</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priorität</label>
+        <input class="form-input" id="inp-prio" type="number" min="1" max="99" placeholder="z.B. 01">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notiz</label>
+        <input class="form-input" id="inp-notiz" type="text" placeholder="z.B. DRINGEND, Spedition Dachser...">
+      </div>
+      <div class="form-group form-full">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label class="form-label" style="margin:0">Gruppen & Stückzahlen</label>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addGruppeRow()">+ Gruppe hinzufügen</button>
+        </div>
+        <div id="gruppenRows"></div>
+      </div>
     </div>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Versanddatum *</label>
-    <input class="form-input" id="inp-datum" type="date">
-  </div>
-  <div class="form-group form-full">
-    <label class="form-label">Kunde *</label>
-    <div class="ac-wrapper">
-      <input class="form-input" id="inp-kunde" type="text" placeholder="Kundenname" autocomplete="off"
-        oninput="acShow('kunde')" onkeydown="acKey(event,'kunde')" onfocus="acShow('kunde')" onblur="acHide('kunde')">
-      
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="saveAuftrag()">Speichern</button>
     </div>
-  </div>
-  <div class="form-group">
-    <label class="form-label">S-Klasse *</label>
-    <select class="form-input" id="inp-sklasse">
-      <option value="S1">S1 – Kleinserie</option>
-      <option value="S2" selected>S2 – Standard</option>
-      <option value="S3">S3 – Sonder</option>
-      <option value="S0">S0 – Handel</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Versandart *</label>
-    <select class="form-input" id="inp-versandart">
-      <option value="Paketdienst">📦 Paketdienst</option>
-      <option value="Spedition">🚛 Spedition</option>
-      <option value="Kundenabholung">🏠 Kundenabholung</option>
-      <option value="IMS-Zustellung">🚐 IMS-Zustellung</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Priorität</label>
-    <input class="form-input" id="inp-prio" type="number" min="1" max="99" placeholder="z.B. 01">
-  </div>
-  <div class="form-group form-full">
-    <label class="form-label">Notiz</label>
-    <input class="form-input" id="inp-notiz" type="text" placeholder="z.B. DRINGEND, Spedition Dachser...">
-  </div>
-  <div class="form-group form-full">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <label class="form-label" style="margin:0">Gruppen & Stückzahlen</label>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="addGruppeRow()">+ Gruppe hinzufügen</button>
-    </div>
-    <div id="gruppenRows"></div>
-  </div>
-</div>
-<div class="modal-actions">
-  <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
-  <button class="btn btn-primary" id="modalSaveBtn" onclick="saveAuftrag()">Speichern</button>
-</div>
-```
-
   </div>
 </div>
 
@@ -2227,21 +2224,17 @@ function acShow(field) {
   if(suggestions.length===0){dd.classList.add('hidden');return;}
   acIdx[field]=-1;
   dd.innerHTML=suggestions.map(s=>{
-    const h=s.replace(new RegExp(`(${val.replace(/[.*+?^${}()|[\]\]/g,'\$&')})`, 'gi'),'<mark>$1</mark>');
+    const h=s.replace(new RegExp(`(${val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>');
     return `<div class="ac-item" data-val="${s}" onmousedown="acSelect('${field}','${s}')">${h}</div>`;
   }).join('');
-  const pos=()=>{
-    const r=inp.getBoundingClientRect();
-    dd.style.top=(r.bottom+2)+'px';
-    dd.style.left=r.left+'px';
-    dd.style.width=r.width+'px';
-  };
-  pos();
+  // Position using fixed coordinates based on input position
+  const rect=inp.getBoundingClientRect();
+  dd.style.top=(rect.bottom+4)+'px';
+  dd.style.left=rect.left+'px';
+  dd.style.width=rect.width+'px';
   dd.classList.remove('hidden');
-  const modal=document.querySelector('.modal');
-  if(modal){modal._acListener=pos;modal.addEventListener('scroll',pos,{passive:true});}
 }
-function acHide(field){ setTimeout(()=>{ document.getElementById('ac-'+field).classList.add('hidden'); const modal=document.querySelector('.modal'); if(modal&&modal._acListener){modal.removeEventListener('scroll',modal._acListener);} },150); }
+function acHide(field){ setTimeout(()=>document.getElementById('ac-'+field).classList.add('hidden'),150); }
 function acSelect(field,val){ document.getElementById('inp-'+field).value=val; document.getElementById('ac-'+field).classList.add('hidden'); }
 function acKey(e,field){
   const dd=document.getElementById('ac-'+field);
@@ -2264,9 +2257,5 @@ initBin().then(() => {
 });
 </script>
 
-<!-- AUTOCOMPLETE DROPDOWNS - global, outside modal -->
-
-<div class="ac-dropdown hidden" id="ac-nr" style="position:fixed;z-index:99999"></div>
-<div class="ac-dropdown hidden" id="ac-kunde" style="position:fixed;z-index:99999"></div>
 </body>
 </html>
