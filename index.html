@@ -147,12 +147,12 @@
   .form-input { background:var(--surface2); border:1.5px solid var(--border); border-radius:6px; padding:10px 12px; color:var(--text) !important; -webkit-text-fill-color:var(--text); font-family:'IBM Plex Sans',sans-serif; font-size:14px; outline:none; transition:border-color 0.15s, box-shadow 0.15s; width:100%; box-sizing:border-box; appearance:none; -webkit-appearance:none; }
   .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,200,150,0.15); }
   .form-input::placeholder { color:var(--text3); -webkit-text-fill-color:var(--text3); }
-  select.form-input { cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+  select.form-input { cursor:pointer !important; appearance:none !important; -webkit-appearance:none !important; -moz-appearance:none !important; background-color:var(--surface2) !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important; background-repeat:no-repeat !important; background-position:right 12px center !important; padding-right:32px !important; border-radius:6px !important; background-size:12px !important; }
   select.form-input option { background:var(--surface); color:var(--text); }
   body.light .form-input { background:#f0f4fa; border-color:#b0bace; color:var(--text) !important; -webkit-text-fill-color:var(--text); }
   body.light .form-input:focus { background:#fff; border-color:var(--accent); }
   body.light .form-input::placeholder { color:#9099b0; -webkit-text-fill-color:#9099b0; }
-  body.light select.form-input { background-color:#f0f4fa; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555d78' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  body.light select.form-input { background-color:#f0f4fa !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555d78' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important; color:var(--text) !important; border-color:#b0bace !important; }
   .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
   .modal-actions .btn-primary { padding:9px 24px; font-size:14px; }
   .modal-actions .btn-ghost { padding:9px 16px; font-size:14px; }
@@ -454,7 +454,12 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
 <div id="tab-ap" class="main hidden">
   <div class="section-header">
     <div class="section-title" id="apTabTitle"></div>
-    <div id="apTabCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="apTabCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
+      <input type="text" id="apSuchfeld" placeholder="🔍 Suche..." oninput="renderAP(document.getElementById('apTabTitle').textContent)"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:160px;"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
   </div>
   <div id="apTabList"></div>
 </div>
@@ -506,6 +511,10 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
       <div class="form-group">
         <label class="form-label">Priorität</label>
         <input class="form-input" id="inp-prio" type="number" min="1" max="99" placeholder="z.B. 01">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Kommission</label>
+        <input class="form-input" id="inp-kommission" type="text" placeholder="z.B. Kommission 2024-001">
       </div>
       <div class="form-group form-full">
         <label class="form-label">Notiz</label>
@@ -633,6 +642,24 @@ function formatDatum(str) { if(!str)return'–'; const[y,m,d]=str.split('-'); re
 function getWochentag(str) { return['So','Mo','Di','Mi','Do','Fr','Sa'][new Date(str).getDay()]; }
 function formatZeit(iso) { if(!iso)return''; const d=new Date(iso); return d.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'}); }
 function formatDateTime(iso) { if(!iso)return'–'; const d=new Date(iso); return d.toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'}); }
+
+function getDurchlaufzeit(a) {
+  if(!a.timers) return null;
+  const allStarts = Object.values(a.timers).map(t=>t.start).filter(Boolean).sort();
+  if(allStarts.length === 0) return null;
+  const ersteEinstempelung = new Date(allStarts[0]);
+  const ende = a.fertigAm ? new Date(a.fertigAm) : null;
+  if(!ende) return null;
+  const minuten = Math.round((ende - ersteEinstempelung) / 60000);
+  if(minuten < 0) return null;
+  return minuten;
+}
+function formatDurchlaufzeit(min) {
+  if(min === null || min === undefined) return '–';
+  if(min < 60) return `${min} Min`;
+  const h = Math.floor(min/60); const m = min % 60;
+  return m > 0 ? `${h}h ${m}min` : `${h}h`;
+}
 
 function downloadCSV() {
   const fertig = auftraege.filter(a=>a.fertig);
@@ -939,7 +966,7 @@ function renderAuftraege() {
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
         ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:2px">⚠ ${Object.entries(a.blockierungen).map(([k,v])=>`${k}: ${v}`).join(' | ')}</div>`:''}
-        ${a.notiz?`<div class="auftrag-notiz">${a.notiz}</div>`:''}
+        ${a.kommission?`<div style="font-size:11px;color:var(--warn);font-weight:700">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:11px;color:var(--text);font-weight:600">⚡ ${a.notiz}</div>`:''}
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${renderStationDots(a)}</div>
       </div>
       <div id="datum-cell-${a.id}">${renderDatumCell(a)}</div>
@@ -974,7 +1001,8 @@ function getAPCardClass(a, apKey, stationFertig, isRunning) {
   const heute = toDateStr(new Date());
   const ueberfaellig = a.datum < heute && !a.fertig;
   if(ueberfaellig) return 'card-ueberfaellig';
-  if(a.blockierungen && a.blockierungen[apKey]) return 'card-ueberfaellig';
+  // Any blockierung on the auftrag = red for all stations
+  if(a.blockierungen && Object.keys(a.blockierungen).length > 0) return 'card-ueberfaellig';
   if(stationFertig) return 'card-fertig';
   if(isRunning) return 'card-aktiv';
   return '';
@@ -1038,9 +1066,11 @@ function renderAP(ap) {
   document.getElementById('apTabTitle').textContent = ap;
   const list = document.getElementById('apTabList');
   const countEl = document.getElementById('apTabCount');
+  const suche = (document.getElementById('apSuchfeld')?.value||'').toLowerCase().trim();
 
   const relevant = auftraegeForAP(ap)
     .filter(a => !a.fertig)
+    .filter(a => !suche || (a.nr||'').toLowerCase().includes(suche) || (a.kunde||'').toLowerCase().includes(suche))
     .sort((a,b) => {
       const apKey = ap.replace(/[^a-z0-9]/gi,'_');
       const aFertig = !!(a.stationFertig && a.stationFertig[apKey]);
@@ -1146,7 +1176,7 @@ function renderAP(ap) {
           <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         </div>
         <div class="hallen-kunde">${a.kunde}</div>
-        ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:10px">${a.notiz}</div>`:''}
+        ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="background:#ff445522;border:1px solid var(--danger);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12px;color:var(--danger);font-weight:700">🔒 ${Object.values(a.blockierungen)[0]}</div>`:""}        ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:10px">⚡ ${a.notiz}</div>`:''}
         <div style="margin-bottom:14px">
           <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="font-size:13px;padding:5px 10px;width:auto;height:auto">${a.sklasse}</span>
         </div>
@@ -1214,17 +1244,17 @@ const liveTimers = {}; // interval handles
 function calcTotalMin(timerData) {
   let total = timerData.totalMs || 0;
   if(timerData.start && !timerData.end) {
-    total += Date.now() - new Date(timerData.start).getTime();
+    total += Math.max(0, Date.now() - new Date(timerData.start).getTime());
   }
-  return Math.floor(total / 60000);
+  return Math.max(0, Math.floor(total / 60000));
 }
 
 function calcTotalMs(timerData) {
   let total = timerData.totalMs || 0;
   if(timerData.start && !timerData.end) {
-    total += Date.now() - new Date(timerData.start).getTime();
+    total += Math.max(0, Date.now() - new Date(timerData.start).getTime());
   }
-  return total;
+  return Math.max(0, total);
 }
 
 function formatMinutes(min) {
@@ -1248,6 +1278,7 @@ function getTotalAuftragMin(a) {
 }
 
 function formatElapsed(ms) {
+  if(!ms || ms < 0) ms = 0;
   const s = Math.floor(ms/1000);
   const m = Math.floor(s/60);
   const h = Math.floor(m/60);
@@ -1383,7 +1414,7 @@ function renderOffen() {
         <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
-      <div class="hallen-kunde">${a.kunde}${a.notiz?`<span style="font-size:12px;color:var(--warn);margin-left:8px">${a.notiz}</span>`:''}</div>
+      <div class="hallen-kunde">${a.kunde}</div>
       <div style="margin:8px 0">
         <span class="versand-badge ${vClass}" style="font-size:13px">${vIcon} ${a.versandart||'–'}</span>
       </div>
@@ -1693,16 +1724,40 @@ function renderHalle() {
     `${getWochentag(zieldatum)}, ${formatDatum(zieldatum)}${isHeute?' – HEUTE':''}`;
 
   const grid = document.getElementById('hallenGrid');
-  const tages = auftraege.filter(a=>a.datum===zieldatum).sort((a,b)=>a.nr.localeCompare(b.nr, undefined, {numeric:true}));
-  const offen = tages.filter(a=>!a.fertig);
-  const fertigH = tages.filter(a=>a.fertig);
+  const isVersandbereit = (a) => {
+    if(a.stationFertig && Object.keys(a.stationFertig).some(k=>k.includes('Nachbearbeitung'))) return true;
+    if(a.gruppen && a.gruppen.some(g=>g.gruppe==='6')) return true;
+    if(a.gruppe === '6') return true;
+    return false;
+  };
+  const tagesAuftraege = auftraege.filter(a=>a.datum===zieldatum);
+  const versandbereitAndere = auftraege.filter(a=>a.datum!==zieldatum && !a.fertig && isVersandbereit(a));
+  const alle = [...tagesAuftraege, ...versandbereitAndere];
+  alle.sort((a,b) => {
+    const aV = isVersandbereit(a) && !a.fertig;
+    const bV = isVersandbereit(b) && !b.fertig;
+    if(aV && !bV) return -1;
+    if(!aV && bV) return 1;
+    if(a.datum !== b.datum) return a.datum.localeCompare(b.datum);
+    return a.nr.localeCompare(b.nr, undefined, {numeric:true});
+  });
+  const offen = alle.filter(a=>!a.fertig);
+  const fertigH = alle.filter(a=>a.fertig);
 
-  if(tages.length===0){
-    grid.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine Aufträge für ${formatDatum(zieldatum)}</div></div>`;
+  if(alle.length===0){
+    grid.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine versandbereiten Aufträge</div></div>`;
     return;
   }
   grid.innerHTML='';
-  [...offen,...fertigH].forEach(a=>{
+  const versandbereitOffen = offen.filter(a=>isVersandbereit(a));
+  const nochNicht = offen.filter(a=>!isVersandbereit(a));
+  if(versandbereitOffen.length > 0) {
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);padding:4px 0 2px;border-bottom:2px solid var(--accent);margin-bottom:4px';
+    hdr.textContent = `✓ Versandbereit (${versandbereitOffen.length})`;
+    grid.appendChild(hdr);
+  }
+  [...versandbereitOffen,...nochNicht,...fertigH].forEach(a=>{
     const vIcon=VERSAND_ICONS[a.versandart]||'';
     const vClass=VERSAND_CLASS[a.versandart]||'';
     const versandKey = `${a.id}_Versand`;
@@ -1718,7 +1773,7 @@ function renderHalle() {
         <div class="hallen-nr" style="margin-bottom:0">${fmtNr(a.nr)}</div>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
-      ${a.notiz?`<div style="font-size:13px;color:var(--warn);font-weight:500;margin-bottom:8px">${a.notiz}</div>`:''}
+      ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:8px">⚡ ${a.notiz}</div>`:''}
       <div style="margin-bottom:14px" id="halle-versand-cell-${a.id}">
         ${renderHalleVersandCell(a)}
       </div>
@@ -1845,6 +1900,7 @@ function openEdit(id) {
   document.getElementById('inp-sklasse').value=a.sklasse;
   document.getElementById('inp-versandart').value=a.versandart||'Paketdienst';
   document.getElementById('inp-notiz').value=a.notiz||'';
+  document.getElementById('inp-kommission').value=a.kommission||'';
   document.getElementById('inp-prio').value=a.prio||'';
   // Gruppen wiederherstellen
   document.getElementById('gruppenRows').innerHTML='';
@@ -1874,6 +1930,7 @@ async function saveAuftrag() {
   const sklasse=document.getElementById('inp-sklasse').value;
   const versandart=document.getElementById('inp-versandart').value;
   const notiz=document.getElementById('inp-notiz').value.trim();
+  const kommission=document.getElementById('inp-kommission').value.trim();
   const prioInput=parseInt(document.getElementById('inp-prio').value);
   const gruppen=getGruppenData();
   // Gesamt-Stückzahl = Summe aller Gruppen
@@ -1882,11 +1939,11 @@ async function saveAuftrag() {
 
   if(editingId) {
     const a=auftraege.find(x=>x.id===editingId);
-    if(a) Object.assign(a,{nr,kunde,datum,sklasse,versandart,notiz,stk,gruppen,prio:prioInput||a.prio});
+    if(a) Object.assign(a,{nr,kunde,datum,sklasse,versandart,notiz,kommission,stk,gruppen,prio:prioInput||a.prio});
   } else {
     const newPrio = prioInput || getNextPrio(datum);
     auftraege.filter(x=>x.datum===datum&&x.prio>=newPrio).forEach(x=>x.prio++);
-    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,stk,gruppen,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString()});
+    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,kommission,stk,gruppen,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString()});
     auftraege.filter(x=>x.datum===datum).sort((a,b)=>a.prio-b.prio).forEach((x,i)=>x.prio=i+1);
   }
   selectedDatum=datum;
