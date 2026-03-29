@@ -298,15 +298,39 @@ function fmtNr(n){const s=String(n).replace(/\s/g,'');return s.length>4?s.slice(
 function getAPs(a){const s=new Set();(a.gruppen||(a.gruppe?[{gruppe:a.gruppe}]:[])).forEach(g=>{if(GR[g.gruppe])GR[g.gruppe].aps.forEach(ap=>s.add(ap));});return[...s];}
 function getVFaps(a){return getAPs(a).filter(ap=>VF_APS.includes(ap));}
 function sf(a,ap){if(!a.stationFertig)return false;const k=ap.replace(/[^a-z0-9]/gi,'_');return!!(a.stationFertig[ap]||a.stationFertig[k]);}
-function ta(a,ap){if(!a.timers)return false;const k=a.id+'_'+ap.replace(/[^a-z0-9]/gi,'_');const t=a.timers[k];return!!(t&&t.start&&!t.end);}
+// Timer AKTUELL aktiv (läuft gerade)
+function ta(a,ap){
+  if(!a.timers)return false;
+  const k=a.id+'_'+ap.replace(/[^a-z0-9]/gi,'_');
+  const t=a.timers[k];
+  if(t&&t.start&&!t.end)return true;
+  // Fallback: suche in allen Keys
+  const needle=ap.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  return Object.keys(a.timers).some(key=>{
+    const lk=key.toLowerCase();
+    const v=a.timers[key];
+    return lk.includes(needle)&&v&&v.start&&!v.end;
+  });
+}
 function sbadge(sk){const s=(sk||'').toLowerCase();return s?'<span class="sb sb-'+s+'">'+sk+'</span>':'';}
 function apShort(ap){return ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ').replace('Einbauelement','EB');}
 function isBlk(a){return(a.blockierungen&&Object.keys(a.blockierungen).length>0)||(a.blockierung&&String(a.blockierung).trim()!=='');}
 function blkTxt(a){if(a.blockierungen&&Object.keys(a.blockierungen).length>0)return Object.values(a.blockierungen).filter(Boolean).join(', ');if(a.blockierung)return String(a.blockierung).trim();return'';}
 function isMatch(a){if(!searchTerm)return true;const t=searchTerm.toLowerCase();return String(a.nr).includes(t)||String(a.kunde||'').toLowerCase().includes(t);}
 function isActive(a){return ALL_APS.some(ap=>ta(a,ap));}
-// Timer JEMALS gestartet (auch wenn pausiert/gestoppt) → Auftrag springt nicht zurück
-function tg(a,ap){if(!a.timers)return false;const k=a.id+'_'+ap.replace(/[^a-z0-9]/gi,'_');const t=a.timers[k];return!!(t&&t.start);}
+// Timer JEMALS gestartet – robust: durchsucht ALLE Timer-Keys nach Stationsname
+function tg(a,ap){
+  if(!a.timers)return false;
+  // Exakter Key-Versuch (wie ta)
+  const k=a.id+'_'+ap.replace(/[^a-z0-9]/gi,'_');
+  if(a.timers[k]&&a.timers[k].start)return true;
+  // Fallback: suche in allen Keys nach dem Stationsnamen
+  const needle=ap.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  return Object.keys(a.timers).some(key=>{
+    const lk=key.toLowerCase();
+    return lk.includes(needle)&&a.timers[key]&&a.timers[key].start;
+  });
+}
 function matchSFilter(a){if(!sFilter)return true;return(a.sklasse||'').toUpperCase()===sFilter.toUpperCase();}
 function hl(a){return isMatch(a)?' highlight':'';}
 
