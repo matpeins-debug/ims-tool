@@ -82,10 +82,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .kachel.gruen{border-color:var(--accent);background:var(--accent-dim);}
 .kachel.orange{border-color:var(--warn);background:var(--warn-dim);}
 .kachel.rot{border-color:var(--danger);background:var(--danger-dim);}
-.kachel.blockiert{border-color:var(--danger);border-width:2px;background:rgba(239,68,68,0.10);}
-body.light .kachel.blockiert{background:rgba(220,38,38,0.12);}
 .kachel.blau{border-color:var(--accent2);background:var(--accent2-dim);}
 .kachel.leer{border:1.5px dashed var(--border);background:transparent;display:flex;align-items:center;justify-content:center;min-height:60px;}
+/* blockiert MUSS nach allen Farbklassen stehen → überschreibt immer */
+.kachel.blockiert{border-color:var(--danger)!important;border-width:2px;background:rgba(239,68,68,0.12)!important;}
+body.light .kachel.blockiert{background:rgba(220,38,38,0.14)!important;}
 
 .k-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
 .k-nr{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;color:var(--text);line-height:1;}
@@ -367,6 +368,18 @@ async function load(){
 function emptyHtml(txt){return'<div class="kachel leer"><div class="k-leer-txt">'+txt+'</div></div>';}
 
 // ── RENDER ───────────────────────────────────────────
+// Blockierung prüfen: beide Felder (blockierungen Objekt + blockierung String)
+function blk(a){
+  if(a.blockierungen&&Object.keys(a.blockierungen).length>0)return true;
+  if(a.blockierung&&String(a.blockierung).trim())return true;
+  return false;
+}
+function blkText(a){
+  if(a.blockierungen&&Object.keys(a.blockierungen).length>0)return Object.values(a.blockierungen).filter(Boolean).join(', ');
+  if(a.blockierung)return String(a.blockierung).trim();
+  return'';
+}
+
 function render(){
   const{inVF,inAZ,inZB,inSL,inNB,inVS}=kategorisiere(auftraege);
 
@@ -377,15 +390,14 @@ function render(){
   }else{
     vfEl.innerHTML=inVF.sort((a,b)=>(a.prio||99)-(b.prio||99)).map(a=>{
       const hat=VF_APS.some(ap=>ta(a,ap));
-      const blk=a.blockierungen&&Object.keys(a.blockierungen).length>0;
-      const blkText=blk?Object.values(a.blockierungen).filter(Boolean).join(', '):'';
-      const klasse=blk?'blockiert':hat?'gruen':'';
-      const nrFarbe=blk?'rot':hat?'gruen':'';
-      return'<div class="kachel '+klasse+'">'+
+      const isBlk=blk(a);
+      const klasse=(hat?'gruen':'')+( isBlk?' blockiert':'');
+      const nrFarbe=isBlk?'rot':hat?'gruen':'';
+      return'<div class="kachel '+klasse.trim()+'">'+
         '<div class="k-row"><div class="k-nr '+nrFarbe+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
         '<div class="k-kunde">'+a.kunde+'</div>'+
         '<div class="k-row"><div class="k-stk">'+a.stk+' <span>Stk</span></div></div>'+
-        (blk?'<div class="k-status rot">⚠ '+blkText+'</div>':'')+
+        (isBlk?'<div class="k-status rot">⚠ '+blkText(a)+'</div>':'')+
       '</div>';
     }).join('');
   }
@@ -398,16 +410,18 @@ function render(){
   }else{
     azGrid.innerHTML=inAZ.map(a=>{
       const alle=a._alleVF;
+      const isBlk=blk(a);
       const farbe=alle?'gruen':'orange';
+      const klasse=farbe+(isBlk?' blockiert':'');
       const status=alle?'✓ ABHOLBEREIT':'⏳ IN ARBEIT';
       const vfAps=getVFaps(a);
       const dots=vfAps.map(ap=>'<span class="k-dot '+(sf(a,ap)?'f':'')+'">'+apShort(ap)+'</span>').join('');
-      return'<div class="kachel '+farbe+'">'+
-        '<div class="k-row"><div class="k-nr '+farbe+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+      return'<div class="kachel '+klasse+'">'+
+        '<div class="k-row"><div class="k-nr '+(isBlk?'rot':farbe)+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
         '<div class="k-kunde">'+a.kunde+'</div>'+
         '<div class="k-row"><div class="k-stk">'+a.stk+' <span>Stk</span></div></div>'+
         '<div class="k-dots">'+dots+'</div>'+
-        '<div class="k-status '+farbe+'">'+status+'</div>'+
+        (isBlk?'<div class="k-status rot">⚠ '+blkText(a)+'</div>':'<div class="k-status '+farbe+'">'+status+'</div>')+
       '</div>';
     }).join('');
   }
@@ -421,12 +435,15 @@ function render(){
   if(inZB.length===0){
     zbEl.innerHTML=emptyHtml('zieht aus Auftragszone');
   }else{
-    zbEl.innerHTML=inZB.map(a=>'<div class="kachel gruen">'+
-      '<div class="k-row"><div class="k-nr gruen">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
-      '<div class="k-kunde">'+a.kunde+'</div>'+
-      '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
-      '<div class="k-status gruen">⚙ IN BEARBEITUNG</div>'+
-    '</div>').join('');
+    zbEl.innerHTML=inZB.map(a=>{
+      const isBlk=blk(a);
+      return'<div class="kachel gruen'+(isBlk?' blockiert':'')+'">'+
+        '<div class="k-row"><div class="k-nr '+(isBlk?'rot':'gruen')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+        '<div class="k-kunde">'+a.kunde+'</div>'+
+        '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
+        (isBlk?'<div class="k-status rot">⚠ '+blkText(a)+'</div>':'<div class="k-status gruen">⚙ IN BEARBEITUNG</div>')+
+      '</div>';
+    }).join('');
   }
   document.getElementById('zb-c').textContent=inZB.length;
 
@@ -436,12 +453,15 @@ function render(){
   if(inSL.length===0){
     slEl.innerHTML=emptyHtml('○ frei')+emptyHtml('○ frei')+emptyHtml('○ frei');
   }else{
-    slEl.innerHTML=inSL.map(a=>'<div class="kachel gruen">'+
-      '<div class="k-row"><div class="k-nr gruen">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
-      '<div class="k-kunde">'+a.kunde+'</div>'+
-      '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
-      '<div class="k-status orange">bereit für NB</div>'+
-    '</div>').join('');
+    slEl.innerHTML=inSL.map(a=>{
+      const isBlk=blk(a);
+      return'<div class="kachel gruen'+(isBlk?' blockiert':'')+'">'+
+        '<div class="k-row"><div class="k-nr '+(isBlk?'rot':'gruen')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+        '<div class="k-kunde">'+a.kunde+'</div>'+
+        '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
+        (isBlk?'<div class="k-status rot">⚠ '+blkText(a)+'</div>':'<div class="k-status orange">bereit für NB</div>')+
+      '</div>';
+    }).join('');
     for(let i=inSL.length;i<3;i++){slEl.innerHTML+=emptyHtml('○ frei');}
   }
   const slC=document.getElementById('slot-c');
@@ -453,12 +473,15 @@ function render(){
   if(inNB.length===0){
     nbEl.innerHTML=emptyHtml('keine aktiven Aufträge');
   }else{
-    nbEl.innerHTML=inNB.map(a=>'<div class="kachel rot">'+
-      '<div class="k-row"><div class="k-nr rot">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
-      '<div class="k-kunde">'+a.kunde+'</div>'+
-      '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
-      '<div class="k-status rot">⚙ IN BEARBEITUNG</div>'+
-    '</div>').join('');
+    nbEl.innerHTML=inNB.map(a=>{
+      const isBlk=blk(a);
+      return'<div class="kachel rot'+(isBlk?' blockiert':'')+'">'+
+        '<div class="k-row"><div class="k-nr rot">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+        '<div class="k-kunde">'+a.kunde+'</div>'+
+        '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
+        (isBlk?'<div class="k-status rot">⚠ '+blkText(a)+'</div>':'<div class="k-status rot">⚙ IN BEARBEITUNG</div>')+
+      '</div>';
+    }).join('');
   }
   document.getElementById('nb-c').textContent=inNB.length;
 
@@ -467,11 +490,15 @@ function render(){
   if(inVS.length===0){
     vsEl.innerHTML=emptyHtml('keine Aufträge');
   }else{
-    vsEl.innerHTML=inVS.map(a=>'<div class="kachel blau">'+
-      '<div class="k-row"><div class="k-nr blau">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
-      '<div class="k-kunde">'+a.kunde+'</div>'+
-      '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
-    '</div>').join('');
+    vsEl.innerHTML=inVS.map(a=>{
+      const isBlk=blk(a);
+      return'<div class="kachel blau'+(isBlk?' blockiert':'')+'">'+
+        '<div class="k-row"><div class="k-nr '+(isBlk?'rot':'blau')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+        '<div class="k-kunde">'+a.kunde+'</div>'+
+        '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
+        (isBlk?'<div class="k-status rot">⚠ '+blkText(a)+'</div>':'')+
+      '</div>';
+    }).join('');
   }
   document.getElementById('vs-c').textContent=inVS.length;
 
