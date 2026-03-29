@@ -391,7 +391,13 @@ function render(){
   document.getElementById('vf-c').textContent=inVF.length;
 
   // AZ
-  const azShow=filterSearch(sortNr(inAZ));
+  // AZ – Sortierung: 1) ABHOLBEREIT  2) IN ARBEIT  3) STÖRUNG, innerhalb nach Nr
+  const azSorted=sortNr(inAZ).sort((a,b)=>{
+    const ra=a._alleVF?0:isBlk(a)?2:1;
+    const rb=b._alleVF?0:isBlk(b)?2:1;
+    return ra-rb;
+  });
+  const azShow=filterSearch(azSorted);
   const azG=document.getElementById('azGrid');
   if(!azShow.length){azG.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--text3);font-size:12px">'+noHit+'</div>';}
   else{azG.innerHTML=azShow.map(a=>{
