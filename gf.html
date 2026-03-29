@@ -381,6 +381,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
   <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('ap-Heizung')">🌡 Heizung</div>
   <div class="tab" onclick="switchTab('ap-Einbauelement')">📦 Einbauelement</div>
+  <div class="tab" onclick="switchTab('zeiten')">⏱ Zeiten</div>
 </div>
 
 <!-- MOBILE DROPDOWN -->
@@ -404,6 +405,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
     <div onclick="switchTab('versand');closeMobileMenu('🚚 Versand')" class="mob-item">🚚 Versand</div>
     <div onclick="switchTab('ap-Heizung');closeMobileMenu('🌡 Heizung')" class="mob-item">🌡 Heizung</div>
     <div onclick="switchTab('ap-Einbauelement');closeMobileMenu('📦 Einbauelement')" class="mob-item">📦 Einbauelement</div>
+    <div onclick="switchTab('zeiten');closeMobileMenu('⏱ Zeiten')" class="mob-item">⏱ Zeiten</div>
   </div>
 </div>
 
@@ -517,6 +519,26 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
     </div>
   </div>
   <div id="apTabList"></div>
+</div>
+
+<!-- ZEITEN TAB -->
+<div id="tab-zeiten" class="main hidden">
+  <div class="section-header">
+    <div class="section-title">⏱ Zeiten bearbeiten</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="text" id="zeitenSuche" placeholder="🔍 Auftrag oder Kunde..."
+        oninput="renderZeiten()"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:220px;"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      <select id="zeitenFilter" onchange="renderZeiten()"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;">
+        <option value="alle">Alle</option>
+        <option value="mitTimer">Nur mit Zeiten</option>
+        <option value="offen">Nur offene</option>
+      </select>
+    </div>
+  </div>
+  <div id="zeitenList"></div>
 </div>
 
 <!-- MODAL -->
@@ -817,6 +839,7 @@ async function loadFromStorage() {
     if (!document.getElementById('tab-bearbeitung').classList.contains('hidden')) renderBearbeitung();
     if (!document.getElementById('tab-stoerung').classList.contains('hidden')) renderStoerung();
     if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').textContent);
+    if (!document.getElementById('tab-zeiten').classList.contains('hidden')) renderZeiten();
   } catch(e) {
     console.error('Storage error:', e);
     const local = localStorage.getItem('ims_auftraege_local');
@@ -909,7 +932,7 @@ document.addEventListener('click', e => {
 });
 
 function switchTab(tab) {
-  const allTabs = ['planung','versand','bearbeitung','stoerung','gf','offen','ap'];
+  const allTabs = ['planung','versand','bearbeitung','stoerung','gf','offen','ap','zeiten'];
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick')===`switchTab('${tab}')`));
   allTabs.forEach(t => document.getElementById('tab-'+t) && document.getElementById('tab-'+t).classList.add('hidden'));
   if(tab.startsWith('ap-')) {
@@ -923,6 +946,7 @@ function switchTab(tab) {
   if(tab==='offen') renderOffen();
   if(tab==='stoerung') renderStoerung();
   if(tab==='bearbeitung') renderBearbeitung();
+  if(tab==='zeiten') renderZeiten();
 }
 
 // ─── WOCHE ────────────────────────────────────────────────────────────────
@@ -2360,6 +2384,214 @@ function acKey(e,field){
   else if(e.key==='Escape'){dd.classList.add('hidden');return;}
   items.forEach((item,i)=>item.classList.toggle('selected',i===acIdx[field]));
   if(acIdx[field]>=0)items[acIdx[field]].scrollIntoView({block:'nearest'});
+}
+
+// ─── ZEITEN BEARBEITEN ────────────────────────────────────────────────────
+function renderZeiten() {
+  const list = document.getElementById('zeitenList');
+  const suche = (document.getElementById('zeitenSuche')?.value||'').toLowerCase().trim();
+  const filter = document.getElementById('zeitenFilter')?.value||'alle';
+
+  let filtered = auftraege.filter(a => {
+    if(suche && !(a.nr||'').toLowerCase().includes(suche) && !(a.kunde||'').toLowerCase().includes(suche)) return false;
+    if(filter==='mitTimer' && (!a.timers || Object.keys(a.timers).length===0)) return false;
+    if(filter==='offen' && a.fertig) return false;
+    return true;
+  }).sort((a,b) => Number(b.nr)-Number(a.nr));
+
+  if(filtered.length===0) {
+    list.innerHTML='<div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Keine Aufträge gefunden</div></div>';
+    return;
+  }
+
+  list.innerHTML='';
+  const grid = document.createElement('div');
+  grid.style.cssText='display:flex;flex-direction:column;gap:12px;';
+  list.appendChild(grid);
+
+  filtered.forEach(a => {
+    const timers = a.timers ? Object.entries(a.timers) : [];
+    const totalMin = getTotalAuftragMin(a);
+    const card = document.createElement('div');
+    card.className = 'hallen-card';
+    card.style.padding='16px';
+
+    let timerRows = '';
+    if(timers.length === 0) {
+      timerRows = '<div style="color:var(--text3);font-size:12px;padding:8px 0">Keine Zeiten erfasst</div>';
+    } else {
+      timerRows = timers.map(([key, td]) => {
+        const apName = key.replace(a.id+'_','').replace(/_/g,' ');
+        const min = calcTotalMin(td);
+        const isRunning = td.start && !td.end;
+        const startStr = td.start ? new Date(td.start).toLocaleString('de-AT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '–';
+        const endStr = td.end ? new Date(td.end).toLocaleString('de-AT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : (isRunning ? '⏵ läuft' : '–');
+        const totalMs = td.totalMs||0;
+        const totalMinStored = Math.floor(totalMs/60000);
+        return `<div style="display:grid;grid-template-columns:140px 1fr 1fr 80px 90px;gap:8px;align-items:center;padding:8px 10px;background:var(--surface2);border-radius:6px;border:1px solid ${isRunning?'var(--accent)':'var(--border)'}">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:${isRunning?'var(--accent)':'var(--text)'}">${apName}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">▶ ${startStr}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">⏹ ${endStr}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--text);text-align:right">${min>0?min+' min':'–'}</div>
+          <div style="display:flex;gap:4px;justify-content:flex-end">
+            <button class="btn-edit" onclick="editTimerEntry('${a.id}','${key}')" title="Bearbeiten">✏</button>
+            <button class="btn-danger" onclick="deleteTimerEntry('${a.id}','${key}')" title="Löschen">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text)">${fmtNr(a.nr)}</div>
+          <span class="s-badge badge-${(a.sklasse||'s2').toLowerCase()}">${a.sklasse||'S2'}</span>
+          ${a.fertig?'<span style="font-size:11px;color:var(--accent);font-weight:600">✓ Fertig</span>':'<span style="font-size:11px;color:var(--text3)">○ Offen</span>'}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${totalMin>0?`<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--accent);font-weight:600">⏱ ${formatMinutes(totalMin)}</span>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="addTimerEntry('${a.id}')">+ Zeit hinzufügen</button>
+        </div>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">${a.kunde}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:10px">${formatDatum(a.datum)} · ${a.stk||'–'} Stk</div>
+      <div style="display:flex;flex-direction:column;gap:4px">${timerRows}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+function editTimerEntry(auftragId, timerKey) {
+  const a = auftraege.find(x=>x.id===auftragId);
+  if(!a || !a.timers || !a.timers[timerKey]) return;
+  const td = a.timers[timerKey];
+  const apName = timerKey.replace(a.id+'_','').replace(/_/g,' ');
+  const totalMin = Math.floor((td.totalMs||0)/60000);
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+  overlay.innerHTML=`
+    <div style="background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:14px;padding:24px;width:420px;max-width:94vw;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        ⏱ ${apName} – ${fmtNr(a.nr)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)">Start</label>
+          <input type="datetime-local" id="zedit-start" class="form-input" value="${td.start?td.start.slice(0,16):''}">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)">Ende</label>
+          <input type="datetime-local" id="zedit-end" class="form-input" value="${td.end?td.end.slice(0,16):''}">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)">Gesamt-Minuten (manuell überschreiben)</label>
+          <input type="number" id="zedit-min" class="form-input" value="${totalMin}" min="0" style="text-align:center;font-size:18px;font-weight:600">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <button class="btn btn-ghost" onclick="this.closest('[style*=fixed]').remove()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveTimerEdit('${auftragId}','${timerKey}')">Speichern</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function saveTimerEdit(auftragId, timerKey) {
+  const a = auftraege.find(x=>x.id===auftragId);
+  if(!a || !a.timers) return;
+  const startVal = document.getElementById('zedit-start').value;
+  const endVal = document.getElementById('zedit-end').value;
+  const minVal = parseInt(document.getElementById('zedit-min').value)||0;
+
+  a.timers[timerKey] = {
+    start: startVal ? new Date(startVal).toISOString() : null,
+    end: endVal ? new Date(endVal).toISOString() : null,
+    totalMs: minVal * 60000
+  };
+
+  document.querySelector('[style*="position:fixed"][style*="z-index:200"]')?.remove();
+  await saveToStorage();
+  renderZeiten();
+}
+
+async function deleteTimerEntry(auftragId, timerKey) {
+  if(!confirm('Timer-Eintrag löschen?')) return;
+  const a = auftraege.find(x=>x.id===auftragId);
+  if(a && a.timers) {
+    delete a.timers[timerKey];
+    if(Object.keys(a.timers).length===0) delete a.timers;
+    await saveToStorage();
+    renderZeiten();
+  }
+}
+
+function addTimerEntry(auftragId) {
+  const a = auftraege.find(x=>x.id===auftragId);
+  if(!a) return;
+  const allAPs = Object.values(GRUPPEN).flatMap(g=>g.aps);
+  const uniqueAPs = [...new Set([...allAPs,'Versand'])];
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+  overlay.innerHTML=`
+    <div style="background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:14px;padding:24px;width:420px;max-width:94vw;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        + Neue Zeit – ${fmtNr(a.nr)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)">Station</label>
+          <select id="zadd-ap" class="form-input">
+            ${uniqueAPs.map(ap=>'<option value="'+ap+'">'+ap+'</option>').join('')}
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)">Start</label>
+          <input type="datetime-local" id="zadd-start" class="form-input">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)">Ende</label>
+          <input type="datetime-local" id="zadd-end" class="form-input">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)">Oder: Minuten direkt eingeben</label>
+          <input type="number" id="zadd-min" class="form-input" placeholder="z.B. 45" min="0" style="text-align:center;font-size:18px;font-weight:600">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <button class="btn btn-ghost" onclick="this.closest('[style*=fixed]').remove()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveNewTimer('${auftragId}')">Hinzufügen</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function saveNewTimer(auftragId) {
+  const a = auftraege.find(x=>x.id===auftragId);
+  if(!a) return;
+  if(!a.timers) a.timers = {};
+  const ap = document.getElementById('zadd-ap').value;
+  const startVal = document.getElementById('zadd-start').value;
+  const endVal = document.getElementById('zadd-end').value;
+  const minVal = parseInt(document.getElementById('zadd-min').value)||0;
+
+  const apKey = ap.replace(/[^a-z0-9]/gi,'_');
+  const timerKey = a.id+'_'+apKey;
+
+  let totalMs = minVal * 60000;
+  if(!totalMs && startVal && endVal) {
+    totalMs = Math.max(0, new Date(endVal) - new Date(startVal));
+  }
+
+  a.timers[timerKey] = {
+    start: startVal ? new Date(startVal).toISOString() : (totalMs>0 ? new Date().toISOString() : null),
+    end: endVal ? new Date(endVal).toISOString() : (totalMs>0 ? new Date().toISOString() : null),
+    totalMs: totalMs
+  };
+
+  document.querySelector('[style*="position:fixed"][style*="z-index:200"]')?.remove();
+  await saveToStorage();
+  renderZeiten();
 }
 
 // ─── START ────────────────────────────────────────────────────────────────
