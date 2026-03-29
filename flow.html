@@ -297,7 +297,18 @@ const ALL_APS=['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung','Zusam
 function fmtNr(n){const s=String(n).replace(/\s/g,'');return s.length>4?s.slice(0,4)+'\u2009'+s.slice(4):s;}
 function getAPs(a){const s=new Set();(a.gruppen||(a.gruppe?[{gruppe:a.gruppe}]:[])).forEach(g=>{if(GR[g.gruppe])GR[g.gruppe].aps.forEach(ap=>s.add(ap));});return[...s];}
 function getVFaps(a){return getAPs(a).filter(ap=>VF_APS.includes(ap));}
-function sf(a,ap){if(!a.stationFertig)return false;const k=ap.replace(/[^a-z0-9]/gi,'_');return!!(a.stationFertig[ap]||a.stationFertig[k]);}
+function sf(a,ap){
+  if(!a.stationFertig)return false;
+  const k=ap.replace(/[^a-z0-9]/gi,'_');
+  if(a.stationFertig[ap]||a.stationFertig[k])return true;
+  // UP1 ↔ UP2 gekoppelt: einer fertig = beide fertig
+  if(ap==='UP-Armatur 1'||ap==='UP-Armatur 2'){
+    const other=ap==='UP-Armatur 1'?'UP-Armatur 2':'UP-Armatur 1';
+    const ok=other.replace(/[^a-z0-9]/gi,'_');
+    if(a.stationFertig[other]||a.stationFertig[ok])return true;
+  }
+  return false;
+}
 // Timer AKTUELL aktiv (läuft gerade)
 function ta(a,ap){
   if(!a.timers)return false;
