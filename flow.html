@@ -6,100 +6,129 @@
 <title>IMS Produktionsfluss</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3248;--accent:#00c896;--accent2:#0084ff;--warn:#ffaa00;--danger:#ff4455;--text:#e6edf3;--text2:#8b949e;--text3:#4a5270;--s1:#0084ff;--s2:#00c896;--s3:#ff9944;}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3248;
+  --accent:#00c896;--accent2:#0084ff;--warn:#ffaa00;--danger:#ff4455;
+  --text:#e6edf3;--text2:#8b949e;--text3:#4a5270;
+  --s1:#0084ff;--s2:#00c896;--s3:#ff9944;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* HEADER */
 .header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--surface);border-bottom:3px solid var(--accent);flex-shrink:0;}
 .logo{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:2px;}
-.header-title{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
+.header-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
 .header-right{display:flex;align-items:center;gap:20px;}
-.clock{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:700;color:var(--text);}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;margin-right:6px;}
+.clock{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:700;color:var(--text);}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;margin-right:6px;transition:all 0.3s;}
 .sync-dot.ok{background:var(--accent);box-shadow:0 0 6px var(--accent);}
 .sync-dot.err{background:var(--danger);}
 .sync-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);}
+
+/* MAIN LAYOUT */
 .main{flex:1;display:flex;overflow:hidden;padding:14px;gap:10px;}
+
+/* ZONE */
 .zone{display:flex;flex-direction:column;gap:8px;min-width:0;}
-.zone-header{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:7px;border-bottom:2px solid var(--border);flex-shrink:0;}
-.zone-title{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:2px;}
+.zone-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--border);flex-shrink:0;}
+.zone-title{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;}
 .zone-count{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;}
-.arrow-zone{display:flex;flex-direction:row;align-items:center;justify-content:center;width:28px;flex-shrink:0;margin-top:28px;}
-.arrow-shaft{height:2px;flex:1;max-width:8px;background:var(--border);border-radius:1px;}
-.arrow-head{font-size:18px;color:var(--border);line-height:1;}
-.arrow-zone.on .arrow-shaft{background:var(--accent);}
-.arrow-zone.on .arrow-head{color:var(--accent);}
-/* VF */
-.zone-vf{width:195px;flex-shrink:0;}
-.vf-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px;}
-.vf-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border-radius:7px;border-left:3px solid var(--border);}
-.vf-row.aktiv{border-left-color:var(--accent);background:#0a1f14;}
-.vf-row.blocked{border-left-color:var(--danger);background:#1f0a0a;}
-.vf-nr{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--text);}
+
+/* ARROW */
+.arrow{display:flex;align-items:center;justify-content:center;width:26px;flex-shrink:0;padding-top:30px;font-size:16px;color:var(--border);}
+.arrow.on{color:var(--accent);}
+
+/* VORFERTIGUNG */
+.zone-vf{width:180px;flex-shrink:0;}
+.vf-list{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px;}
+.vf-card{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--border);transition:border-color 0.2s;}
+.vf-card.aktiv{border-left-color:var(--accent);}
+.vf-card.blocked{border-left-color:var(--danger);}
+.vf-nr{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:700;color:var(--text);}
 .vf-nr.aktiv{color:var(--accent);}
-.vf-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
-.vf-kunde{font-size:10px;color:var(--text2);max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* AZ */
+.vf-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.vf-kunde{font-size:10px;color:var(--text2);max-width:78px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* AUFTRAGSZONE */
 .zone-az{flex:1;min-width:0;}
-.az-outer{background:#080f08;border:2.5px solid var(--accent);border-radius:14px;padding:10px;flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
-.az-subtitle{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;text-align:center;opacity:0.6;flex-shrink:0;}
+.az-wrap{background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:10px;flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+.az-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;text-align:center;opacity:0.5;flex-shrink:0;}
 .az-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1;}
-.az-feld{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
-.az-feld.voll{border-color:var(--accent);background:#0a1f0a;}
-.az-feld.wb{border-color:var(--warn);background:#1a1400;}
-.az-feld.leer{border:2px dashed var(--border);background:transparent;opacity:0.3;}
+.az-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
+.az-card.voll{border-color:var(--accent);}
+.az-card.arbeit{border-color:var(--warn);}
+.az-card.leer{border:1.5px dashed var(--border);background:transparent;opacity:0.25;}
 .az-nr{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--text);line-height:1;}
-.az-nr.voll{color:var(--accent);} .az-nr.wb{color:var(--warn);}
+.az-nr.voll{color:var(--accent);}
+.az-nr.arbeit{color:var(--warn);}
 .az-kunde{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .az-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
-.az-dot{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 5px;border-radius:3px;border:1px solid var(--border);color:var(--text3);background:var(--surface2);}
-.az-dot.f{background:#00c89620;border-color:#00c89660;color:var(--accent);}
-.az-st{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;margin-top:auto;}
-.az-st.voll{color:var(--accent);} .az-st.wb{color:var(--warn);} .az-st.leer{color:var(--text3);}
-/* ZB */
-.zone-zb{width:170px;flex-shrink:0;}
-.zb-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:8px;overflow-y:auto;}
-.zb-box.on{border-color:var(--accent);background:#0a1f0a;}
-.zb-nr{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--accent);text-align:center;}
-.zb-kunde{font-size:12px;color:var(--text2);text-align:center;margin-top:3px;}
-.zb-stk{font-size:11px;color:var(--text3);text-align:center;margin-top:2px;}
-.leer-msg{color:var(--text3);font-size:13px;text-align:center;padding:16px 0;}
+.az-dot{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 5px;border-radius:3px;border:1px solid var(--border);color:var(--text3);background:var(--bg);}
+.az-dot.f{border-color:var(--accent);color:var(--accent);background:#00c89612;}
+.az-status{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;margin-top:auto;}
+.az-status.voll{color:var(--accent);}
+.az-status.arbeit{color:var(--warn);}
+.az-status.leer{color:var(--text3);}
+
+/* ZUSAMMENBAU */
+.zone-zb{width:165px;flex-shrink:0;}
+.zb-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;transition:border-color 0.2s;}
+.zb-box.on{border-color:var(--accent);}
+.zb-entry{text-align:center;}
+.zb-nr{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--accent);}
+.zb-kunde{font-size:12px;color:var(--text2);margin-top:3px;}
+.zb-stk{font-size:11px;color:var(--text3);margin-top:2px;}
+
 /* SLOT */
-.zone-slot{width:155px;flex-shrink:0;}
+.zone-slot{width:152px;flex-shrink:0;}
 .slot-list{flex:1;display:flex;flex-direction:column;gap:7px;}
-.slot-item{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:3px;}
-.slot-item.bereit{border-color:var(--accent);background:#0a1f0a;}
-.slot-item.leer{border:1.5px dashed var(--border);background:transparent;opacity:0.35;}
+.slot-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:3px;transition:border-color 0.2s;}
+.slot-card.bereit{border-color:var(--accent);}
+.slot-card.leer{border:1.5px dashed var(--border);background:transparent;opacity:0.3;}
 .slot-nr{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:700;}
 .slot-nr.bereit{color:var(--accent);}
 .slot-kunde{font-size:11px;color:var(--text2);}
-.slot-st{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;margin-top:auto;color:var(--accent);}
-.slot-leer{color:var(--text3);font-size:12px;text-align:center;padding:8px 0;}
-/* NB */
-.zone-nb{width:170px;flex-shrink:0;}
-.nb-box{background:#1f0a0a;border:2.5px solid var(--danger);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:8px;overflow-y:auto;}
-.nb-eng{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--danger);letter-spacing:1px;text-align:center;border:1px solid #ff445544;border-radius:4px;padding:3px 6px;flex-shrink:0;}
-.nb-nr{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--danger);text-align:center;}
-.nb-kunde{font-size:12px;color:var(--text2);text-align:center;margin-top:3px;}
-.nb-stk{font-size:11px;color:var(--text3);text-align:center;margin-top:2px;}
-/* VS */
-.zone-vs{width:150px;flex-shrink:0;}
-.vs-box{background:#0a0f2a;border:2px solid var(--accent2);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
-.vs-row{padding:6px 0;border-bottom:1px solid #0084ff22;}
-.vs-row:last-child{border-bottom:none;}
-.vs-nr{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--accent2);}
+.slot-stk{font-size:10px;color:var(--text3);}
+.slot-status{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--accent);margin-top:auto;}
+
+/* NACHBEARBEITUNG */
+.zone-nb{width:165px;flex-shrink:0;}
+.nb-box{background:var(--surface);border:1.5px solid var(--danger);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
+.nb-entry{text-align:center;}
+.nb-nr{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--danger);}
+.nb-kunde{font-size:12px;color:var(--text2);margin-top:3px;}
+.nb-stk{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* VERSAND */
+.zone-vs{width:148px;flex-shrink:0;}
+.vs-box{background:var(--surface);border:1.5px solid var(--accent2);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.vs-entry{padding-bottom:8px;border-bottom:1px solid var(--border);}
+.vs-entry:last-child{border-bottom:none;padding-bottom:0;}
+.vs-nr{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:700;color:var(--accent2);}
 .vs-kunde{font-size:11px;color:var(--text2);margin-top:2px;}
 .vs-stk{font-size:10px;color:var(--text3);}
+
+/* LEER */
+.leer-txt{font-size:12px;color:var(--text3);text-align:center;padding:12px 0;}
+
+/* S-BADGE */
+.sb{display:inline-flex;align-items:center;justify-content:center;width:26px;height:16px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;}
+.sb-s1{background:#0084ff18;color:var(--s1);border:1px solid #0084ff44;}
+.sb-s2{background:#00c89618;color:var(--s2);border:1px solid #00c89644;}
+.sb-s3{background:#ff994418;color:var(--s3);border:1px solid #ff994444;}
+
 /* FOOTER */
-.footer{flex-shrink:0;background:var(--surface);border-top:2px solid var(--border);padding:9px 28px;display:flex;align-items:center;}
-.fs{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border-right:1px solid var(--border);padding:0 16px;}
+.footer{flex-shrink:0;background:var(--surface);border-top:2px solid var(--border);padding:10px 28px;display:flex;align-items:center;}
+.fs{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border-right:1px solid var(--border);padding:0 12px;}
 .fs:last-child{border-right:none;}
-.fs-val{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;color:var(--text);line-height:1;}
-.fs-val.g{color:var(--accent);} .fs-val.o{color:var(--warn);} .fs-val.r{color:var(--danger);} .fs-val.b{color:var(--accent2);}
+.fs-val{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--text);line-height:1;}
+.fs-val.g{color:var(--accent);}
+.fs-val.o{color:var(--warn);}
+.fs-val.r{color:var(--danger);}
+.fs-val.b{color:var(--accent2);}
 .fs-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;text-align:center;}
-.s-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:16px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;}
-.badge-s1{background:#0084ff22;color:var(--s1);border:1px solid #0084ff44;}
-.badge-s2{background:#00c89622;color:var(--s2);border:1px solid #00c89644;}
-.badge-s3{background:#ff994422;color:var(--s3);border:1px solid #ff994444;}
+
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 </style>
@@ -120,35 +149,35 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <div class="zone zone-vf">
     <div class="zone-header">
       <span class="zone-title">Vorfertigung</span>
-      <span class="zone-count" id="vf-c" style="color:var(--text2)">0</span>
+      <span class="zone-count g" id="vf-c" style="color:var(--text2)">0</span>
     </div>
-    <div class="vf-box" id="vfBox"><div class="leer-msg">–</div></div>
+    <div class="vf-list" id="vfList"><div class="leer-txt">– keine offenen Aufträge</div></div>
   </div>
 
-  <div class="arrow-zone" id="a1"><div class="arrow-shaft"></div><div class="arrow-head">▶</div><div class="arrow-shaft"></div></div>
+  <div class="arrow" id="a1">▶</div>
 
   <div class="zone zone-az">
     <div class="zone-header">
       <span class="zone-title">⬡ Auftragszone</span>
       <span class="zone-count" id="az-c" style="color:var(--accent)">0 / 8</span>
     </div>
-    <div class="az-outer">
-      <div class="az-subtitle">⬡ grünes Herz der Produktion</div>
+    <div class="az-wrap">
+      <div class="az-label">⬡ grünes Herz der Produktion</div>
       <div class="az-grid" id="azGrid"></div>
     </div>
   </div>
 
-  <div class="arrow-zone" id="a2"><div class="arrow-shaft"></div><div class="arrow-head">▶</div><div class="arrow-shaft"></div></div>
+  <div class="arrow" id="a2">▶</div>
 
   <div class="zone zone-zb">
     <div class="zone-header">
       <span class="zone-title">Zusammenbau</span>
       <span class="zone-count" id="zb-c" style="color:var(--text2)">0</span>
     </div>
-    <div class="zb-box" id="zbBox"><div class="leer-msg">– zieht aus<br>Auftragszone</div></div>
+    <div class="zb-box" id="zbBox"><div class="leer-txt">– zieht aus<br>Auftragszone</div></div>
   </div>
 
-  <div class="arrow-zone" id="a3"><div class="arrow-shaft"></div><div class="arrow-head">▶</div><div class="arrow-shaft"></div></div>
+  <div class="arrow" id="a3">▶</div>
 
   <div class="zone zone-slot">
     <div class="zone-header">
@@ -156,34 +185,30 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       <span class="zone-count" id="slot-c" style="color:var(--text2)">0 / 3</span>
     </div>
     <div class="slot-list">
-      <div class="slot-item leer" id="s1"><div class="slot-leer">○ frei</div></div>
-      <div class="slot-item leer" id="s2"><div class="slot-leer">○ frei</div></div>
-      <div class="slot-item leer" id="s3"><div class="slot-leer">○ frei</div></div>
+      <div class="slot-card leer" id="s1"><div class="leer-txt">○ frei</div></div>
+      <div class="slot-card leer" id="s2"><div class="leer-txt">○ frei</div></div>
+      <div class="slot-card leer" id="s3"><div class="leer-txt">○ frei</div></div>
     </div>
   </div>
 
-  <div class="arrow-zone" id="a4"><div class="arrow-shaft"></div><div class="arrow-head">▶</div><div class="arrow-shaft"></div></div>
+  <div class="arrow" id="a4">▶</div>
 
   <div class="zone zone-nb">
     <div class="zone-header">
       <span class="zone-title">Nachbearbeitung</span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--danger);letter-spacing:1px">ENGPASS</span>
       <span class="zone-count" id="nb-c" style="color:var(--danger)">0</span>
     </div>
-    <div class="nb-box" id="nbBox">
-      
-      <div class="leer-msg">– keine aktiven Aufträge</div>
-    </div>
+    <div class="nb-box" id="nbBox"><div class="leer-txt">– keine aktiven Aufträge</div></div>
   </div>
 
-  <div class="arrow-zone" id="a5"><div class="arrow-shaft"></div><div class="arrow-head" style="color:var(--accent2)">▶</div><div class="arrow-shaft"></div></div>
+  <div class="arrow" id="a5" style="color:var(--accent2)">▶</div>
 
   <div class="zone zone-vs">
     <div class="zone-header">
       <span class="zone-title">📦 Versand</span>
       <span class="zone-count" id="vs-c" style="color:var(--accent2)">0</span>
     </div>
-    <div class="vs-box" id="vsBox"><div class="leer-msg" style="color:var(--text3)">– keine Aufträge</div></div>
+    <div class="vs-box" id="vsBox"><div class="leer-txt">– keine Aufträge</div></div>
   </div>
 
 </div>
@@ -207,10 +232,11 @@ function fmtNr(n){const s=String(n).replace(/\s/g,'');return s.length>4?s.slice(
 function getAPs(a){const s=new Set();(a.gruppen||(a.gruppe?[{gruppe:a.gruppe}]:[])).forEach(g=>{if(GR[g.gruppe])GR[g.gruppe].aps.forEach(ap=>s.add(ap));});return[...s];}
 function getVF(a){return getAPs(a).filter(ap=>VF.includes(ap));}
 function sf(a,ap){if(!a.stationFertig)return false;const k=ap.replace(/[^a-z0-9]/gi,'_');return!!(a.stationFertig[ap]||a.stationFertig[k]);}
-function ta(a,ap){if(!a.timers)return false;const k=`${a.id}_${ap.replace(/[^a-z0-9]/gi,'_')}`;const t=a.timers[k];return!!(t&&t.start&&!t.end);}
-function badge(sk){const s=(sk||'').toLowerCase();return`<span class="s-badge badge-${s}">${sk||''}</span>`;}
+function ta(a,ap){if(!a.timers)return false;const k=a.id+'_'+ap.replace(/[^a-z0-9]/gi,'_');const t=a.timers[k];return!!(t&&t.start&&!t.end);}
+function sbadge(sk){const s=(sk||'').toLowerCase();return`<span class="sb sb-${s}">${sk||''}</span>`;}
 function tick(){const n=new Date();document.getElementById('clock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');}
 setInterval(tick,1000);tick();
+
 async function load(){
   try{
     const r=await fetch(`${SB_URL}/rest/v1/ims_data?id=eq.main&select=auftraege`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
@@ -225,6 +251,7 @@ async function load(){
     document.getElementById('sl').textContent='Verbindungsfehler';
   }
 }
+
 function render(){
   const o=auftraege;
   const inVF=o.filter(a=>{const v=getVF(a);return v.length>0&&!v.some(ap=>sf(a,ap))&&!sf(a,'Zusammenbau');});
@@ -234,66 +261,65 @@ function render(){
   const inNB=o.filter(a=>ta(a,'Nachbearbeitung'));
   const inVS=o.filter(a=>sf(a,'Nachbearbeitung'));
 
-  // VF
-  const vfBox=document.getElementById('vfBox');
-  vfBox.innerHTML=inVF.length===0?'<div class="leer-msg">– keine offenen Aufträge</div>':
+  // VORFERTIGUNG
+  const vfList=document.getElementById('vfList');
+  vfList.innerHTML=inVF.length===0?'<div class="leer-txt">– keine offenen Aufträge</div>':
     inVF.sort((a,b)=>(a.prio||99)-(b.prio||99)).map(a=>{
       const hat=VF.some(ap=>ta(a,ap));
       const blk=a.blockierungen&&Object.keys(a.blockierungen).length>0;
-      return`<div class="vf-row ${blk?'blocked':hat?'aktiv':''}"><span class="vf-nr ${hat?'aktiv':''}">${fmtNr(a.nr)}</span><div class="vf-right"><span class="vf-kunde">${a.kunde}</span>${badge(a.sklasse)}</div></div>`;
+      return`<div class="vf-card ${blk?'blocked':hat?'aktiv':''}"><span class="vf-nr ${hat?'aktiv':''}">${fmtNr(a.nr)}</span><div class="vf-meta"><span class="vf-kunde">${a.kunde}</span>${sbadge(a.sklasse)}</div></div>`;
     }).join('');
   document.getElementById('vf-c').textContent=inVF.length;
 
-  // AZ
+  // AUFTRAGSZONE
   const g=document.getElementById('azGrid');g.innerHTML='';
   for(let i=0;i<8;i++){
     const a=inAZ[i];const d=document.createElement('div');
-    if(!a){d.className='az-feld leer';d.innerHTML='<div class="az-st leer">○ frei</div>';}
+    if(!a){d.className='az-card leer';d.innerHTML='<div class="az-status leer">○ frei</div>';}
     else{
       const v=getVF(a);const all=v.length>0&&v.every(ap=>sf(a,ap));
-      d.className='az-feld '+(all?'voll':'wb');
+      d.className='az-card '+(all?'voll':'arbeit');
       const dots=v.map(ap=>{const f=sf(a,ap);const s=ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ');return`<span class="az-dot ${f?'f':''}">${s}</span>`;}).join('');
-      d.innerHTML=`<div class="az-nr ${all?'voll':'wb'}">${fmtNr(a.nr)}</div><div class="az-kunde">${a.kunde}</div><div class="az-dots">${dots}</div><div class="az-st ${all?'voll':'wb'}">${all?'✓ VOLLSTÄNDIG':'⏳ IN ARBEIT'}</div>`;
+      d.innerHTML=`<div class="az-nr ${all?'voll':'arbeit'}">${fmtNr(a.nr)}</div><div class="az-kunde">${a.kunde}</div><div class="az-dots">${dots}</div><div class="az-status ${all?'voll':'arbeit'}">${all?'✓ VOLLSTÄNDIG':'⏳ IN ARBEIT'}</div>`;
     }
     g.appendChild(d);
   }
   document.getElementById('az-c').textContent=Math.min(inAZ.length,8)+' / 8';
 
-  // ZB
+  // ZUSAMMENBAU
   const zb=document.getElementById('zbBox');
-  if(inZB.length===0){zb.className='zb-box';zb.innerHTML='<div class="leer-msg">– zieht aus<br>Auftragszone</div>';}
-  else{zb.className='zb-box on';zb.innerHTML=inZB.map(a=>`<div><div class="zb-nr">${fmtNr(a.nr)}</div><div class="zb-kunde">${a.kunde}</div><div class="zb-stk">${a.stk} Stk · ${badge(a.sklasse)}</div></div>`).join('<hr style="border:none;border-top:1px solid var(--border);margin:6px 0">');}
+  if(inZB.length===0){zb.className='zb-box';zb.innerHTML='<div class="leer-txt">– zieht aus<br>Auftragszone</div>';}
+  else{zb.className='zb-box on';zb.innerHTML=inZB.map(a=>`<div class="zb-entry"><div class="zb-nr">${fmtNr(a.nr)}</div><div class="zb-kunde">${a.kunde}</div><div class="zb-stk">${a.stk} Stk · ${sbadge(a.sklasse)}</div></div>`).join('<hr style="border:none;border-top:1px solid var(--border);margin:4px 0">');}
   document.getElementById('zb-c').textContent=inZB.length;
 
   // SLOT
   for(let i=1;i<=3;i++){const a=inSL[i-1];const el=document.getElementById('s'+i);
-    if(!a){el.className='slot-item leer';el.innerHTML='<div class="slot-leer">○ frei</div>';}
-    else{el.className='slot-item bereit';el.innerHTML=`<div class="slot-nr bereit">${fmtNr(a.nr)}</div><div class="slot-kunde">${a.kunde}</div><div class="slot-kunde" style="color:var(--text3)">${a.stk} Stk</div><div class="slot-st">✓ bereit für NB</div>`;}}
+    if(!a){el.className='slot-card leer';el.innerHTML='<div class="leer-txt">○ frei</div>';}
+    else{el.className='slot-card bereit';el.innerHTML=`<div class="slot-nr bereit">${fmtNr(a.nr)}</div><div class="slot-kunde">${a.kunde}</div><div class="slot-stk">${a.stk} Stk</div><div class="slot-status">✓ bereit für NB</div>`;}}
   document.getElementById('slot-c').textContent=Math.min(inSL.length,3)+' / 3';
 
-  // NB
+  // NACHBEARBEITUNG
   const nb=document.getElementById('nbBox');
-  nb.innerHTML=''+(inNB.length===0?'<div class="leer-msg">– keine aktiven Aufträge</div>':inNB.map(a=>`<div><div class="nb-nr">${fmtNr(a.nr)}</div><div class="nb-kunde">${a.kunde}</div><div class="nb-stk">${a.stk} Stk · ${badge(a.sklasse)}</div></div>`).join('<hr style="border:none;border-top:1px solid #ff445533;margin:5px 0">'));
+  nb.innerHTML=inNB.length===0?'<div class="leer-txt">– keine aktiven Aufträge</div>':inNB.map(a=>`<div class="nb-entry"><div class="nb-nr">${fmtNr(a.nr)}</div><div class="nb-kunde">${a.kunde}</div><div class="nb-stk">${a.stk} Stk · ${sbadge(a.sklasse)}</div></div>`).join('<hr style="border:none;border-top:1px solid var(--border);margin:4px 0">');
   document.getElementById('nb-c').textContent=inNB.length;
 
-  // VS
+  // VERSAND
   const vs=document.getElementById('vsBox');
-  vs.innerHTML=inVS.length===0?'<div class="leer-msg" style="color:var(--text3)">– keine Aufträge</div>':inVS.map(a=>`<div class="vs-row"><div class="vs-nr">${fmtNr(a.nr)}</div><div class="vs-kunde">${a.kunde}</div><div class="vs-stk">${a.stk} Stk</div></div>`).join('');
+  vs.innerHTML=inVS.length===0?'<div class="leer-txt">– keine Aufträge</div>':inVS.map(a=>`<div class="vs-entry"><div class="vs-nr">${fmtNr(a.nr)}</div><div class="vs-kunde">${a.kunde}</div><div class="vs-stk">${a.stk} Stk</div></div>`).join('');
   document.getElementById('vs-c').textContent=inVS.length;
 
   // FOOTER
-  ['fs1','fs2','fs3','fs4','fs5','fs6'].forEach((id,i)=>{
-    document.getElementById(id).textContent=[inVF.length,inAZ.length,inZB.length,inSL.length,inNB.length,inVS.length][i];
-  });
+  [['fs1',inVF.length],['fs2',inAZ.length],['fs3',inZB.length],['fs4',inSL.length],['fs5',inNB.length],['fs6',inVS.length]].forEach(([id,v])=>document.getElementById(id).textContent=v);
 
   // PFEILE
-  const arr=(id,on)=>document.getElementById(id).className='arrow-zone'+(on?' on':'');
+  const arr=(id,on)=>document.getElementById(id).className='arrow'+(on?' on':'');
   arr('a1',inVF.length>0);
   arr('a2',inAZ.some(a=>getVF(a).every(ap=>sf(a,ap))));
   arr('a3',inZB.length>0);
   arr('a4',inSL.length>0);
-  document.getElementById('a5').className='arrow-zone'+(inNB.length>0?' on':'');
+  if(inNB.length>0)document.getElementById('a5').style.color='var(--accent2)';
 }
+
 load();setInterval(load,15000);
 </script>
 </body>
