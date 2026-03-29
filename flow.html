@@ -4,9 +4,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>IMS ◆ FLOW</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -52,11 +49,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .sync-label{font-family:‘IBM Plex Mono’,monospace;font-size:9px;color:var(–text3);white-space:nowrap;}
 .theme-btn{background:var(–surface2);border:1px solid var(–border);border-radius:16px;padding:3px 8px;font-size:11px;color:var(–text2);cursor:pointer;font-family:‘IBM Plex Sans’,sans-serif;white-space:nowrap;}
 .theme-btn:hover{border-color:var(–accent);color:var(–text);}
-
-/* ── FLOW ARROW (header) ───────────────────────────── */
-.flow-arrow{flex:1;display:flex;align-items:center;gap:0;min-width:40px;padding:0 12px;}
-.flow-line{flex:1;height:2px;background:linear-gradient(90deg,var(–accent) 0%,var(–accent) 60%,transparent 100%);border-radius:1px;opacity:0.5;}
-.flow-tip{font-size:16px;color:var(–accent);opacity:0.5;line-height:1;margin-left:-2px;}
 
 /* ── SEARCH ────────────────────────────────────────── */
 .search-wrap{position:relative;flex-shrink:0;}
@@ -108,9 +100,6 @@ body.light .k-status.aktiv{color:#047857;}
 .zone-body.zb-sl{border-color:var(–z-sl-mid);}
 .zone-body.zb-nb{border-color:var(–z-nb-mid);}
 .zone-body.zb-vs{border-color:var(–z-vs-mid);}
-
-/* ── ARROW (hidden) ─────────────────────────────────── */
-.arrow{display:none;}
 
 /* ── KACHEL ────────────────────────────────────────── */
 .kachel{background:var(–surface2);border:1.5px solid var(–border);border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:2px;transition:border-color .2s,background .2s;}
@@ -196,9 +185,7 @@ body{overflow-y:auto;overflow-x:hidden;}
 .clock{font-size:18px;}
 .search-input{width:100px;}
 .search-input:focus{width:140px;}
-.flow-arrow{display:none;}
 .main{flex-direction:column;overflow:visible;padding:6px;gap:10px;}
-.arrow{display:none;}
 .zone{flex:unset!important;width:100%;}
 .zone-body{max-height:none;overflow:visible;}
 .az-grid{grid-template-columns:repeat(2,1fr);}
@@ -233,7 +220,6 @@ body{overflow-y:auto;overflow-x:hidden;}
 
 <div class="header">
   <div class="logo">IMS ◆ FLOW</div>
-  <div class="flow-arrow"><div class="flow-line"></div><div class="flow-tip">▸</div></div>
   <div class="header-right">
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
@@ -260,27 +246,22 @@ body{overflow-y:auto;overflow-x:hidden;}
     <div class="zone-head z-vf"><span class="zone-title z-vf">Vorfertigung</span><span class="zone-count" id="vf-c" style="color:var(--z-vf)">0</span></div>
     <div class="zone-body" id="vfList"></div>
   </div>
-  <div class="arrow" id="a1">▸</div>
   <div class="zone zone-az">
     <div class="zone-head z-az"><span class="zone-title z-az">⬡ Auftragszone</span><span class="zone-count" id="az-c" style="color:var(--z-az)">0 / 8</span></div>
     <div class="zone-body zb-az" id="azBody"><div class="az-grid" id="azGrid"></div></div>
   </div>
-  <div class="arrow" id="a2">▸</div>
   <div class="zone zone-zb">
     <div class="zone-head z-zb"><span class="zone-title z-zb">Zusammenbau</span><span class="zone-count" id="zb-c" style="color:var(--z-zb)">0</span></div>
     <div class="zone-body" id="zbList"></div>
   </div>
-  <div class="arrow" id="a3">▸</div>
   <div class="zone zone-sl">
     <div class="zone-head z-sl"><span class="zone-title z-sl">Slot</span><span class="zone-count" id="slot-c" style="color:var(--z-sl)">0 / 3</span></div>
     <div class="zone-body zb-sl" id="slotList"></div>
   </div>
-  <div class="arrow" id="a4">▸</div>
   <div class="zone zone-nb">
     <div class="zone-head z-nb"><span class="zone-title z-nb">Nachbearb.</span><span class="zone-count" id="nb-c" style="color:var(--z-nb)">0</span></div>
     <div class="zone-body zb-nb" id="nbList"></div>
   </div>
-  <div class="arrow" id="a5">▸</div>
   <div class="zone zone-vs">
     <div class="zone-head z-vs"><span class="zone-title z-vs">📦 Versand</span><span class="zone-count" id="vs-c" style="color:var(--z-vs)">0</span></div>
     <div class="zone-body zb-vs" id="vsList"></div>
@@ -499,10 +480,6 @@ function render(){
   if(!vsShow.length){vsEl.innerHTML=emptyHtml(noHit);}
   else{vsEl.innerHTML=vsShow.map(a=>{const b=isBlk(a),act=isActive(a),dot=act&&!b?'<span class="aktiv-dot"></span>':'';return'<div class="kachel tuerkis'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'tuerkis')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':(act?'<div class="k-status aktiv">⚙ IN BEARBEITUNG'+dot+'</div>':''))+'</div>';}).join('');}
   document.getElementById('vs-c').textContent=inVS.length;
-
-  // ARROWS
-  const arr=(id,on)=>{const el=document.getElementById(id);if(el)el.className='arrow'+(on?' on':'');};
-  arr('a1',inVF.length>0);arr('a2',inAZ.some(a=>a._alleVF));arr('a3',inZB.length>0);arr('a4',inSL.length>0);arr('a5',inNB.length>0);
 }
 
 load();setInterval(load,15000);
