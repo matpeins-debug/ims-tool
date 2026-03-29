@@ -4,866 +4,297 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IMS Produktionsfluss</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0a0d14; --surface:#131720; --surface2:#1a1e2e; --border:#252a3d;
-    --accent:#00c896; --accent2:#0084ff; --warn:#ffaa00; --danger:#ff4455;
-    --text:#e6edf3; --text2:#8b949e; --text3:#4a5270;
-  }
-
-  * { margin:0; padding:0; box-sizing:border-box; }
-
-  body {
-    font-family:'IBM Plex Sans',sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    min-height:100vh;
-    overflow:hidden;
-  }
-
-  /* ── HEADER ─────────────────────────────────────────────── */
-  .header {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:14px 32px;
-    background:var(--surface);
-    border-bottom:3px solid var(--accent);
-  }
-  .logo {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:22px;
-    font-weight:700;
-    color:var(--accent);
-    letter-spacing:2px;
-  }
-  .header-center {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:28px;
-    font-weight:700;
-    color:var(--text);
-    letter-spacing:1px;
-  }
-  .header-right {
-    display:flex;
-    flex-direction:column;
-    align-items:flex-end;
-    gap:4px;
-  }
-  .clock {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:32px;
-    font-weight:700;
-    color:var(--accent);
-  }
-  .date-label {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:14px;
-    color:var(--text2);
-  }
-  .sync-info {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    color:var(--text3);
-  }
-
-  /* ── MAIN LAYOUT ─────────────────────────────────────────── */
-  .flow-container {
-    display:flex;
-    align-items:stretch;
-    gap:0;
-    height:calc(100vh - 72px);
-    padding:20px;
-    gap:16px;
-  }
-
-  /* ── ZONEN ────────────────────────────────────────────────── */
-  .zone {
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-
-  .zone-label {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:2px;
-    color:var(--text3);
-    text-align:center;
-    padding-bottom:6px;
-    border-bottom:1px solid var(--border);
-  }
-
-  .zone-count {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:13px;
-    color:var(--text2);
-    text-align:center;
-  }
-
-  /* ── VORFERTIGUNG ─────────────────────────────────────────── */
-  .zone-vorfertigung {
-    width:200px;
-    flex-shrink:0;
-  }
-
-  .station-card {
-    background:var(--surface);
-    border:1.5px solid var(--border);
-    border-radius:10px;
-    padding:12px 14px;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-  .station-card.aktiv {
-    border-color:var(--accent);
-    background:#0a1f14;
-  }
-  .station-name {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:13px;
-    font-weight:600;
-    color:var(--text2);
-    text-transform:uppercase;
-    letter-spacing:1px;
-  }
-  .station-auftraege {
-    display:flex;
-    flex-wrap:wrap;
-    gap:4px;
-  }
-  .station-nr {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:16px;
-    font-weight:700;
-    color:var(--accent);
-    background:#00c89618;
-    border:1px solid #00c89644;
-    border-radius:5px;
-    padding:2px 7px;
-  }
-  .station-leer {
-    font-size:13px;
-    color:var(--text3);
-  }
-
-  /* ── PFEIL ────────────────────────────────────────────────── */
-  .arrow {
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-shrink:0;
-    width:36px;
-    color:var(--border);
-    font-size:28px;
-    padding-top:28px;
-  }
-  .arrow.active { color:var(--accent); }
-
-  /* ── AUFTRAGSZONE ─────────────────────────────────────────── */
-  .zone-auftragszone {
-    flex:1;
-    min-width:0;
-  }
-
-  .auftragszone-box {
-    flex:1;
-    background:#080f08;
-    border:2.5px solid var(--accent);
-    border-radius:14px;
-    padding:14px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-
-  .az-grid {
-    display:grid;
-    grid-template-columns:repeat(4, 1fr);
-    gap:10px;
-    flex:1;
-  }
-
-  .az-feld {
-    background:var(--surface);
-    border:2px solid var(--border);
-    border-radius:10px;
-    padding:10px 12px;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    min-height:110px;
-  }
-  .az-feld.vollstaendig {
-    border-color:var(--accent);
-    background:#0a1f0a;
-  }
-  .az-feld.in-arbeit {
-    border-color:var(--warn);
-    background:#1a1400;
-  }
-  .az-feld.leer {
-    border:2px dashed var(--border);
-    background:transparent;
-    opacity:0.4;
-  }
-
-  .az-nr {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:22px;
-    font-weight:700;
-    color:var(--text);
-    letter-spacing:1px;
-  }
-  .az-nr.vollstaendig { color:var(--accent); }
-  .az-nr.in-arbeit    { color:var(--warn); }
-
-  .az-kunde {
-    font-size:13px;
-    color:var(--text2);
-    font-weight:600;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-
-  .az-dots {
-    display:flex;
-    gap:5px;
-    flex-wrap:wrap;
-    margin-top:2px;
-  }
-  .az-dot {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10px;
-    padding:2px 6px;
-    border-radius:3px;
-    border:1px solid var(--border);
-    color:var(--text3);
-    background:var(--surface2);
-  }
-  .az-dot.fertig {
-    background:#00c89620;
-    border-color:#00c89655;
-    color:var(--accent);
-  }
-
-  .az-status {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    font-weight:700;
-    margin-top:auto;
-  }
-  .az-status.vollstaendig { color:var(--accent); }
-  .az-status.in-arbeit    { color:var(--warn); }
-  .az-status.leer         { color:var(--text3); }
-
-  /* ── SLOT ─────────────────────────────────────────────────── */
-  .zone-slot {
-    width:180px;
-    flex-shrink:0;
-  }
-
-  .slot-box {
-    background:var(--surface);
-    border:1.5px solid var(--border);
-    border-radius:10px;
-    padding:10px 12px;
-    display:flex;
-    flex-direction:column;
-    gap:5px;
-    min-height:90px;
-  }
-  .slot-box.belegt {
-    border-color:var(--warn);
-    background:#1a1400;
-  }
-  .slot-box.bereit {
-    border-color:var(--accent);
-    background:#0a1f0a;
-  }
-  .slot-box.leer {
-    border:2px dashed var(--border);
-    background:transparent;
-    opacity:0.4;
-  }
-
-  .slot-nr {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:20px;
-    font-weight:700;
-  }
-  .slot-nr.bereit { color:var(--accent); }
-  .slot-nr.belegt { color:var(--warn); }
-
-  .slot-kunde {
-    font-size:12px;
-    color:var(--text2);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-
-  /* ── NACHBEARBEITUNG ─────────────────────────────────────── */
-  .zone-nb {
-    width:190px;
-    flex-shrink:0;
-  }
-
-  .nb-card {
-    background:#1f0a0a;
-    border:2.5px solid var(--danger);
-    border-radius:10px;
-    padding:14px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    flex:1;
-  }
-  .nb-engpass {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    font-weight:700;
-    color:var(--danger);
-    letter-spacing:1px;
-    text-align:center;
-  }
-  .nb-nr {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:22px;
-    font-weight:700;
-    color:var(--danger);
-    text-align:center;
-  }
-  .nb-kunde {
-    font-size:13px;
-    color:var(--text2);
-    text-align:center;
-  }
-  .nb-leer {
-    font-size:13px;
-    color:var(--text3);
-    text-align:center;
-    padding:20px 0;
-  }
-
-  /* ── VERSAND ─────────────────────────────────────────────── */
-  .zone-versand {
-    width:160px;
-    flex-shrink:0;
-  }
-
-  .versand-box {
-    background:#0a0f2a;
-    border:2px solid var(--accent2);
-    border-radius:10px;
-    padding:12px;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    flex:1;
-  }
-  .versand-nr {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:18px;
-    font-weight:700;
-    color:var(--accent2);
-  }
-  .versand-kunde {
-    font-size:12px;
-    color:var(--text2);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .versand-leer {
-    font-size:13px;
-    color:var(--text3);
-    text-align:center;
-    padding:20px 0;
-  }
-
-  /* ── FOOTER STATS ────────────────────────────────────────── */
-  .footer-stats {
-    position:fixed;
-    bottom:0;
-    left:0;
-    right:0;
-    background:var(--surface);
-    border-top:2px solid var(--border);
-    padding:10px 32px;
-    display:flex;
-    gap:32px;
-    align-items:center;
-  }
-  .stat {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:2px;
-  }
-  .stat-val {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:24px;
-    font-weight:700;
-    color:var(--text);
-  }
-  .stat-val.green  { color:var(--accent); }
-  .stat-val.orange { color:var(--warn); }
-  .stat-val.red    { color:var(--danger); }
-  .stat-lbl {
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10px;
-    color:var(--text3);
-    text-transform:uppercase;
-    letter-spacing:1px;
-  }
-  .stat-sep {
-    width:1px;
-    height:40px;
-    background:var(--border);
-  }
-
-  .leer-feld {
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:var(--text3);
-    font-size:13px;
-    height:100%;
-  }
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3248;--accent:#00c896;--accent2:#0084ff;--warn:#ffaa00;--danger:#ff4455;--text:#e6edf3;--text2:#8b949e;--text3:#4a5270;--s1:#0084ff;--s2:#00c896;--s3:#ff9944;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--surface);border-bottom:3px solid var(--accent);flex-shrink:0;}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:2px;}
+.header-title{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
+.header-right{display:flex;align-items:center;gap:20px;}
+.clock{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:700;color:var(--text);}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;margin-right:6px;}
+.sync-dot.ok{background:var(--accent);box-shadow:0 0 6px var(--accent);}
+.sync-dot.err{background:var(--danger);}
+.sync-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);}
+.main{flex:1;display:flex;overflow:hidden;padding:14px;gap:10px;}
+.zone{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.zone-header{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:7px;border-bottom:2px solid var(--border);flex-shrink:0;}
+.zone-title{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:2px;}
+.zone-count{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;}
+.arrow-zone{display:flex;flex-direction:row;align-items:center;justify-content:center;width:28px;flex-shrink:0;margin-top:28px;}
+.arrow-shaft{height:2px;flex:1;max-width:8px;background:var(--border);border-radius:1px;}
+.arrow-head{font-size:18px;color:var(--border);line-height:1;}
+.arrow-zone.on .arrow-shaft{background:var(--accent);}
+.arrow-zone.on .arrow-head{color:var(--accent);}
+/* VF */
+.zone-vf{width:195px;flex-shrink:0;}
+.vf-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px;}
+.vf-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border-radius:7px;border-left:3px solid var(--border);}
+.vf-row.aktiv{border-left-color:var(--accent);background:#0a1f14;}
+.vf-row.blocked{border-left-color:var(--danger);background:#1f0a0a;}
+.vf-nr{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--text);}
+.vf-nr.aktiv{color:var(--accent);}
+.vf-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.vf-kunde{font-size:10px;color:var(--text2);max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* AZ */
+.zone-az{flex:1;min-width:0;}
+.az-outer{background:#080f08;border:2.5px solid var(--accent);border-radius:14px;padding:10px;flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+.az-subtitle{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;text-align:center;opacity:0.6;flex-shrink:0;}
+.az-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1;}
+.az-feld{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
+.az-feld.voll{border-color:var(--accent);background:#0a1f0a;}
+.az-feld.wb{border-color:var(--warn);background:#1a1400;}
+.az-feld.leer{border:2px dashed var(--border);background:transparent;opacity:0.3;}
+.az-nr{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--text);line-height:1;}
+.az-nr.voll{color:var(--accent);} .az-nr.wb{color:var(--warn);}
+.az-kunde{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.az-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
+.az-dot{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 5px;border-radius:3px;border:1px solid var(--border);color:var(--text3);background:var(--surface2);}
+.az-dot.f{background:#00c89620;border-color:#00c89660;color:var(--accent);}
+.az-st{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;margin-top:auto;}
+.az-st.voll{color:var(--accent);} .az-st.wb{color:var(--warn);} .az-st.leer{color:var(--text3);}
+/* ZB */
+.zone-zb{width:170px;flex-shrink:0;}
+.zb-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:8px;overflow-y:auto;}
+.zb-box.on{border-color:var(--accent);background:#0a1f0a;}
+.zb-nr{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--accent);text-align:center;}
+.zb-kunde{font-size:12px;color:var(--text2);text-align:center;margin-top:3px;}
+.zb-stk{font-size:11px;color:var(--text3);text-align:center;margin-top:2px;}
+.leer-msg{color:var(--text3);font-size:13px;text-align:center;padding:16px 0;}
+/* SLOT */
+.zone-slot{width:155px;flex-shrink:0;}
+.slot-list{flex:1;display:flex;flex-direction:column;gap:7px;}
+.slot-item{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:3px;}
+.slot-item.bereit{border-color:var(--accent);background:#0a1f0a;}
+.slot-item.leer{border:1.5px dashed var(--border);background:transparent;opacity:0.35;}
+.slot-nr{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:700;}
+.slot-nr.bereit{color:var(--accent);}
+.slot-kunde{font-size:11px;color:var(--text2);}
+.slot-st{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;margin-top:auto;color:var(--accent);}
+.slot-leer{color:var(--text3);font-size:12px;text-align:center;padding:8px 0;}
+/* NB */
+.zone-nb{width:170px;flex-shrink:0;}
+.nb-box{background:#1f0a0a;border:2.5px solid var(--danger);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:8px;overflow-y:auto;}
+.nb-eng{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--danger);letter-spacing:1px;text-align:center;border:1px solid #ff445544;border-radius:4px;padding:3px 6px;flex-shrink:0;}
+.nb-nr{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--danger);text-align:center;}
+.nb-kunde{font-size:12px;color:var(--text2);text-align:center;margin-top:3px;}
+.nb-stk{font-size:11px;color:var(--text3);text-align:center;margin-top:2px;}
+/* VS */
+.zone-vs{width:150px;flex-shrink:0;}
+.vs-box{background:#0a0f2a;border:2px solid var(--accent2);border-radius:12px;padding:14px;flex:1;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.vs-row{padding:6px 0;border-bottom:1px solid #0084ff22;}
+.vs-row:last-child{border-bottom:none;}
+.vs-nr{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--accent2);}
+.vs-kunde{font-size:11px;color:var(--text2);margin-top:2px;}
+.vs-stk{font-size:10px;color:var(--text3);}
+/* FOOTER */
+.footer{flex-shrink:0;background:var(--surface);border-top:2px solid var(--border);padding:9px 28px;display:flex;align-items:center;}
+.fs{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border-right:1px solid var(--border);padding:0 16px;}
+.fs:last-child{border-right:none;}
+.fs-val{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.fs-val.g{color:var(--accent);} .fs-val.o{color:var(--warn);} .fs-val.r{color:var(--danger);} .fs-val.b{color:var(--accent2);}
+.fs-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;text-align:center;}
+.s-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:16px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;}
+.badge-s1{background:#0084ff22;color:var(--s1);border:1px solid #0084ff44;}
+.badge-s2{background:#00c89622;color:var(--s2);border:1px solid #00c89644;}
+.badge-s3{background:#ff994422;color:var(--s3);border:1px solid #ff994444;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="logo">IMS ◆ FLOW</div>
-  <div class="header-center">PRODUKTIONSFLUSS</div>
+  <div class="header-title">Produktionsfluss – Live</div>
   <div class="header-right">
+    <div><span class="sync-dot" id="sd"></span><span class="sync-label" id="sl">Verbinde...</span></div>
     <div class="clock" id="clock">--:--:--</div>
-    <div class="date-label" id="dateLabel">--</div>
-    <div class="sync-info" id="syncInfo">● Verbinde...</div>
   </div>
 </div>
 
-<!-- MAIN FLOW -->
-<div class="flow-container">
+<div class="main">
 
-  <!-- VORFERTIGUNG -->
-  <div class="zone zone-vorfertigung">
-    <div class="zone-label">Vorfertigung</div>
-    <div id="cnc-card" class="station-card">
-      <div class="station-name">🔧 CNC</div>
-      <div id="cnc-auftraege" class="station-auftraege"><span class="station-leer">–</span></div>
+  <div class="zone zone-vf">
+    <div class="zone-header">
+      <span class="zone-title">Vorfertigung</span>
+      <span class="zone-count" id="vf-c" style="color:var(--text2)">0</span>
     </div>
-    <div id="ap-card" class="station-card">
-      <div class="station-name">🔩 AP-Armatur</div>
-      <div id="ap-auftraege" class="station-auftraege"><span class="station-leer">–</span></div>
-    </div>
-    <div id="up1-card" class="station-card">
-      <div class="station-name">🔩 UP-Arm. 1</div>
-      <div id="up1-auftraege" class="station-auftraege"><span class="station-leer">–</span></div>
-    </div>
-    <div id="up2-card" class="station-card">
-      <div class="station-name">🔩 UP-Arm. 2</div>
-      <div id="up2-auftraege" class="station-auftraege"><span class="station-leer">–</span></div>
-    </div>
-    <div id="hz-card" class="station-card">
-      <div class="station-name">🌡 Heizung</div>
-      <div id="hz-auftraege" class="station-auftraege"><span class="station-leer">–</span></div>
-    </div>
-    <div class="zone-count" id="vf-count">0 aktiv</div>
+    <div class="vf-box" id="vfBox"><div class="leer-msg">–</div></div>
   </div>
 
-  <!-- PFEIL -->
-  <div class="arrow" id="arrow1">▶</div>
+  <div class="arrow-zone" id="a1"><div class="arrow-shaft"></div><div class="arrow-head">▶</div><div class="arrow-shaft"></div></div>
 
-  <!-- AUFTRAGSZONE -->
-  <div class="zone zone-auftragszone">
-    <div class="zone-label">⬡ Auftragszone <span id="az-count-label" style="color:var(--accent)">0 / 8</span></div>
-    <div class="auftragszone-box">
+  <div class="zone zone-az">
+    <div class="zone-header">
+      <span class="zone-title">⬡ Auftragszone</span>
+      <span class="zone-count" id="az-c" style="color:var(--accent)">0 / 8</span>
+    </div>
+    <div class="az-outer">
+      <div class="az-subtitle">⬡ grünes Herz der Produktion</div>
       <div class="az-grid" id="azGrid"></div>
     </div>
   </div>
 
-  <!-- PFEIL -->
-  <div class="arrow" id="arrow2">▶</div>
+  <div class="arrow-zone" id="a2"><div class="arrow-shaft"></div><div class="arrow-head">▶</div><div class="arrow-shaft"></div></div>
 
-  <!-- ZUSAMMENBAU -->
-  <div class="zone" style="width:190px;flex-shrink:0">
-    <div class="zone-label">Zusammenbau</div>
-    <div id="zb-box" style="flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;">
-      <div id="zb-content" class="leer-feld">–</div>
+  <div class="zone zone-zb">
+    <div class="zone-header">
+      <span class="zone-title">Zusammenbau</span>
+      <span class="zone-count" id="zb-c" style="color:var(--text2)">0</span>
     </div>
-    <div class="zone-count" id="zb-count">0 aktiv</div>
+    <div class="zb-box" id="zbBox"><div class="leer-msg">– zieht aus<br>Auftragszone</div></div>
   </div>
 
-  <!-- PFEIL -->
-  <div class="arrow" id="arrow3">▶</div>
+  <div class="arrow-zone" id="a3"><div class="arrow-shaft"></div><div class="arrow-head">▶</div><div class="arrow-shaft"></div></div>
 
-  <!-- SLOT -->
   <div class="zone zone-slot">
-    <div class="zone-label">Slot <span id="slot-count-label" style="color:var(--text2)">0 / 3</span></div>
-    <div style="display:flex;flex-direction:column;gap:8px;flex:1">
-      <div id="slot1" class="slot-box leer"><div class="leer-feld" style="font-size:13px;color:var(--text3)">○ frei</div></div>
-      <div id="slot2" class="slot-box leer"><div class="leer-feld" style="font-size:13px;color:var(--text3)">○ frei</div></div>
-      <div id="slot3" class="slot-box leer"><div class="leer-feld" style="font-size:13px;color:var(--text3)">○ frei</div></div>
+    <div class="zone-header">
+      <span class="zone-title">Slot</span>
+      <span class="zone-count" id="slot-c" style="color:var(--text2)">0 / 3</span>
+    </div>
+    <div class="slot-list">
+      <div class="slot-item leer" id="s1"><div class="slot-leer">○ frei</div></div>
+      <div class="slot-item leer" id="s2"><div class="slot-leer">○ frei</div></div>
+      <div class="slot-item leer" id="s3"><div class="slot-leer">○ frei</div></div>
     </div>
   </div>
 
-  <!-- PFEIL -->
-  <div class="arrow" id="arrow4">▶</div>
+  <div class="arrow-zone" id="a4"><div class="arrow-shaft"></div><div class="arrow-head">▶</div><div class="arrow-shaft"></div></div>
 
-  <!-- NACHBEARBEITUNG -->
   <div class="zone zone-nb">
-    <div class="zone-label">⚠ Nachbearb. <span style="color:var(--danger);font-size:10px">ENGPASS</span></div>
-    <div id="nb-box" class="nb-card">
-      <div class="nb-engpass">⚠ ENGPASS-STATION</div>
-      <div id="nb-content" class="nb-leer">– keine aktiven Aufträge</div>
+    <div class="zone-header">
+      <span class="zone-title">Nachbearbeitung</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--danger);letter-spacing:1px">ENGPASS</span>
+      <span class="zone-count" id="nb-c" style="color:var(--danger)">0</span>
     </div>
-    <div class="zone-count" id="nb-count">0 aktiv</div>
+    <div class="nb-box" id="nbBox">
+      
+      <div class="leer-msg">– keine aktiven Aufträge</div>
+    </div>
   </div>
 
-  <!-- PFEIL -->
-  <div class="arrow" id="arrow5" style="color:var(--accent2)">▶</div>
+  <div class="arrow-zone" id="a5"><div class="arrow-shaft"></div><div class="arrow-head" style="color:var(--accent2)">▶</div><div class="arrow-shaft"></div></div>
 
-  <!-- VERSAND -->
-  <div class="zone zone-versand">
-    <div class="zone-label">📦 Versand</div>
-    <div id="versand-box" class="versand-box">
-      <div id="versand-content" class="versand-leer">– keine Aufträge</div>
+  <div class="zone zone-vs">
+    <div class="zone-header">
+      <span class="zone-title">📦 Versand</span>
+      <span class="zone-count" id="vs-c" style="color:var(--accent2)">0</span>
     </div>
-    <div class="zone-count" id="versand-count">0 bereit</div>
+    <div class="vs-box" id="vsBox"><div class="leer-msg" style="color:var(--text3)">– keine Aufträge</div></div>
   </div>
 
 </div>
 
-<!-- FOOTER STATS -->
-<div class="footer-stats">
-  <div class="stat">
-    <div class="stat-val" id="stat-gesamt">0</div>
-    <div class="stat-lbl">Offen gesamt</div>
-  </div>
-  <div class="stat-sep"></div>
-  <div class="stat">
-    <div class="stat-val green" id="stat-vf">0</div>
-    <div class="stat-lbl">In Vorfertigung</div>
-  </div>
-  <div class="stat-sep"></div>
-  <div class="stat">
-    <div class="stat-val green" id="stat-az">0</div>
-    <div class="stat-lbl">Auftragszone</div>
-  </div>
-  <div class="stat-sep"></div>
-  <div class="stat">
-    <div class="stat-val orange" id="stat-zb">0</div>
-    <div class="stat-lbl">Zusammenbau</div>
-  </div>
-  <div class="stat-sep"></div>
-  <div class="stat">
-    <div class="stat-val orange" id="stat-slot">0</div>
-    <div class="stat-lbl">Im Slot</div>
-  </div>
-  <div class="stat-sep"></div>
-  <div class="stat">
-    <div class="stat-val red" id="stat-nb">0</div>
-    <div class="stat-lbl">Nachbearbeitung</div>
-  </div>
-  <div class="stat-sep"></div>
-  <div class="stat">
-    <div class="stat-val" id="stat-versand">0</div>
-    <div class="stat-lbl">Versandbereit</div>
-  </div>
+<div class="footer">
+  <div class="fs"><div class="fs-val g" id="fs1">0</div><div class="fs-lbl">Vorfertigung</div></div>
+  <div class="fs"><div class="fs-val g" id="fs2">0</div><div class="fs-lbl">Auftragszone</div></div>
+  <div class="fs"><div class="fs-val o" id="fs3">0</div><div class="fs-lbl">Zusammenbau</div></div>
+  <div class="fs"><div class="fs-val o" id="fs4">0</div><div class="fs-lbl">Slot</div></div>
+  <div class="fs"><div class="fs-val r" id="fs5">0</div><div class="fs-lbl">Nachbearbeitung</div></div>
+  <div class="fs"><div class="fs-val b" id="fs6">0</div><div class="fs-lbl">Versandbereit</div></div>
 </div>
 
 <script>
-const SUPABASE_URL = 'https://elwlptapzwwqhjuxnnws.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_MbE6UlJorEnYMe6w77Lixw_ttcF5gBx';
-
-let auftraege = [];
-let syncInterval;
-
-// ── GRUPPEN CONFIG ────────────────────────────────────────
-const GRUPPEN = {
-  '0': { aps:['CNC','AP-Armatur','Zusammenbau','Nachbearbeitung'] },
-  '1': { aps:['CNC','UP-Armatur 1','UP-Armatur 2','Zusammenbau','Nachbearbeitung'] },
-  '2': { aps:['Heizung'] },
-  '3': { aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'] },
-  '4': { aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'] },
-  '5': { aps:['CNC','UP-Armatur 1','UP-Armatur 2','Einbauelement'] },
-  '6': { aps:['Versand'] },
-};
-
-const VORFERTIGUNG_APS = ['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'];
-
-// ── HELPERS ────────────────────────────────────────────────
-function fmtNr(nr) {
-  const s = String(nr).replace(/\s/g,'');
-  return s.length > 4 ? s.slice(0,4) + '\u2009' + s.slice(4) : s;
-}
-
-function isTimerActive(a, apName) {
-  if(!a.timers) return false;
-  const key = `${a.id}_${apName.replace(/[^a-z0-9]/gi,'_')}`;
-  const t = a.timers[key];
-  return t && t.start && !t.end;
-}
-
-function isStationFertig(a, apName) {
-  if(!a.stationFertig) return false;
-  const key = apName.replace(/[^a-z0-9]/gi,'_');
-  return !!(a.stationFertig[apName] || a.stationFertig[key]);
-}
-
-function getAuftragsAPs(a) {
-  const aps = new Set();
-  const gruppen = a.gruppen || (a.gruppe ? [{gruppe:a.gruppe}] : []);
-  gruppen.forEach(g => { if(GRUPPEN[g.gruppe]) GRUPPEN[g.gruppe].aps.forEach(ap => aps.add(ap)); });
-  return [...aps];
-}
-
-function getVorfAPs(a) {
-  return getAuftragsAPs(a).filter(ap => VORFERTIGUNG_APS.includes(ap));
-}
-
-// ── CLOCK ──────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    String(now.getHours()).padStart(2,'0') + ':' +
-    String(now.getMinutes()).padStart(2,'0') + ':' +
-    String(now.getSeconds()).padStart(2,'0');
-  const days = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-  document.getElementById('dateLabel').textContent =
-    days[now.getDay()] + ', ' +
-    String(now.getDate()).padStart(2,'0') + '.' +
-    String(now.getMonth()+1).padStart(2,'0') + '.' +
-    now.getFullYear();
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// ── LOAD DATA ─────────────────────────────────────────────
-async function loadData() {
-  try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/ims_data?id=eq.main&select=auftraege`,
-      { headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${SUPABASE_KEY}` } }
-    );
-    if(!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    auftraege = (data[0]?.auftraege || []).filter(a => !a.fertig);
-    document.getElementById('syncInfo').textContent = '● Synchronisiert ' + new Date().toLocaleTimeString('de');
-    document.getElementById('syncInfo').style.color = 'var(--accent)';
+const SB_URL='https://elwlptapzwwqhjuxnnws.supabase.co';
+const SB_KEY='sb_publishable_MbE6UlJorEnYMe6w77Lixw_ttcF5gBx';
+let auftraege=[];
+const GR={'0':{aps:['CNC','AP-Armatur','Zusammenbau','Nachbearbeitung']},'1':{aps:['CNC','UP-Armatur 1','UP-Armatur 2','Zusammenbau','Nachbearbeitung']},'2':{aps:['Heizung']},'3':{aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung']},'4':{aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung']},'5':{aps:['CNC','UP-Armatur 1','UP-Armatur 2','Einbauelement']},'6':{aps:['Versand']}};
+const VF=['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'];
+function fmtNr(n){const s=String(n).replace(/\s/g,'');return s.length>4?s.slice(0,4)+'\u2009'+s.slice(4):s;}
+function getAPs(a){const s=new Set();(a.gruppen||(a.gruppe?[{gruppe:a.gruppe}]:[])).forEach(g=>{if(GR[g.gruppe])GR[g.gruppe].aps.forEach(ap=>s.add(ap));});return[...s];}
+function getVF(a){return getAPs(a).filter(ap=>VF.includes(ap));}
+function sf(a,ap){if(!a.stationFertig)return false;const k=ap.replace(/[^a-z0-9]/gi,'_');return!!(a.stationFertig[ap]||a.stationFertig[k]);}
+function ta(a,ap){if(!a.timers)return false;const k=`${a.id}_${ap.replace(/[^a-z0-9]/gi,'_')}`;const t=a.timers[k];return!!(t&&t.start&&!t.end);}
+function badge(sk){const s=(sk||'').toLowerCase();return`<span class="s-badge badge-${s}">${sk||''}</span>`;}
+function tick(){const n=new Date();document.getElementById('clock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');}
+setInterval(tick,1000);tick();
+async function load(){
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/ims_data?id=eq.main&select=auftraege`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    auftraege=(d[0]?.auftraege||[]).filter(a=>!a.fertig);
+    document.getElementById('sd').className='sync-dot ok';
+    document.getElementById('sl').textContent='Synchronisiert '+new Date().toLocaleTimeString('de');
     render();
-  } catch(e) {
-    document.getElementById('syncInfo').textContent = '● Verbindungsfehler';
-    document.getElementById('syncInfo').style.color = 'var(--danger)';
+  }catch(e){
+    document.getElementById('sd').className='sync-dot err';
+    document.getElementById('sl').textContent='Verbindungsfehler';
   }
 }
+function render(){
+  const o=auftraege;
+  const inVF=o.filter(a=>{const v=getVF(a);return v.length>0&&!v.some(ap=>sf(a,ap))&&!sf(a,'Zusammenbau');});
+  const inAZ=o.filter(a=>{const v=getVF(a);return v.length>0&&v.some(ap=>sf(a,ap))&&!sf(a,'Zusammenbau');});
+  const inZB=o.filter(a=>ta(a,'Zusammenbau'));
+  const inSL=o.filter(a=>sf(a,'Zusammenbau')&&!sf(a,'Nachbearbeitung')&&!ta(a,'Nachbearbeitung'));
+  const inNB=o.filter(a=>ta(a,'Nachbearbeitung'));
+  const inVS=o.filter(a=>sf(a,'Nachbearbeitung'));
 
-// ── RENDER ─────────────────────────────────────────────────
-function render() {
-  const offene = auftraege.filter(a => !a.fertig);
+  // VF
+  const vfBox=document.getElementById('vfBox');
+  vfBox.innerHTML=inVF.length===0?'<div class="leer-msg">– keine offenen Aufträge</div>':
+    inVF.sort((a,b)=>(a.prio||99)-(b.prio||99)).map(a=>{
+      const hat=VF.some(ap=>ta(a,ap));
+      const blk=a.blockierungen&&Object.keys(a.blockierungen).length>0;
+      return`<div class="vf-row ${blk?'blocked':hat?'aktiv':''}"><span class="vf-nr ${hat?'aktiv':''}">${fmtNr(a.nr)}</span><div class="vf-right"><span class="vf-kunde">${a.kunde}</span>${badge(a.sklasse)}</div></div>`;
+    }).join('');
+  document.getElementById('vf-c').textContent=inVF.length;
 
-  // ── VORFERTIGUNG ──
-  const vfStationen = {
-    'CNC':         { el:'cnc',  card:'cnc-card' },
-    'AP-Armatur':  { el:'ap',   card:'ap-card' },
-    'UP-Armatur 1':{ el:'up1',  card:'up1-card' },
-    'UP-Armatur 2':{ el:'up2',  card:'up2-card' },
-    'Heizung':     { el:'hz',   card:'hz-card' },
-  };
-
-  let vfAktivGesamt = 0;
-
-  Object.entries(vfStationen).forEach(([apName, cfg]) => {
-    // Aufträge wo diese Station aktiv ODER noch nicht fertig (aber gestartet)
-    const aktiv = offene.filter(a => {
-      const aps = getAuftragsAPs(a);
-      if(!aps.includes(apName)) return false;
-      if(isStationFertig(a, apName)) return false;
-      return true;
-    });
-
-    const laufend = offene.filter(a => isTimerActive(a, apName));
-
-    const el = document.getElementById(cfg.el + '-auftraege');
-    const card = document.getElementById(cfg.card);
-
-    if(laufend.length > 0) {
-      card.classList.add('aktiv');
-      el.innerHTML = laufend.map(a =>
-        `<span class="station-nr">${fmtNr(a.nr)}</span>`
-      ).join('');
-      vfAktivGesamt += laufend.length;
-    } else if(aktiv.length > 0) {
-      card.classList.remove('aktiv');
-      el.innerHTML = `<span class="station-leer">${aktiv.length} wartend</span>`;
-    } else {
-      card.classList.remove('aktiv');
-      el.innerHTML = `<span class="station-leer">–</span>`;
+  // AZ
+  const g=document.getElementById('azGrid');g.innerHTML='';
+  for(let i=0;i<8;i++){
+    const a=inAZ[i];const d=document.createElement('div');
+    if(!a){d.className='az-feld leer';d.innerHTML='<div class="az-st leer">○ frei</div>';}
+    else{
+      const v=getVF(a);const all=v.length>0&&v.every(ap=>sf(a,ap));
+      d.className='az-feld '+(all?'voll':'wb');
+      const dots=v.map(ap=>{const f=sf(a,ap);const s=ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ');return`<span class="az-dot ${f?'f':''}">${s}</span>`;}).join('');
+      d.innerHTML=`<div class="az-nr ${all?'voll':'wb'}">${fmtNr(a.nr)}</div><div class="az-kunde">${a.kunde}</div><div class="az-dots">${dots}</div><div class="az-st ${all?'voll':'wb'}">${all?'✓ VOLLSTÄNDIG':'⏳ IN ARBEIT'}</div>`;
     }
+    g.appendChild(d);
+  }
+  document.getElementById('az-c').textContent=Math.min(inAZ.length,8)+' / 8';
+
+  // ZB
+  const zb=document.getElementById('zbBox');
+  if(inZB.length===0){zb.className='zb-box';zb.innerHTML='<div class="leer-msg">– zieht aus<br>Auftragszone</div>';}
+  else{zb.className='zb-box on';zb.innerHTML=inZB.map(a=>`<div><div class="zb-nr">${fmtNr(a.nr)}</div><div class="zb-kunde">${a.kunde}</div><div class="zb-stk">${a.stk} Stk · ${badge(a.sklasse)}</div></div>`).join('<hr style="border:none;border-top:1px solid var(--border);margin:6px 0">');}
+  document.getElementById('zb-c').textContent=inZB.length;
+
+  // SLOT
+  for(let i=1;i<=3;i++){const a=inSL[i-1];const el=document.getElementById('s'+i);
+    if(!a){el.className='slot-item leer';el.innerHTML='<div class="slot-leer">○ frei</div>';}
+    else{el.className='slot-item bereit';el.innerHTML=`<div class="slot-nr bereit">${fmtNr(a.nr)}</div><div class="slot-kunde">${a.kunde}</div><div class="slot-kunde" style="color:var(--text3)">${a.stk} Stk</div><div class="slot-st">✓ bereit für NB</div>`;}}
+  document.getElementById('slot-c').textContent=Math.min(inSL.length,3)+' / 3';
+
+  // NB
+  const nb=document.getElementById('nbBox');
+  nb.innerHTML=''+(inNB.length===0?'<div class="leer-msg">– keine aktiven Aufträge</div>':inNB.map(a=>`<div><div class="nb-nr">${fmtNr(a.nr)}</div><div class="nb-kunde">${a.kunde}</div><div class="nb-stk">${a.stk} Stk · ${badge(a.sklasse)}</div></div>`).join('<hr style="border:none;border-top:1px solid #ff445533;margin:5px 0">'));
+  document.getElementById('nb-c').textContent=inNB.length;
+
+  // VS
+  const vs=document.getElementById('vsBox');
+  vs.innerHTML=inVS.length===0?'<div class="leer-msg" style="color:var(--text3)">– keine Aufträge</div>':inVS.map(a=>`<div class="vs-row"><div class="vs-nr">${fmtNr(a.nr)}</div><div class="vs-kunde">${a.kunde}</div><div class="vs-stk">${a.stk} Stk</div></div>`).join('');
+  document.getElementById('vs-c').textContent=inVS.length;
+
+  // FOOTER
+  ['fs1','fs2','fs3','fs4','fs5','fs6'].forEach((id,i)=>{
+    document.getElementById(id).textContent=[inVF.length,inAZ.length,inZB.length,inSL.length,inNB.length,inVS.length][i];
   });
 
-  document.getElementById('vf-count').textContent = vfAktivGesamt + ' aktiv';
-  document.getElementById('stat-vf').textContent = vfAktivGesamt;
-
-  // ── AUFTRAGSZONE ──
-  // Ein Auftrag ist in der Auftragszone wenn mindestens eine Vorf-Station fertig
-  // aber noch nicht alle (die sind dann noch "in Arbeit")
-  // Vollständig = alle Vorf-Stationen fertig UND Zusammenbau noch nicht fertig
-  const azAuftraege = offene.filter(a => {
-    const vfAps = getVorfAPs(a);
-    if(vfAps.length === 0) return false;
-    const hatEineFertig = vfAps.some(ap => isStationFertig(a, ap));
-    const zbFertig = isStationFertig(a, 'Zusammenbau');
-    return hatEineFertig && !zbFertig;
-  });
-
-  const azGrid = document.getElementById('azGrid');
-  azGrid.innerHTML = '';
-
-  const azSlots = 8;
-  for(let i = 0; i < azSlots; i++) {
-    const a = azAuftraege[i];
-    const div = document.createElement('div');
-
-    if(!a) {
-      div.className = 'az-feld leer';
-      div.innerHTML = `<div class="az-status leer">○ frei</div>`;
-    } else {
-      const vfAps = getVorfAPs(a);
-      const alleFertig = vfAps.every(ap => isStationFertig(a, ap));
-
-      div.className = 'az-feld ' + (alleFertig ? 'vollstaendig' : 'in-arbeit');
-
-      const dotsHtml = vfAps.map(ap => {
-        const fertig = isStationFertig(a, ap);
-        const short = ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ');
-        return `<span class="az-dot ${fertig?'fertig':''}">${short}</span>`;
-      }).join('');
-
-      div.innerHTML = `
-        <div class="az-nr ${alleFertig?'vollstaendig':'in-arbeit'}">${fmtNr(a.nr)}</div>
-        <div class="az-kunde">${a.kunde}</div>
-        <div class="az-dots">${dotsHtml}</div>
-        <div class="az-status ${alleFertig?'vollstaendig':'in-arbeit'}">
-          ${alleFertig ? '✓ VOLLSTÄNDIG' : '⏳ IN ARBEIT'}
-        </div>`;
-    }
-    azGrid.appendChild(div);
-  }
-
-  const azBelegt = Math.min(azAuftraege.length, azSlots);
-  document.getElementById('az-count-label').textContent = azBelegt + ' / ' + azSlots;
-  document.getElementById('stat-az').textContent = azBelegt;
-
-  // ── ZUSAMMENBAU ──
-  const zbAktiv = offene.filter(a => isTimerActive(a, 'Zusammenbau'));
-  const zbBox = document.getElementById('zb-box');
-  const zbContent = document.getElementById('zb-content');
-
-  if(zbAktiv.length > 0) {
-    zbBox.style.borderColor = 'var(--accent)';
-    zbBox.style.background = '#0a1f0a';
-    zbContent.innerHTML = zbAktiv.map(a => `
-      <div style="text-align:center">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--accent)">${fmtNr(a.nr)}</div>
-        <div style="font-size:13px;color:var(--text2);margin-top:4px">${a.kunde}</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">${a.stk} Stk</div>
-      </div>
-    `).join('<hr style="border-color:var(--border);margin:8px 0">');
-  } else {
-    zbBox.style.borderColor = 'var(--border)';
-    zbBox.style.background = 'var(--surface)';
-    zbContent.innerHTML = `<div class="leer-feld">– warte auf Auftragszone</div>`;
-  }
-  document.getElementById('zb-count').textContent = zbAktiv.length + ' aktiv';
-  document.getElementById('stat-zb').textContent = zbAktiv.length;
-
-  // ── SLOT ──
-  // Aufträge wo Zusammenbau fertig aber Nachbearbeitung noch nicht fertig
-  const slotAuftraege = offene.filter(a => {
-    return isStationFertig(a, 'Zusammenbau') && !isStationFertig(a, 'Nachbearbeitung') && !isTimerActive(a, 'Nachbearbeitung');
-  });
-
-  for(let i = 1; i <= 3; i++) {
-    const a = slotAuftraege[i-1];
-    const el = document.getElementById('slot' + i);
-    if(!a) {
-      el.className = 'slot-box leer';
-      el.innerHTML = `<div class="leer-feld" style="font-size:13px;color:var(--text3)">○ frei</div>`;
-    } else {
-      const bereit = !isTimerActive(a, 'Zusammenbau');
-      el.className = 'slot-box ' + (bereit ? 'bereit' : 'belegt');
-      el.innerHTML = `
-        <div class="slot-nr ${bereit?'bereit':'belegt'}">${fmtNr(a.nr)}</div>
-        <div class="slot-kunde">${a.kunde}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${a.stk} Stk</div>
-        <div style="font-size:11px;font-weight:700;color:${bereit?'var(--accent)':'var(--warn)'};margin-top:4px">
-          ${bereit ? '✓ bereit für NB' : '⏳ wartet'}
-        </div>`;
-    }
-  }
-  document.getElementById('slot-count-label').textContent = Math.min(slotAuftraege.length, 3) + ' / 3';
-  document.getElementById('stat-slot').textContent = Math.min(slotAuftraege.length, 3);
-
-  // ── NACHBEARBEITUNG ──
-  const nbAktiv = offene.filter(a => isTimerActive(a, 'Nachbearbeitung'));
-  const nbBox = document.getElementById('nb-box');
-  const nbContent = document.getElementById('nb-content');
-
-  if(nbAktiv.length > 0) {
-    nbContent.innerHTML = nbAktiv.map(a => `
-      <div class="nb-nr">${fmtNr(a.nr)}</div>
-      <div class="nb-kunde">${a.kunde}</div>
-      <div style="font-size:12px;color:var(--text3)">${a.stk} Stk</div>
-    `).join('<hr style="border-color:#ff445544;margin:6px 0">');
-  } else {
-    nbContent.innerHTML = `<div class="nb-leer">– keine aktiven Aufträge</div>`;
-  }
-  document.getElementById('nb-count').textContent = nbAktiv.length + ' aktiv';
-  document.getElementById('stat-nb').textContent = nbAktiv.length;
-
-  // ── VERSAND ──
-  const versandBereit = offene.filter(a => isStationFertig(a, 'Nachbearbeitung'));
-  const versandBox = document.getElementById('versand-box');
-  const versandContent = document.getElementById('versand-content');
-
-  if(versandBereit.length > 0) {
-    versandContent.innerHTML = versandBereit.map(a => `
-      <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
-        <div class="versand-nr">${fmtNr(a.nr)}</div>
-        <div class="versand-kunde">${a.kunde}</div>
-        <div style="font-size:11px;color:var(--text3)">${a.stk} Stk</div>
-      </div>
-    `).join('');
-  } else {
-    versandContent.innerHTML = `<div class="versand-leer">– keine Aufträge</div>`;
-  }
-  document.getElementById('versand-count').textContent = versandBereit.length + ' bereit';
-  document.getElementById('stat-versand').textContent = versandBereit.length;
-
-  // ── GESAMT ──
-  document.getElementById('stat-gesamt').textContent = offene.length;
-
-  // ── PFEIL FARBEN ──
-  document.getElementById('arrow1').className = 'arrow ' + (vfAktivGesamt > 0 ? 'active' : '');
-  document.getElementById('arrow2').className = 'arrow ' + (azAuftraege.some(a => getVorfAPs(a).every(ap => isStationFertig(a, ap))) ? 'active' : '');
-  document.getElementById('arrow3').className = 'arrow ' + (zbAktiv.length > 0 ? 'active' : '');
-  document.getElementById('arrow4').className = 'arrow ' + (slotAuftraege.length > 0 ? 'active' : '');
-  document.getElementById('arrow5').style.color = nbAktiv.length > 0 ? 'var(--accent2)' : 'var(--border)';
+  // PFEILE
+  const arr=(id,on)=>document.getElementById(id).className='arrow-zone'+(on?' on':'');
+  arr('a1',inVF.length>0);
+  arr('a2',inAZ.some(a=>getVF(a).every(ap=>sf(a,ap))));
+  arr('a3',inZB.length>0);
+  arr('a4',inSL.length>0);
+  document.getElementById('a5').className='arrow-zone'+(inNB.length>0?' on':'');
 }
-
-// ── START ──────────────────────────────────────────────────
-loadData();
-syncInterval = setInterval(loadData, 15000);
+load();setInterval(load,15000);
 </script>
 </body>
 </html>
