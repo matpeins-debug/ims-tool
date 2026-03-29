@@ -329,18 +329,25 @@ function isBlk(a){return(a.blockierungen&&Object.keys(a.blockierungen).length>0)
 function blkTxt(a){if(a.blockierungen&&Object.keys(a.blockierungen).length>0)return Object.values(a.blockierungen).filter(Boolean).join(', ');if(a.blockierung)return String(a.blockierung).trim();return'';}
 function isMatch(a){if(!searchTerm)return true;const t=searchTerm.toLowerCase();return String(a.nr).includes(t)||String(a.kunde||'').toLowerCase().includes(t);}
 function isActive(a){return ALL_APS.some(ap=>ta(a,ap));}
-// Timer JEMALS gestartet – robust: durchsucht ALLE Timer-Keys nach Stationsname
+// Timer JEMALS gestartet – NUCLEAR: durchsucht das GESAMTE Auftrags-JSON
 function tg(a,ap){
-  if(!a.timers)return false;
-  // Exakter Key-Versuch (wie ta)
-  const k=a.id+'_'+ap.replace(/[^a-z0-9]/gi,'_');
-  if(a.timers[k]&&a.timers[k].start)return true;
-  // Fallback: suche in allen Keys nach dem Stationsnamen
-  const needle=ap.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-  return Object.keys(a.timers).some(key=>{
-    const lk=key.toLowerCase();
-    return lk.includes(needle)&&a.timers[key]&&a.timers[key].start;
-  });
+  // 1. Prüfe timers direkt
+  if(a.timers){
+    const k=a.id+'_'+ap.replace(/[^a-z0-9]/gi,'_');
+    if(a.timers[k]&&a.timers[k].start)return true;
+    const needle=ap.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    const found=Object.keys(a.timers).some(key=>key.toLowerCase().includes(needle)&&a.timers[key]&&a.timers[key].start);
+    if(found)return true;
+  }
+  // 2. Prüfe stationFertig (würde heißen Station ist sogar schon fertig)
+  if(sf(a,ap))return true;
+  // 3. Nuclear: stringify und suche nach Stationsname in timers-Bereich
+  if(a.timers){
+    const json=JSON.stringify(a.timers).toLowerCase();
+    const needle=ap.toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(json.includes(needle))return true;
+  }
+  return false;
 }
 function matchSFilter(a){if(!sFilter)return true;return(a.sklasse||'').toUpperCase()===sFilter.toUpperCase();}
 function hl(a){return isMatch(a)?' highlight':'';}
@@ -351,12 +358,22 @@ function kategorisiere(o){
     const vf=getVFaps(a),hatVF=vf.length>0,eineF=hatVF&&vf.some(ap=>sf(a,ap)),alleF=hatVF&&vf.every(ap=>sf(a,ap));
     const zbL=ta(a,'Zusammenbau'),zbG=tg(a,'Zusammenbau'),zbF=sf(a,'Zusammenbau');
     const nbL=ta(a,'Nachbearbeitung'),nbG=tg(a,'Nachbearbeitung'),nbF=sf(a,'Nachbearbeitung');
+    // DEBUG: log wenn ZB-Spuren vorhanden aber Auftrag nicht in ZB landet
+    if((zbG||zbL)&&!zbF&&!nbL&&!nbG&&!nbF){
+      console.log('[FLOW DEBUG] Auftrag '+a.nr+' → ZB (zbL='+zbL+', zbG='+zbG+', zbF='+zbF+')',a.timers);
+    }
     if(nbF)inVS.push(a);
-    else if(nbL||nbG)inNB.push(a);       // NB jemals gestartet → bleibt in NB
-    else if(zbF)inSL.push(a);             // ZB fertig → Slot
-    else if(zbL||zbG)inZB.push(a);        // ZB jemals gestartet → bleibt in ZB (kein Rücksprung!)
-    else if(eineF)inAZ.push({...a,_alleVF:alleF});
-    else inVF.push(a);
+    else if(nbL||nbG)inNB.push(a);
+    else if(zbF)inSL.push(a);
+    else if(zbL||zbG)inZB.push(a);
+    else{
+      if(eineF)inAZ.push({...a,_alleVF:alleF});
+      else inVF.push(a);
+      // DEBUG: prüfe ob Auftrag Timer-Daten hat die auf ZB hinweisen
+      if(a.timers&&JSON.stringify(a.timers).toLowerCase().includes('zusammenbau')){
+        console.warn('[FLOW DEBUG] ⚠ Auftrag '+a.nr+' hat ZB-Timer aber ist in '+(eineF?'AZ':'VF')+'!',JSON.stringify(a.timers));
+      }
+    }
   });
   return{inVF,inAZ,inZB,inSL,inNB,inVS};
 }
