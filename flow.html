@@ -63,46 +63,26 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .dd-nr{font-weight:600;color:var(--text);}
 .dd-kunde{color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-/* ── STATS BAR ─────────────────────────────────────── */
-.stats-bar{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
-.stat{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 6px;border-right:1px solid var(--border);white-space:nowrap;}
-.stat:last-child{border-right:none;}
-.stat-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
-.stat-dot.c-vf{background:var(--z-vf);}
-.stat-dot.c-az{background:var(--z-az);}
-.stat-dot.c-zb{background:var(--z-zb);}
-.stat-dot.c-sl{background:var(--z-sl);}
-.stat-dot.c-nb{background:var(--z-nb);}
-.stat-dot.c-vs{background:var(--z-vs);}
-.stat-val{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;line-height:1;}
-.stat-val.c-vf{color:var(--z-vf);}
-.stat-val.c-az{color:var(--z-az);}
-.stat-val.c-zb{color:var(--z-zb);}
-.stat-val.c-sl{color:var(--z-sl);}
-.stat-val.c-nb{color:var(--z-nb);}
-.stat-val.c-vs{color:var(--z-vs);}
-.stat-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
-
 /* ── MAIN ──────────────────────────────────────────── */
 .main{flex:1;display:flex;overflow:hidden;padding:6px;gap:4px;min-height:0;}
 
 /* ── ZONE ──────────────────────────────────────────── */
 .zone{display:flex;flex-direction:column;min-width:0;flex:1;}
-.zone-head{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-radius:var(--radius) var(--radius) 0 0;flex-shrink:0;gap:6px;}
+.zone-head{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-radius:var(--radius) var(--radius) 0 0;flex-shrink:0;gap:8px;}
 .zone-head.z-vf{background:var(--z-vf-dim);border:1px solid var(--z-vf-mid);border-bottom:none;}
 .zone-head.z-az{background:var(--z-az-dim);border:1px solid var(--z-az-mid);border-bottom:none;}
 .zone-head.z-zb{background:var(--z-zb-dim);border:1px solid var(--z-zb-mid);border-bottom:none;}
 .zone-head.z-sl{background:var(--z-sl-dim);border:1px solid var(--z-sl-mid);border-bottom:none;}
 .zone-head.z-nb{background:var(--z-nb-dim);border:1px solid var(--z-nb-mid);border-bottom:none;}
 .zone-head.z-vs{background:var(--z-vs-dim);border:1px solid var(--z-vs-mid);border-bottom:none;}
-.zone-title{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap;}
+.zone-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap;}
 .zone-title.z-vf{color:var(--z-vf);}
 .zone-title.z-az{color:var(--z-az);}
 .zone-title.z-zb{color:var(--z-zb);}
 .zone-title.z-sl{color:var(--z-sl);}
 .zone-title.z-nb{color:var(--z-nb);}
 .zone-title.z-vs{color:var(--z-vs);}
-.zone-count{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;white-space:nowrap;}
+.zone-count{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;white-space:nowrap;}
 .zone-body{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:0 0 var(--radius) var(--radius);overflow-y:auto;padding:var(--gap);display:flex;flex-direction:column;gap:var(--gap);}
 .zone-body.zb-az{border-color:var(--z-az-mid);}
 .zone-body.zb-sl{border-color:var(--z-sl-mid);}
@@ -173,7 +153,7 @@ body.light .vf-row.blockiert{background:rgba(220,38,38,0.14)!important;}
 .az-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap);align-content:start;}
 
 /* ── WARN BADGE ────────────────────────────────────── */
-.warn-badge{display:inline-flex;align-items:center;gap:3px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--danger);background:var(--danger-dim);border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:1px 5px;}
+.warn-badge{display:inline-flex;align-items:center;gap:3px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--danger);background:var(--danger-dim);border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:2px 8px;}
 
 /* ── ZONE SIZES ────────────────────────────────────── */
 .zone-vf{flex:0.85;}
@@ -193,9 +173,6 @@ body.light .vf-row.blockiert{background:rgba(220,38,38,0.14)!important;}
   .clock{font-size:18px;}
   .search-input{width:100px;}
   .search-input:focus{width:140px;}
-  .stats-bar{flex-wrap:wrap;}
-  .stat{min-width:calc(33.33% - 1px);border-bottom:1px solid var(--border);}
-  .stat:nth-child(n+4){border-bottom:none;}
   .main{flex-direction:column;overflow:visible;padding:6px;gap:10px;}
   .arrow{display:none;}
   .zone{flex:unset!important;width:100%;}
@@ -203,7 +180,6 @@ body.light .vf-row.blockiert{background:rgba(220,38,38,0.14)!important;}
   .az-grid{grid-template-columns:repeat(2,1fr);}
   .k-nr{font-size:14px;}
   .k-stk{font-size:16px;}
-  .stat-val{font-size:16px;}
 }
 @media(max-width:480px){.az-grid{grid-template-columns:1fr;}}
 </style>
@@ -223,16 +199,6 @@ body.light .vf-row.blockiert{background:rgba(220,38,38,0.14)!important;}
     <div class="sync-wrap"><span class="sync-dot" id="sd"></span><span class="sync-label" id="sl">…</span></div>
     <div class="clock" id="clock">--:--</div>
   </div>
-</div>
-
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <div class="stat"><span class="stat-dot c-vf"></span><span class="stat-val c-vf" id="sv-vf">0</span><span class="stat-lbl">VF</span></div>
-  <div class="stat"><span class="stat-dot c-az"></span><span class="stat-val c-az" id="sv-az">0</span><span class="stat-lbl">AZ</span></div>
-  <div class="stat"><span class="stat-dot c-zb"></span><span class="stat-val c-zb" id="sv-zb">0</span><span class="stat-lbl">ZB</span></div>
-  <div class="stat"><span class="stat-dot c-sl"></span><span class="stat-val c-sl" id="sv-sl">0</span><span class="stat-lbl">Slot</span></div>
-  <div class="stat"><span class="stat-dot c-nb"></span><span class="stat-val c-nb" id="sv-nb">0</span><span class="stat-lbl">NB</span></div>
-  <div class="stat"><span class="stat-dot c-vs"></span><span class="stat-val c-vs" id="sv-vs">0</span><span class="stat-lbl">VS</span></div>
 </div>
 
 <!-- MAIN -->
@@ -338,24 +304,31 @@ async function load(){
 
 function emptyHtml(t){return'<div class="kachel leer"><div class="k-leer-txt">'+t+'</div></div>';}
 
+// Sort by Auftragsnummer aufsteigend
+function sortNr(arr){return arr.sort((a,b)=>Number(a.nr)-Number(b.nr));}
+// Bei aktiver Suche: nur Treffer zeigen
+function filterSearch(arr){return searchTerm?arr.filter(a=>isMatch(a)):arr;}
+
 function render(){
   const{inVF,inAZ,inZB,inSL,inNB,inVS}=kategorisiere(auftraege);
 
   // VF (kompakte Zeilen)
+  const vfShow=filterSearch(sortNr(inVF));
   const vfEl=document.getElementById('vfList');
-  if(!inVF.length){vfEl.innerHTML=emptyHtml('keine Aufträge');}
-  else{vfEl.innerHTML=inVF.sort((a,b)=>(a.prio||99)-(b.prio||99)).map(a=>{
+  if(!vfShow.length){vfEl.innerHTML=emptyHtml(searchTerm?'kein Treffer':'keine Aufträge');}
+  else{vfEl.innerHTML=vfShow.map(a=>{
     const hat=VF_APS.some(ap=>ta(a,ap)),b=isBlk(a);
-    const cls=(b?'blockiert':hat?'aktiv':'')+hl(a);
+    const cls=(b?'blockiert':hat?'aktiv':'');
     return'<div class="vf-row '+cls.trim()+'"><div class="vf-nr '+(b?'rot':hat?'gruen':'')+'">'+fmtNr(a.nr)+'</div><div class="vf-kunde">'+a.kunde+'</div><div class="vf-stk">'+a.stk+'<span> Stk</span></div>'+sbadge(a.sklasse)+(b?'<div class="vf-blk">⚠</div>':'')+'</div>';
   }).join('');}
   document.getElementById('vf-c').textContent=inVF.length;
 
   // AZ
+  const azShow=filterSearch(sortNr(inAZ));
   const azG=document.getElementById('azGrid');
-  if(!inAZ.length){azG.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--text3);font-size:12px">keine Aufträge</div>';}
-  else{azG.innerHTML=inAZ.map(a=>{
-    const alle=a._alleVF,b=isBlk(a),f=alle?'gruen':'orange',cls=f+(b?' blockiert':'')+hl(a);
+  if(!azShow.length){azG.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--text3);font-size:12px">'+(searchTerm?'kein Treffer':'keine Aufträge')+'</div>';}
+  else{azG.innerHTML=azShow.map(a=>{
+    const alle=a._alleVF,b=isBlk(a),f=alle?'gruen':'orange',cls=f+(b?' blockiert':'');
     const dots=getVFaps(a).map(ap=>'<span class="k-dot '+(sf(a,ap)?'f':'')+'">'+apShort(ap)+'</span>').join('');
     return'<div class="kachel '+cls+'"><div class="k-row"><div class="k-nr '+(b?'rot':f)+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-row"><div class="k-stk">'+a.stk+' <span>Stk</span></div></div><div class="k-dots">'+dots+'</div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status '+f+'">'+(alle?'✓ ABHOLBEREIT':'⏳ IN ARBEIT')+'</div>')+'</div>';
   }).join('');}
@@ -364,39 +337,35 @@ function render(){
   azC.style.color=azO?'var(--danger)':'var(--z-az)';
 
   // ZB
+  const zbShow=filterSearch(sortNr(inZB));
   const zbEl=document.getElementById('zbList');
-  if(!inZB.length){zbEl.innerHTML=emptyHtml('zieht aus AZ');}
-  else{zbEl.innerHTML=inZB.map(a=>{const b=isBlk(a);return'<div class="kachel blau'+(b?' blockiert':'')+hl(a)+'"><div class="k-row"><div class="k-nr '+(b?'rot':'blau')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status blau">⚙ IN BEARBEITUNG</div>')+'</div>';}).join('');}
+  if(!zbShow.length){zbEl.innerHTML=emptyHtml(searchTerm?'kein Treffer':'zieht aus AZ');}
+  else{zbEl.innerHTML=zbShow.map(a=>{const b=isBlk(a);return'<div class="kachel blau'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'blau')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status blau">⚙ IN BEARBEITUNG</div>')+'</div>';}).join('');}
   document.getElementById('zb-c').textContent=inZB.length;
 
   // SLOT
+  const slShow=filterSearch(sortNr(inSL));
   const slEl=document.getElementById('slotList'),slO=inSL.length>3;
-  if(!inSL.length){slEl.innerHTML=emptyHtml('○ frei')+emptyHtml('○ frei')+emptyHtml('○ frei');}
-  else{slEl.innerHTML=inSL.map(a=>{const b=isBlk(a);return'<div class="kachel gruen'+(b?' blockiert':'')+hl(a)+'"><div class="k-row"><div class="k-nr '+(b?'rot':'gruen')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status orange">bereit für NB</div>')+'</div>';}).join('');
-    for(let i=inSL.length;i<3;i++)slEl.innerHTML+=emptyHtml('○ frei');}
+  if(!slShow.length){slEl.innerHTML=emptyHtml(searchTerm?'kein Treffer':'○ frei')+(!searchTerm?emptyHtml('○ frei')+emptyHtml('○ frei'):'');}
+  else{slEl.innerHTML=slShow.map(a=>{const b=isBlk(a);return'<div class="kachel gruen'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'gruen')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status orange">bereit für NB</div>')+'</div>';}).join('');
+    if(!searchTerm)for(let i=inSL.length;i<3;i++)slEl.innerHTML+=emptyHtml('○ frei');}
   const slC=document.getElementById('slot-c');
   slC.innerHTML=slO?inSL.length+' <span class="warn-badge">⚠ &gt;3</span>':inSL.length+' / 3';
   slC.style.color=slO?'var(--danger)':'var(--z-sl)';
 
   // NB
+  const nbShow=filterSearch(sortNr(inNB));
   const nbEl=document.getElementById('nbList');
-  if(!inNB.length){nbEl.innerHTML=emptyHtml('keine Aufträge');}
-  else{nbEl.innerHTML=inNB.map(a=>{const b=isBlk(a);return'<div class="kachel violett'+(b?' blockiert':'')+hl(a)+'"><div class="k-row"><div class="k-nr '+(b?'rot':'violett')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status violett">⚙ IN BEARBEITUNG</div>')+'</div>';}).join('');}
+  if(!nbShow.length){nbEl.innerHTML=emptyHtml(searchTerm?'kein Treffer':'keine Aufträge');}
+  else{nbEl.innerHTML=nbShow.map(a=>{const b=isBlk(a);return'<div class="kachel violett'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'violett')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status violett">⚙ IN BEARBEITUNG</div>')+'</div>';}).join('');}
   document.getElementById('nb-c').textContent=inNB.length;
 
   // VS
+  const vsShow=filterSearch(sortNr(inVS));
   const vsEl=document.getElementById('vsList');
-  if(!inVS.length){vsEl.innerHTML=emptyHtml('keine Aufträge');}
-  else{vsEl.innerHTML=inVS.map(a=>{const b=isBlk(a);return'<div class="kachel tuerkis'+(b?' blockiert':'')+hl(a)+'"><div class="k-row"><div class="k-nr '+(b?'rot':'tuerkis')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'')+'</div>';}).join('');}
+  if(!vsShow.length){vsEl.innerHTML=emptyHtml(searchTerm?'kein Treffer':'keine Aufträge');}
+  else{vsEl.innerHTML=vsShow.map(a=>{const b=isBlk(a);return'<div class="kachel tuerkis'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'tuerkis')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'')+'</div>';}).join('');}
   document.getElementById('vs-c').textContent=inVS.length;
-
-  // STATS
-  document.getElementById('sv-vf').textContent=inVF.length;
-  document.getElementById('sv-az').textContent=inAZ.length;
-  document.getElementById('sv-zb').textContent=inZB.length;
-  document.getElementById('sv-sl').textContent=inSL.length;
-  document.getElementById('sv-nb').textContent=inNB.length;
-  document.getElementById('sv-vs').textContent=inVS.length;
 
   // ARROWS
   const arr=(id,on)=>{const el=document.getElementById(id);if(el)el.className='arrow'+(on?' on':'');};
