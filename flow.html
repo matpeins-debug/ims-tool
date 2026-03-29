@@ -42,7 +42,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 /* VORFERTIGUNG */
 .zone-vf{width:180px;flex-shrink:0;}
 .vf-list{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px;}
-.vf-card{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--border);transition:border-color 0.2s;}
+.vf-card{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--border);transition:border-color 0.2s;min-height:52px;}
 .vf-card.aktiv{border-left-color:var(--accent);}
 .vf-card.blocked{border-left-color:var(--danger);}
 .vf-nr{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:700;color:var(--text);}
@@ -55,15 +55,16 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .az-wrap{background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:10px;flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
 .az-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;text-align:center;opacity:0.5;flex-shrink:0;}
 .az-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1;overflow-y:auto;align-content:start;}
-.az-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
+.az-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;height:140px;}
 .az-card.voll{border-color:var(--accent);}
 .az-card.arbeit{border-color:var(--warn);}
-.az-card.leer{border:1.5px dashed var(--border);background:transparent;opacity:0.25;}
-.az-nr{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--text);line-height:1;}
+.az-card.leer{border:1.5px dashed var(--border);background:transparent;opacity:0.25;height:140px;}
+.az-nr{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text);line-height:1;}
 .az-nr.voll{color:var(--accent);}
 .az-nr.arbeit{color:var(--warn);}
 .az-kunde{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.az-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
+.az-stk{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--text);line-height:1;}
+.az-dots{display:flex;gap:3px;flex-wrap:wrap;}
 .az-dot{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 5px;border-radius:3px;border:1px solid var(--border);color:var(--text3);background:var(--bg);}
 .az-dot.f{border-color:var(--accent);color:var(--accent);background:#00c89612;}
 .az-status{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;margin-top:auto;}
@@ -282,7 +283,7 @@ function render(){
       const v=getVF(a);const all=v.length>0&&v.every(ap=>sf(a,ap));
       d.className='az-card '+(all?'voll':'arbeit');
       const dots=v.map(ap=>{const f=sf(a,ap);const s=ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ');return`<span class="az-dot ${f?'f':''}">${s}</span>`;}).join('');
-      d.innerHTML=`<div class="az-nr ${all?'voll':'arbeit'}">${fmtNr(a.nr)}</div><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="az-kunde">${a.kunde}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--text)">${a.stk}<span style="font-size:9px;color:var(--text3)"> Stk</span></div></div><div class="az-dots">${dots}</div><div class="az-status ${all?'voll':'arbeit'}">${all?'✓ VOLLSTÄNDIG':'⏳ IN ARBEIT'}</div>`;
+      d.innerHTML=`<div class="az-nr ${all?'voll':'arbeit'}">${fmtNr(a.nr)}</div><div class="az-kunde">${a.kunde}</div><div class="az-stk">${a.stk} <span style="font-size:11px;color:var(--text2);font-weight:400">Stk</span></div><div class="az-dots">${dots}</div><div class="az-status ${all?'voll':'arbeit'}">${all?'✓ VOLLSTÄNDIG':'⏳ IN ARBEIT'}</div>`;
       g.appendChild(d);
     });
   }
