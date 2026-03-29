@@ -1453,7 +1453,7 @@ async function timerStop(id, apKey, ap) {
   const elapsed = td.start ? Date.now() - new Date(td.start).getTime() : 0;
   a.timers[timerKey] = {
     totalMs: (td.totalMs || 0) + elapsed,
-    start: null,
+    start: td.start,
     end: new Date().toISOString()
   };
   if(liveTimers[timerKey]) { clearInterval(liveTimers[timerKey]); delete liveTimers[timerKey]; }
@@ -1490,11 +1490,31 @@ async function saveFotoDoku(id, apKey, checked) {
   if(btn) { btn.disabled = !checked; btn.style.opacity = checked?'1':'0.4'; btn.style.cursor = checked?'pointer':'not-allowed'; }
 }
 
+// Alle laufenden Timer eines Auftrags stoppen (optional: nur für bestimmte Station)
+function stopRunningTimers(a, onlyApKey) {
+  if(!a || !a.timers) return;
+  Object.keys(a.timers).forEach(key => {
+    const td = a.timers[key];
+    if(td && td.start && !td.end) {
+      // Wenn onlyApKey gesetzt: nur diesen Timer stoppen
+      if(onlyApKey && !key.includes(onlyApKey)) return;
+      const elapsed = Date.now() - new Date(td.start).getTime();
+      a.timers[key] = {
+        totalMs: (td.totalMs || 0) + elapsed,
+        start: td.start,
+        end: new Date().toISOString()
+      };
+      if(liveTimers[key]) { clearInterval(liveTimers[key]); delete liveTimers[key]; }
+    }
+  });
+}
+
 async function markStationFertig(id, ap, apKey) {
   const a = auftraege.find(x=>x.id===id);
   if(a) {
     if(!a.stationFertig) a.stationFertig = {};
     a.stationFertig[apKey] = new Date().toISOString();
+    stopRunningTimers(a, apKey);
   }
   await saveToStorage();
   renderAP(ap);
@@ -2149,7 +2169,7 @@ async function saveAuftrag() {
 // ─── ACTIONS ─────────────────────────────────────────────────────────────
 async function markFertig(id) {
   const a=auftraege.find(x=>x.id===id);
-  if(a){ a.fertig=true; a.fertigAm=new Date().toISOString(); }
+  if(a){ a.fertig=true; a.fertigAm=new Date().toISOString(); stopRunningTimers(a); }
   await saveToStorage(); renderAll();
 }
 function editPakete(id) {
@@ -2195,6 +2215,7 @@ async function markFertigHalle(id) {
   if(a){
     a.fertig=true;
     a.fertigAm=new Date().toISOString();
+    stopRunningTimers(a);
     const paketeInput=document.getElementById(`pakete-${id}`);
     const paketeTypInput=document.getElementById(`paketeTyp-${id}`);
     if(paketeInput&&paketeInput.value) a.pakete=parseInt(paketeInput.value);
