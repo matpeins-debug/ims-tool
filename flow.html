@@ -54,7 +54,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .zone-az{flex:1;min-width:0;}
 .az-wrap{background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:10px;flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
 .az-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;text-align:center;opacity:0.5;flex-shrink:0;}
-.az-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1;}
+.az-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1;overflow-y:auto;align-content:start;}
 .az-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
 .az-card.voll{border-color:var(--accent);}
 .az-card.arbeit{border-color:var(--warn);}
@@ -82,7 +82,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 /* SLOT */
 .zone-slot{width:152px;flex-shrink:0;}
-.slot-list{flex:1;display:flex;flex-direction:column;gap:7px;}
+.slot-list{flex:1;display:flex;flex-direction:column;gap:7px;overflow-y:auto;}
 .slot-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:3px;transition:border-color 0.2s;}
 .slot-card.bereit{border-color:var(--accent);}
 .slot-card.leer{border:1.5px dashed var(--border);background:transparent;opacity:0.3;}
@@ -184,11 +184,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       <span class="zone-title">Slot</span>
       <span class="zone-count" id="slot-c" style="color:var(--text2)">0 / 3</span>
     </div>
-    <div class="slot-list">
-      <div class="slot-card leer" id="s1"><div class="leer-txt">○ frei</div></div>
-      <div class="slot-card leer" id="s2"><div class="leer-txt">○ frei</div></div>
-      <div class="slot-card leer" id="s3"><div class="leer-txt">○ frei</div></div>
-    </div>
+    <div class="slot-list" id="slotList"></div>
   </div>
 
   <div class="arrow" id="a4">▶</div>
@@ -267,24 +263,34 @@ function render(){
     inVF.sort((a,b)=>(a.prio||99)-(b.prio||99)).map(a=>{
       const hat=VF.some(ap=>ta(a,ap));
       const blk=a.blockierungen&&Object.keys(a.blockierungen).length>0;
-      return`<div class="vf-card ${blk?'blocked':hat?'aktiv':''}"><span class="vf-nr ${hat?'aktiv':''}">${fmtNr(a.nr)}</span><div class="vf-meta"><span class="vf-kunde">${a.kunde}</span>${sbadge(a.sklasse)}</div></div>`;
+      return`<div class="vf-card ${blk?'blocked':hat?'aktiv':''}"><span class="vf-nr ${hat?'aktiv':''}">${fmtNr(a.nr)}</span><div class="vf-meta"><span class="vf-kunde">${a.kunde}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--text)">${a.stk}<span style="font-size:9px;color:var(--text3)"> Stk</span></span>${sbadge(a.sklasse)}</div></div>`;
     }).join('');
   document.getElementById('vf-c').textContent=inVF.length;
 
   // AUFTRAGSZONE
   const g=document.getElementById('azGrid');g.innerHTML='';
-  for(let i=0;i<8;i++){
-    const a=inAZ[i];const d=document.createElement('div');
-    if(!a){d.className='az-card leer';d.innerHTML='<div class="az-status leer">○ frei</div>';}
-    else{
+  // Show ALL auftraege in AZ, no hard limit
+  const azZeigen = inAZ.length > 0 ? inAZ : [];
+  if(azZeigen.length===0){
+    const empty=document.createElement('div');
+    empty.style.cssText='grid-column:1/-1;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;padding:20px';
+    empty.textContent='– keine Aufträge';
+    g.appendChild(empty);
+  } else {
+    azZeigen.forEach(a=>{
+      const d=document.createElement('div');
       const v=getVF(a);const all=v.length>0&&v.every(ap=>sf(a,ap));
       d.className='az-card '+(all?'voll':'arbeit');
       const dots=v.map(ap=>{const f=sf(a,ap);const s=ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ');return`<span class="az-dot ${f?'f':''}">${s}</span>`;}).join('');
-      d.innerHTML=`<div class="az-nr ${all?'voll':'arbeit'}">${fmtNr(a.nr)}</div><div class="az-kunde">${a.kunde}</div><div class="az-dots">${dots}</div><div class="az-status ${all?'voll':'arbeit'}">${all?'✓ VOLLSTÄNDIG':'⏳ IN ARBEIT'}</div>`;
-    }
-    g.appendChild(d);
+      d.innerHTML=`<div class="az-nr ${all?'voll':'arbeit'}">${fmtNr(a.nr)}</div><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="az-kunde">${a.kunde}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--text)">${a.stk}<span style="font-size:9px;color:var(--text3)"> Stk</span></div></div><div class="az-dots">${dots}</div><div class="az-status ${all?'voll':'arbeit'}">${all?'✓ VOLLSTÄNDIG':'⏳ IN ARBEIT'}</div>`;
+      g.appendChild(d);
+    });
   }
-  document.getElementById('az-c').textContent=Math.min(inAZ.length,8)+' / 8';
+  // Count label: red if over 8
+  const azOver = inAZ.length > 8;
+  const azEl = document.getElementById('az-c');
+  azEl.textContent = inAZ.length + (azOver?' / 8 ⚠':'/ 8');
+  azEl.style.color = azOver ? 'var(--danger)' : 'var(--accent)';
 
   // ZUSAMMENBAU
   const zb=document.getElementById('zbBox');
