@@ -3,137 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IMS Produktionsfluss</title>
+<title>IMS ◆ FLOW</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ── DESIGN TOKENS ─────────────────────────────────── */
 :root {
-  --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3248;
-  --accent:#00c896; --accent2:#0084ff; --warn:#ffaa00; --danger:#ff4455;
-  --text:#e6edf3; --text2:#8b949e; --text3:#4a5270;
-  --s1:#0084ff; --s2:#00c896; --s3:#ff9944;
+  --bg:#0c0e14; --surface:#151820; --surface2:#1c2030; --border:#282e42;
+  --accent:#00c896; --accent-dim:#00c89620; --accent-mid:#00c89640;
+  --accent2:#3b82f6; --accent2-dim:#3b82f620; --accent2-mid:#3b82f640;
+  --warn:#f59e0b; --warn-dim:#f59e0b20; --warn-mid:#f59e0b40;
+  --danger:#ef4444; --danger-dim:#ef444420; --danger-mid:#ef444440;
+  --text:#e8ecf4; --text2:#8892a8; --text3:#4a5270;
+  --s1:#3b82f6; --s2:#00c896; --s3:#f59e0b;
+  --radius:10px;
+  --zone-gap:6px;
 }
 body.light {
-  --bg:#dce3ee; --surface:#f5f7fb; --surface2:#e0e6f0; --border:#9aa5be;
-  --accent:#00a87a; --accent2:#0066cc; --warn:#e09000; --danger:#d63040;
-  --text:#1a2035; --text2:#3a4560; --text3:#6b7694;
+  --bg:#e4e8f0; --surface:#f4f6fa; --surface2:#e8ecf4; --border:#b0b8cc;
+  --accent:#00a87a; --accent-dim:#00a87a18; --accent-mid:#00a87a30;
+  --accent2:#2563eb; --accent2-dim:#2563eb18; --accent2-mid:#2563eb30;
+  --warn:#d97706; --warn-dim:#d9770618; --warn-mid:#d9770630;
+  --danger:#dc2626; --danger-dim:#dc262618; --danger-mid:#dc262630;
+  --text:#141824; --text2:#485068; --text3:#7080a0;
 }
 
-/* ── BASE ──────────────────────────────────────────── */
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'IBM Plex Sans',sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+/* ── RESET ─────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:16px;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
 
 /* ── HEADER ────────────────────────────────────────── */
-.header { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; background:var(--surface); border-bottom:3px solid var(--accent); flex-shrink:0; }
-.logo { font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:700; color:var(--accent); letter-spacing:2px; }
-.header-title { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--text2); letter-spacing:3px; text-transform:uppercase; }
-.header-right { display:flex; align-items:center; gap:16px; }
-.clock { font-family:'IBM Plex Mono',monospace; font-size:30px; font-weight:700; color:var(--text); }
-.sync-dot { width:8px; height:8px; border-radius:50%; background:var(--text3); display:inline-block; margin-right:5px; transition:all 0.3s; }
-.sync-dot.ok { background:var(--accent); box-shadow:0 0 6px var(--accent); }
-.sync-dot.err { background:var(--danger); }
-.sync-label { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text3); }
-.theme-btn { background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; color:var(--text2); cursor:pointer; font-family:'IBM Plex Sans',sans-serif; }
-.theme-btn:hover { border-color:var(--accent); color:var(--text); }
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:2px solid var(--accent);flex-shrink:0;gap:12px;}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);letter-spacing:2px;white-space:nowrap;}
+.header-center{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:12px;}
+.header-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.clock{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.sync-wrap{display:flex;align-items:center;gap:5px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:all .3s;}
+.sync-dot.ok{background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.sync-dot.err{background:var(--danger);box-shadow:0 0 8px var(--danger);}
+.sync-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);white-space:nowrap;}
+.theme-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;white-space:nowrap;transition:all .2s;}
+.theme-btn:hover{border-color:var(--accent);color:var(--text);}
 
-/* ── MAIN ──────────────────────────────────────────── */
-.main { flex:1; display:flex; overflow:hidden; padding:12px; gap:10px; }
+/* ── MAIN FLOW ─────────────────────────────────────── */
+.main{flex:1;display:flex;overflow:hidden;padding:8px;gap:4px;min-height:0;}
 
-/* ── ZONE WRAPPER ──────────────────────────────────── */
-.zone { display:flex; flex-direction:column; gap:8px; min-width:0; }
-.zone-header { display:flex; align-items:center; justify-content:space-between; padding-bottom:8px; border-bottom:2px solid var(--border); flex-shrink:0; }
-.zone-title { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:1.5px; }
-.zone-count { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; }
+/* ── ZONE ──────────────────────────────────────────── */
+.zone{display:flex;flex-direction:column;min-width:0;flex:1;gap:0;}
+.zone-head{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:var(--radius) var(--radius) 0 0;flex-shrink:0;}
+.zone-head.z-vf{background:var(--surface2);}
+.zone-head.z-az{background:var(--accent-dim);border:1px solid var(--accent-mid);border-bottom:none;}
+.zone-head.z-zb{background:var(--surface2);}
+.zone-head.z-sl{background:var(--warn-dim);border:1px solid var(--warn-mid);border-bottom:none;}
+.zone-head.z-nb{background:var(--danger-dim);border:1px solid var(--danger-mid);border-bottom:none;}
+.zone-head.z-vs{background:var(--accent2-dim);border:1px solid var(--accent2-mid);border-bottom:none;}
+.zone-title{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap;}
+.zone-title.z-vf{color:var(--text2);}
+.zone-title.z-az{color:var(--accent);}
+.zone-title.z-zb{color:var(--text2);}
+.zone-title.z-sl{color:var(--warn);}
+.zone-title.z-nb{color:var(--danger);}
+.zone-title.z-vs{color:var(--accent2);}
+.zone-count{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;}
+
+.zone-body{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:0 0 var(--radius) var(--radius);overflow-y:auto;padding:var(--zone-gap);display:flex;flex-direction:column;gap:var(--zone-gap);}
+.zone-body.z-az{border-color:var(--accent-mid);}
+.zone-body.z-sl{border-color:var(--warn-mid);}
+.zone-body.z-nb{border-color:var(--danger-mid);}
+.zone-body.z-vs{border-color:var(--accent2-mid);}
 
 /* ── ARROW ─────────────────────────────────────────── */
-.arrow { display:flex; align-items:center; justify-content:center; width:24px; flex-shrink:0; padding-top:30px; font-size:18px; color:var(--border); transition:color 0.3s; }
-.arrow.on { color:var(--accent); }
+.arrow{display:flex;align-items:center;justify-content:center;width:20px;flex-shrink:0;font-size:14px;color:var(--border);transition:color .3s;padding-top:26px;}
+.arrow.on{color:var(--accent);text-shadow:0 0 8px var(--accent-dim);}
 
-/* ── EINHEITLICHE KACHEL (Referenz: Versand) ───────── */
-.kachel {
-  background:var(--surface);
-  border:1.5px solid var(--border);
-  border-radius:10px;
-  padding:12px 14px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  transition:border-color 0.2s;
-  min-height:110px;
-}
-.kachel.gruen  { border-color:var(--accent); }
-.kachel.orange { border-color:var(--warn); }
-.kachel.rot    { border-color:var(--danger); }
-.kachel.blau   { border-color:var(--accent2); }
-.kachel.leer   { border:1.5px dashed var(--border); background:transparent; opacity:0.3; }
+/* ── KACHEL (einheitlich) ──────────────────────────── */
+.kachel{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;transition:border-color .2s,background .2s;min-height:0;}
+.kachel.gruen{border-color:var(--accent);background:var(--accent-dim);}
+.kachel.orange{border-color:var(--warn);background:var(--warn-dim);}
+.kachel.rot{border-color:var(--danger);background:var(--danger-dim);}
+.kachel.blau{border-color:var(--accent2);background:var(--accent2-dim);}
+.kachel.leer{border:1.5px dashed var(--border);background:transparent;display:flex;align-items:center;justify-content:center;min-height:60px;}
 
-/* Kachel Inhalt */
-.k-nr    { font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:700; color:var(--text); line-height:1; }
-.k-nr.gruen  { color:var(--accent); }
-.k-nr.orange { color:var(--warn); }
-.k-nr.rot    { color:var(--danger); }
-.k-nr.blau   { color:var(--accent2); }
-.k-kunde { font-size:12px; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
-.k-stk   { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; color:var(--text); line-height:1; margin-top:4px; }
-.k-stk span { font-size:11px; color:var(--text2); font-weight:400; }
-.k-dots  { display:flex; gap:3px; flex-wrap:wrap; margin-top:4px; }
-.k-dot   { font-family:'IBM Plex Mono',monospace; font-size:9px; padding:1px 5px; border-radius:3px; border:1px solid var(--border); color:var(--text3); background:var(--surface2); }
-.k-dot.f { border-color:var(--accent); color:var(--accent); background:#00c89612; }
-.k-status { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; margin-top:auto; padding-top:4px; }
-.k-status.gruen  { color:var(--accent); }
-.k-status.orange { color:var(--warn); }
-.k-leer-txt { font-size:12px; color:var(--text3); text-align:center; padding:8px 0; }
+.k-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.k-nr{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;color:var(--text);line-height:1;}
+.k-nr.gruen{color:var(--accent);}
+.k-nr.orange{color:var(--warn);}
+.k-nr.rot{color:var(--danger);}
+.k-nr.blau{color:var(--accent2);}
+.k-kunde{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.k-stk{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--text);line-height:1;}
+.k-stk span{font-size:10px;color:var(--text3);font-weight:400;}
+.k-dots{display:flex;gap:2px;flex-wrap:wrap;}
+.k-dot{font-family:'IBM Plex Mono',monospace;font-size:8px;padding:1px 4px;border-radius:3px;border:1px solid var(--border);color:var(--text3);background:var(--surface);}
+.k-dot.f{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.k-status{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;margin-top:auto;padding-top:2px;}
+.k-status.gruen{color:var(--accent);}
+.k-status.orange{color:var(--warn);}
+.k-status.rot{color:var(--danger);}
+.k-status.blau{color:var(--accent2);}
+.k-leer-txt{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-align:center;}
 
 /* S-Badge */
-.sb { display:inline-flex; align-items:center; justify-content:center; width:26px; height:16px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:600; }
-.sb-s1 { background:#0084ff18; color:var(--s1); border:1px solid #0084ff44; }
-.sb-s2 { background:#00c89618; color:var(--s2); border:1px solid #00c89644; }
-.sb-s3 { background:#ff994418; color:var(--s3); border:1px solid #ff994444; }
+.sb{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:16px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;flex-shrink:0;}
+.sb-s1{background:#3b82f618;color:var(--s1);border:1px solid #3b82f644;}
+.sb-s2{background:#00c89618;color:var(--s2);border:1px solid #00c89644;}
+.sb-s3{background:#f59e0b18;color:var(--s3);border:1px solid #f59e0b44;}
 
-/* ── VORFERTIGUNG ──────────────────────────────────── */
-.zone-vf { width:185px; flex-shrink:0; }
-.vf-list { background:var(--surface); border:1.5px solid var(--border); border-radius:12px; flex:1; overflow-y:auto; padding:8px; display:flex; flex-direction:column; gap:6px; }
-.vf-kachel { display:flex; align-items:center; justify-content:space-between; }
-.vf-left { display:flex; flex-direction:column; gap:2px; }
-.vf-right { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
-
-/* ── AUFTRAGSZONE ──────────────────────────────────── */
-.zone-az { flex:1; min-width:0; }
-.az-outer { background:var(--surface); border:2px solid var(--accent); border-radius:14px; padding:10px; flex:1; display:flex; flex-direction:column; gap:8px; overflow:hidden; }
-.az-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; text-align:center; opacity:0.5; flex-shrink:0; }
-.az-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; flex:1; overflow-y:auto; align-content:start; }
-
-
-/* ── ZUSAMMENBAU ───────────────────────────────────── */
-.zone-zb { width:170px; flex-shrink:0; }
-.zb-list { background:var(--surface); border:1.5px solid var(--border); border-radius:12px; flex:1; overflow-y:auto; padding:8px; display:flex; flex-direction:column; gap:6px; transition:border-color 0.2s; }
-.zb-list.on { border-color:var(--accent); }
-
-/* ── SLOT ──────────────────────────────────────────── */
-.zone-slot { width:155px; flex-shrink:0; }
-.slot-list { flex:1; display:flex; flex-direction:column; gap:6px; overflow-y:auto; }
-
-/* ── NACHBEARBEITUNG ───────────────────────────────── */
-.zone-nb { width:170px; flex-shrink:0; }
-.nb-list { background:var(--surface); border:1.5px solid var(--danger); border-radius:12px; flex:1; overflow-y:auto; padding:8px; display:flex; flex-direction:column; gap:6px; }
-
-/* ── VERSAND ───────────────────────────────────────── */
-.zone-vs { width:155px; flex-shrink:0; }
-.vs-list { background:var(--surface); border:1.5px solid var(--accent2); border-radius:12px; flex:1; overflow-y:auto; padding:8px; display:flex; flex-direction:column; gap:6px; }
+/* ── AUFTRAGSZONE GRID ─────────────────────────────── */
+.az-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--zone-gap);align-content:start;}
+.az-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;text-align:center;opacity:.4;padding:2px 0;}
 
 /* ── FOOTER ────────────────────────────────────────── */
-.footer { flex-shrink:0; background:var(--surface); border-top:2px solid var(--border); padding:10px 28px; display:flex; align-items:center; }
-.fs { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; border-right:1px solid var(--border); padding:0 10px; }
-.fs:last-child { border-right:none; }
-.fs-val { font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:700; color:var(--text); line-height:1; }
-.fs-val.g { color:var(--accent); }
-.fs-val.o { color:var(--warn); }
-.fs-val.r { color:var(--danger); }
-.fs-val.b { color:var(--accent2); }
-.fs-lbl { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; text-align:center; }
+.footer{flex-shrink:0;background:var(--surface);border-top:2px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:0;}
+.fs{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;border-right:1px solid var(--border);padding:0 4px;}
+.fs:last-child{border-right:none;}
+.fs-val{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;line-height:1;}
+.fs-val.g{color:var(--accent);}
+.fs-val.o{color:var(--warn);}
+.fs-val.r{color:var(--danger);}
+.fs-val.b{color:var(--accent2);}
+.fs-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;text-align:center;line-height:1.1;}
 
-::-webkit-scrollbar { width:3px; }
-::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+/* ── SCROLLBAR ─────────────────────────────────────── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ── ZONE SIZES (desktop) ──────────────────────────── */
+.zone-vf{flex:0.9;}
+.zone-az{flex:2.2;}
+.zone-zb{flex:0.9;}
+.zone-sl{flex:0.9;}
+.zone-nb{flex:0.9;}
+.zone-vs{flex:0.9;}
+
+/* ── MOBILE ────────────────────────────────────────── */
+@media(max-width:900px){
+  body{overflow-y:auto;overflow-x:hidden;}
+  .header{padding:8px 12px;flex-wrap:wrap;gap:8px;}
+  .header-center{display:none;}
+  .clock{font-size:20px;}
+  .main{flex-direction:column;overflow:visible;padding:6px;gap:12px;}
+  .arrow{display:none;}
+  .zone{flex:unset!important;width:100%;}
+  .zone-body{max-height:none;overflow:visible;}
+  .az-grid{grid-template-columns:repeat(2,1fr);}
+  .footer{flex-wrap:wrap;gap:4px;padding:8px 10px;}
+  .fs{min-width:calc(33.33% - 4px);border-right:none;padding:6px 0;border-bottom:1px solid var(--border);}
+  .fs:nth-child(4),.fs:nth-child(5),.fs:nth-child(6){border-bottom:none;}
+  .k-nr{font-size:15px;}
+  .k-stk{font-size:16px;}
+  .zone-count{font-size:13px;}
+  .fs-val{font-size:20px;}
+}
+
+@media(max-width:480px){
+  .az-grid{grid-template-columns:1fr;}
+}
+
+/* ── ÜBERLAUF-WARNUNG ──────────────────────────────── */
+.warn-badge{display:inline-flex;align-items:center;gap:3px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--danger);background:var(--danger-dim);border:1px solid var(--danger-mid);border-radius:4px;padding:1px 6px;}
 </style>
 </head>
 <body>
@@ -141,106 +170,94 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--bg); color:var(-
 <!-- HEADER -->
 <div class="header">
   <div class="logo">IMS ◆ FLOW</div>
-  <div class="header-title">Produktionsfluss – Live</div>
+  <div class="header-center">Produktionsfluss – Live</div>
   <div class="header-right">
-    <button class="theme-btn" onclick="toggleTheme()">☀ Hell / Dunkel</button>
-    <div><span class="sync-dot" id="sd"></span><span class="sync-label" id="sl">Verbinde...</span></div>
-    <div class="clock" id="clock">--:--:--</div>
+    <button class="theme-btn" onclick="toggleTheme()">☀/☾</button>
+    <div class="sync-wrap"><span class="sync-dot" id="sd"></span><span class="sync-label" id="sl">Verbinde…</span></div>
+    <div class="clock" id="clock">--:--</div>
   </div>
 </div>
 
 <!-- MAIN -->
-<div class="main">
+<div class="main" id="main">
 
   <!-- VORFERTIGUNG -->
   <div class="zone zone-vf">
-    <div class="zone-header">
-      <span class="zone-title">Vorfertigung</span>
+    <div class="zone-head z-vf">
+      <span class="zone-title z-vf">Vorfertigung</span>
       <span class="zone-count" id="vf-c" style="color:var(--text2)">0</span>
     </div>
-    <div class="vf-list" id="vfList">
-      <div class="k-leer-txt">– keine offenen Aufträge</div>
-    </div>
+    <div class="zone-body" id="vfList"></div>
   </div>
 
-  <div class="arrow" id="a1">▶</div>
+  <div class="arrow" id="a1">▸</div>
 
   <!-- AUFTRAGSZONE -->
   <div class="zone zone-az">
-    <div class="zone-header">
-      <span class="zone-title">⬡ Auftragszone</span>
+    <div class="zone-head z-az">
+      <span class="zone-title z-az">⬡ Auftragszone</span>
       <span class="zone-count" id="az-c" style="color:var(--accent)">0 / 8</span>
     </div>
-    <div class="az-outer">
-      <div class="az-label">⬡ grünes Herz der Produktion</div>
+    <div class="zone-body z-az" id="azBody">
+      <div class="az-label">grünes Herz der Produktion</div>
       <div class="az-grid" id="azGrid"></div>
     </div>
   </div>
 
-  <div class="arrow" id="a2">▶</div>
+  <div class="arrow" id="a2">▸</div>
 
   <!-- ZUSAMMENBAU -->
   <div class="zone zone-zb">
-    <div class="zone-header">
-      <span class="zone-title">Zusammenbau</span>
+    <div class="zone-head z-zb">
+      <span class="zone-title z-zb">Zusammenbau</span>
       <span class="zone-count" id="zb-c" style="color:var(--text2)">0</span>
     </div>
-    <div class="zb-list" id="zbList">
-      <div class="k-leer-txt">– zieht aus<br>Auftragszone</div>
-    </div>
+    <div class="zone-body" id="zbList"></div>
   </div>
 
-  <div class="arrow" id="a3">▶</div>
+  <div class="arrow" id="a3">▸</div>
 
   <!-- SLOT -->
-  <div class="zone zone-slot">
-    <div class="zone-header">
-      <span class="zone-title">Slot</span>
-      <span class="zone-count" id="slot-c" style="color:var(--text2)">0 / 3</span>
+  <div class="zone zone-sl">
+    <div class="zone-head z-sl">
+      <span class="zone-title z-sl">Slot</span>
+      <span class="zone-count" id="slot-c" style="color:var(--warn)">0 / 3</span>
     </div>
-    <div class="slot-list" id="slotList">
-      <div class="kachel leer"><div class="k-leer-txt">○ frei</div></div>
-      <div class="kachel leer"><div class="k-leer-txt">○ frei</div></div>
-      <div class="kachel leer"><div class="k-leer-txt">○ frei</div></div>
-    </div>
+    <div class="zone-body z-sl" id="slotList"></div>
   </div>
 
-  <div class="arrow" id="a4">▶</div>
+  <div class="arrow" id="a4">▸</div>
 
   <!-- NACHBEARBEITUNG -->
   <div class="zone zone-nb">
-    <div class="zone-header">
-      <span class="zone-title">Nachbearbeitung</span>
+    <div class="zone-head z-nb">
+      <span class="zone-title z-nb">Nachbearbeitung</span>
       <span class="zone-count" id="nb-c" style="color:var(--danger)">0</span>
     </div>
-    <div class="nb-list" id="nbList">
-      <div class="k-leer-txt">– keine aktiven Aufträge</div>
-    </div>
+    <div class="zone-body z-nb" id="nbList"></div>
   </div>
 
-  <div class="arrow" id="a5" style="color:var(--accent2)">▶</div>
+  <div class="arrow" id="a5">▸</div>
 
   <!-- VERSAND -->
   <div class="zone zone-vs">
-    <div class="zone-header">
-      <span class="zone-title">📦 Versand</span>
+    <div class="zone-head z-vs">
+      <span class="zone-title z-vs">📦 Versand</span>
       <span class="zone-count" id="vs-c" style="color:var(--accent2)">0</span>
     </div>
-    <div class="vs-list" id="vsList">
-      <div class="k-leer-txt">– keine Aufträge</div>
-    </div>
+    <div class="zone-body z-vs" id="vsList"></div>
   </div>
 
 </div>
 
 <!-- FOOTER -->
 <div class="footer">
-  <div class="fs"><div class="fs-val g" id="fs1">0</div><div class="fs-lbl">Vorfertigung</div></div>
-  <div class="fs"><div class="fs-val g" id="fs2">0</div><div class="fs-lbl">Auftragszone</div></div>
-  <div class="fs"><div class="fs-val o" id="fs3">0</div><div class="fs-lbl">Zusammenbau</div></div>
+  <div class="fs"><div class="fs-val g" id="fs1">0</div><div class="fs-lbl">Vorfer-<br>tigung</div></div>
+  <div class="fs"><div class="fs-val g" id="fs2">0</div><div class="fs-lbl">Auftrags-<br>zone</div></div>
+  <div class="fs"><div class="fs-val o" id="fs3">0</div><div class="fs-lbl">Zusammen-<br>bau</div></div>
   <div class="fs"><div class="fs-val o" id="fs4">0</div><div class="fs-lbl">Slot</div></div>
-  <div class="fs"><div class="fs-val r" id="fs5">0</div><div class="fs-lbl">Nachbearbeitung</div></div>
-  <div class="fs"><div class="fs-val b" id="fs6">0</div><div class="fs-lbl">Versandbereit</div></div>
+  <div class="fs"><div class="fs-val r" id="fs5">0</div><div class="fs-lbl">Nachbe-<br>arbeitung</div></div>
+  <div class="fs"><div class="fs-val b" id="fs6">0</div><div class="fs-lbl">Versand-<br>bereit</div></div>
 </div>
 
 <script>
@@ -266,74 +283,31 @@ function getAPs(a){
   (a.gruppen||(a.gruppe?[{gruppe:a.gruppe}]:[])).forEach(g=>{if(GR[g.gruppe])GR[g.gruppe].aps.forEach(ap=>s.add(ap));});
   return[...s];
 }
-
 function getVFaps(a){return getAPs(a).filter(ap=>VF_APS.includes(ap));}
-
-// Station fertig gemeldet?
 function sf(a,ap){
   if(!a.stationFertig)return false;
   const k=ap.replace(/[^a-z0-9]/gi,'_');
   return!!(a.stationFertig[ap]||a.stationFertig[k]);
 }
-
-// Timer aktiv?
 function ta(a,ap){
   if(!a.timers)return false;
   const k=a.id+'_'+ap.replace(/[^a-z0-9]/gi,'_');
   const t=a.timers[k];
   return!!(t&&t.start&&!t.end);
 }
-
 function sbadge(sk){
   const s=(sk||'').toLowerCase();
-  return`<span class="sb sb-${s}">${sk||''}</span>`;
+  if(!s)return'';
+  return'<span class="sb sb-'+s+'">'+sk+'</span>';
 }
 
-// Kachel HTML – einheitlich für alle Zonen
-function kachelHtml(a, farbe, statusText, extraHtml=''){
-  return`<div class="kachel ${farbe}">
-    <div class="k-nr ${farbe}">${fmtNr(a.nr)}</div>
-    <div class="k-kunde">${a.kunde}</div>
-    <div class="k-stk">${a.stk} <span>Stk</span></div>
-    ${extraHtml}
-    ${statusText?`<div class="k-status ${farbe}">${statusText}</div>`:''}
-  </div>`;
+function apShort(ap){
+  return ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ').replace('Einbauelement','EB');
 }
 
-// Dots für Auftragszone
-function dotsHtml(a){
-  const v=getVFaps(a);
-  return`<div class="k-dots">${v.map(ap=>{
-    const f=sf(a,ap);
-    const s=ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ');
-    return`<span class="k-dot ${f?'f':''}">${s}</span>`;
-  }).join('')}</div>`;
-}
-
-// ── FLUSS-LOGIK ───────────────────────────────────────────
-//
-// VORFERTIGUNG: Aufträge wo noch keine VF-Station fertig ist
-//   UND Zusammenbau-Timer noch nicht gestartet wurde
-//
-// AUFTRAGSZONE: Mind. eine VF-Station fertig gemeldet
-//   UND Zusammenbau noch NICHT gestartet (kein Timer, nicht fertig)
-//   → "IN ARBEIT" = noch nicht alle VF fertig
-//   → "ABHOLBEREIT" = alle VF für diesen Auftrag fertig
-//
-// ZUSAMMENBAU: Zusammenbau-Timer läuft (gestartet aber nicht fertig)
-//   → Auftrag verschwindet aus Auftragszone
-//
-// SLOT: Zusammenbau fertig gemeldet
-//   UND Nachbearbeitung noch NICHT gestartet
-//
-// NACHBEARBEITUNG: Nachbearbeitung-Timer läuft
-//   → Auftrag verschwindet aus Slot
-//
-// VERSAND: Nachbearbeitung fertig gemeldet
-
+// ── KATEGORISIERUNG ──────────────────────────────────
 function kategorisiere(o){
-  const inVF=[], inAZ=[], inZB=[], inSL=[], inNB=[], inVS=[];
-
+  const inVF=[],inAZ=[],inZB=[],inSL=[],inNB=[],inVS=[];
   o.forEach(a=>{
     const vfAps=getVFaps(a);
     const hatVFaps=vfAps.length>0;
@@ -343,26 +317,17 @@ function kategorisiere(o){
     const zbFertig=sf(a,'Zusammenbau');
     const nbTimerLaeuft=ta(a,'Nachbearbeitung');
     const nbFertig=sf(a,'Nachbearbeitung');
-
-    if(nbFertig){
-      inVS.push(a);
-    } else if(nbTimerLaeuft){
-      inNB.push(a);
-    } else if(zbFertig&&!nbTimerLaeuft){
-      inSL.push(a);
-    } else if(zbTimerLaeuft){
-      inZB.push(a);
-    } else if(eineVFfertig&&!zbTimerLaeuft&&!zbFertig){
-      inAZ.push({...a, _alleVF:alleVFfertig});
-    } else {
-      inVF.push(a);
-    }
+    if(nbFertig){inVS.push(a);}
+    else if(nbTimerLaeuft){inNB.push(a);}
+    else if(zbFertig&&!nbTimerLaeuft){inSL.push(a);}
+    else if(zbTimerLaeuft){inZB.push(a);}
+    else if(eineVFfertig&&!zbTimerLaeuft&&!zbFertig){inAZ.push({...a,_alleVF:alleVFfertig});}
+    else{inVF.push(a);}
   });
-
   return{inVF,inAZ,inZB,inSL,inNB,inVS};
 }
 
-// ── UHRZEIT ──────────────────────────────────────────────
+// ── UHRZEIT ──────────────────────────────────────────
 function tick(){
   const n=new Date();
   document.getElementById('clock').textContent=
@@ -372,133 +337,145 @@ function tick(){
 }
 setInterval(tick,1000);tick();
 
-// ── THEME ────────────────────────────────────────────────
+// ── THEME ────────────────────────────────────────────
 function toggleTheme(){
   document.body.classList.toggle('light');
   localStorage.setItem('flow_theme',document.body.classList.contains('light')?'light':'dark');
 }
 if(localStorage.getItem('flow_theme')==='light')document.body.classList.add('light');
 
-// ── LOAD ─────────────────────────────────────────────────
+// ── LOAD ─────────────────────────────────────────────
 async function load(){
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/ims_data?id=eq.main&select=auftraege`,
-      {headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+    const r=await fetch(SB_URL+'/rest/v1/ims_data?id=eq.main&select=auftraege',
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
     if(!r.ok)throw new Error(r.status);
     const d=await r.json();
     auftraege=(d[0]?.auftraege||[]).filter(a=>!a.fertig);
     document.getElementById('sd').className='sync-dot ok';
-    document.getElementById('sl').textContent='Synchronisiert '+new Date().toLocaleTimeString('de');
+    document.getElementById('sl').textContent='Sync '+new Date().toLocaleTimeString('de',{hour:'2-digit',minute:'2-digit'});
     render();
   }catch(e){
     document.getElementById('sd').className='sync-dot err';
-    document.getElementById('sl').textContent='Verbindungsfehler';
+    document.getElementById('sl').textContent='Fehler';
   }
 }
 
-// ── RENDER ───────────────────────────────────────────────
-function render(){
-  const {inVF,inAZ,inZB,inSL,inNB,inVS}=kategorisiere(auftraege);
+// ── EMPTY STATE ──────────────────────────────────────
+function emptyHtml(txt){return'<div class="kachel leer"><div class="k-leer-txt">'+txt+'</div></div>';}
 
-  // VORFERTIGUNG
-  const vfList=document.getElementById('vfList');
+// ── RENDER ───────────────────────────────────────────
+function render(){
+  const{inVF,inAZ,inZB,inSL,inNB,inVS}=kategorisiere(auftraege);
+
+  // ── VORFERTIGUNG ──
+  const vfEl=document.getElementById('vfList');
   if(inVF.length===0){
-    vfList.innerHTML='<div class="k-leer-txt">– keine offenen Aufträge</div>';
-  } else {
-    vfList.innerHTML=inVF.sort((a,b)=>(a.prio||99)-(b.prio||99)).map(a=>{
+    vfEl.innerHTML=emptyHtml('keine offenen Aufträge');
+  }else{
+    vfEl.innerHTML=inVF.sort((a,b)=>(a.prio||99)-(b.prio||99)).map(a=>{
       const hat=VF_APS.some(ap=>ta(a,ap));
       const blk=a.blockierungen&&Object.keys(a.blockierungen).length>0;
       const farbe=blk?'rot':hat?'gruen':'';
-      return`<div class="kachel ${farbe}">
-        <div class="vf-kachel">
-          <div class="vf-left">
-            <div class="k-nr ${farbe}">${fmtNr(a.nr)}</div>
-            <div class="k-kunde">${a.kunde}</div>
-            <div class="k-stk" style="font-size:16px">${a.stk} <span>Stk</span></div>
-          </div>
-          <div class="vf-right">${sbadge(a.sklasse)}</div>
-        </div>
-      </div>`;
+      return'<div class="kachel '+farbe+'">'+
+        '<div class="k-row"><div class="k-nr '+farbe+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+        '<div class="k-kunde">'+a.kunde+'</div>'+
+        '<div class="k-row"><div class="k-stk">'+a.stk+' <span>Stk</span></div></div>'+
+      '</div>';
     }).join('');
   }
   document.getElementById('vf-c').textContent=inVF.length;
 
-  // AUFTRAGSZONE
+  // ── AUFTRAGSZONE ──
   const azGrid=document.getElementById('azGrid');
-  azGrid.innerHTML='';
   if(inAZ.length===0){
-    const empty=document.createElement('div');
-    empty.style.cssText='grid-column:1/-1;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;padding:20px';
-    empty.textContent='– keine Aufträge in der Auftragszone';
-    azGrid.appendChild(empty);
-  } else {
-    inAZ.forEach(a=>{
+    azGrid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--text3);font-size:12px">keine Aufträge in der Zone</div>';
+  }else{
+    azGrid.innerHTML=inAZ.map(a=>{
       const alle=a._alleVF;
       const farbe=alle?'gruen':'orange';
       const status=alle?'✓ ABHOLBEREIT':'⏳ IN ARBEIT';
-      const div=document.createElement('div');
-      div.className=`kachel ${farbe}`;
-      div.innerHTML=`
-        <div class="k-nr ${farbe}">${fmtNr(a.nr)}</div>
-        <div class="k-kunde">${a.kunde}</div>
-        <div class="k-stk">${a.stk} <span>Stk</span></div>
-        ${dotsHtml(a)}
-        <div class="k-status ${farbe}">${status}</div>`;
-      azGrid.appendChild(div);
-    });
+      const vfAps=getVFaps(a);
+      const dots=vfAps.map(ap=>'<span class="k-dot '+(sf(a,ap)?'f':'')+'">'+apShort(ap)+'</span>').join('');
+      return'<div class="kachel '+farbe+'">'+
+        '<div class="k-row"><div class="k-nr '+farbe+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+        '<div class="k-kunde">'+a.kunde+'</div>'+
+        '<div class="k-row"><div class="k-stk">'+a.stk+' <span>Stk</span></div></div>'+
+        '<div class="k-dots">'+dots+'</div>'+
+        '<div class="k-status '+farbe+'">'+status+'</div>'+
+      '</div>';
+    }).join('');
   }
   const azOver=inAZ.length>8;
-  const azEl=document.getElementById('az-c');
-  azEl.textContent=inAZ.length+(azOver?' / 8 ⚠':' / 8');
-  azEl.style.color=azOver?'var(--danger)':'var(--accent)';
+  const azC=document.getElementById('az-c');
+  azC.innerHTML=azOver?inAZ.length+' <span class="warn-badge">⚠ &gt;8</span>':inAZ.length+' / 8';
+  azC.style.color=azOver?'var(--danger)':'var(--accent)';
 
-  // ZUSAMMENBAU
-  const zbList=document.getElementById('zbList');
+  // ── ZUSAMMENBAU ──
+  const zbEl=document.getElementById('zbList');
   if(inZB.length===0){
-    zbList.className='zb-list';
-    zbList.innerHTML='<div class="k-leer-txt">– zieht aus<br>Auftragszone</div>';
-  } else {
-    zbList.className='zb-list on';
-    zbList.innerHTML=inZB.map(a=>kachelHtml(a,'gruen','⚙ IN BEARBEITUNG')).join('');
+    zbEl.innerHTML=emptyHtml('zieht aus Auftragszone');
+  }else{
+    zbEl.innerHTML=inZB.map(a=>'<div class="kachel gruen">'+
+      '<div class="k-row"><div class="k-nr gruen">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+      '<div class="k-kunde">'+a.kunde+'</div>'+
+      '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
+      '<div class="k-status gruen">⚙ IN BEARBEITUNG</div>'+
+    '</div>').join('');
   }
   document.getElementById('zb-c').textContent=inZB.length;
 
-  // SLOT
-  const slotList=document.getElementById('slotList');
-  const slotOver=inSL.length>3;
-  const slotEl=document.getElementById('slot-c');
-  slotEl.textContent=inSL.length+(slotOver?' / 3 ⚠':' / 3');
-  slotEl.style.color=slotOver?'var(--danger)':'var(--text2)';
+  // ── SLOT ──
+  const slEl=document.getElementById('slotList');
+  const slOver=inSL.length>3;
   if(inSL.length===0){
-    slotList.innerHTML='<div class="kachel leer"><div class="k-leer-txt">○ frei</div></div>'.repeat(3);
-  } else {
-    slotList.innerHTML=inSL.map(a=>kachelHtml(a,'gruen','✓ bereit für NB')).join('');
-    // fill empty slots up to 3 visually
-    const leer=Math.max(0,3-inSL.length);
-    slotList.innerHTML+=('<div class="kachel leer"><div class="k-leer-txt">○ frei</div></div>').repeat(leer);
+    slEl.innerHTML=emptyHtml('○ frei')+emptyHtml('○ frei')+emptyHtml('○ frei');
+  }else{
+    slEl.innerHTML=inSL.map(a=>'<div class="kachel gruen">'+
+      '<div class="k-row"><div class="k-nr gruen">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+      '<div class="k-kunde">'+a.kunde+'</div>'+
+      '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
+      '<div class="k-status orange">bereit für NB</div>'+
+    '</div>').join('');
+    for(let i=inSL.length;i<3;i++){slEl.innerHTML+=emptyHtml('○ frei');}
   }
-  document.getElementById('slot-c').textContent=inSL.length+(slotOver?' / 3 ⚠':' / 3');
+  const slC=document.getElementById('slot-c');
+  slC.innerHTML=slOver?inSL.length+' <span class="warn-badge">⚠ &gt;3</span>':inSL.length+' / 3';
+  slC.style.color=slOver?'var(--danger)':'var(--warn)';
 
-  // NACHBEARBEITUNG
-  const nbList=document.getElementById('nbList');
-  nbList.innerHTML=inNB.length===0
-    ?'<div class="k-leer-txt">– keine aktiven Aufträge</div>'
-    :inNB.map(a=>kachelHtml(a,'rot','⚙ IN BEARBEITUNG')).join('');
+  // ── NACHBEARBEITUNG ──
+  const nbEl=document.getElementById('nbList');
+  if(inNB.length===0){
+    nbEl.innerHTML=emptyHtml('keine aktiven Aufträge');
+  }else{
+    nbEl.innerHTML=inNB.map(a=>'<div class="kachel rot">'+
+      '<div class="k-row"><div class="k-nr rot">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+      '<div class="k-kunde">'+a.kunde+'</div>'+
+      '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
+      '<div class="k-status rot">⚙ IN BEARBEITUNG</div>'+
+    '</div>').join('');
+  }
   document.getElementById('nb-c').textContent=inNB.length;
 
-  // VERSAND
-  const vsList=document.getElementById('vsList');
-  vsList.innerHTML=inVS.length===0
-    ?'<div class="k-leer-txt">– keine Aufträge</div>'
-    :inVS.map(a=>kachelHtml(a,'blau','')).join('');
+  // ── VERSAND ──
+  const vsEl=document.getElementById('vsList');
+  if(inVS.length===0){
+    vsEl.innerHTML=emptyHtml('keine Aufträge');
+  }else{
+    vsEl.innerHTML=inVS.map(a=>'<div class="kachel blau">'+
+      '<div class="k-row"><div class="k-nr blau">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+'</div>'+
+      '<div class="k-kunde">'+a.kunde+'</div>'+
+      '<div class="k-stk">'+a.stk+' <span>Stk</span></div>'+
+    '</div>').join('');
+  }
   document.getElementById('vs-c').textContent=inVS.length;
 
-  // FOOTER
+  // ── FOOTER ──
   [['fs1',inVF.length],['fs2',inAZ.length],['fs3',inZB.length],['fs4',inSL.length],['fs5',inNB.length],['fs6',inVS.length]]
     .forEach(([id,v])=>document.getElementById(id).textContent=v);
 
-  // PFEILE
-  const arr=(id,on)=>document.getElementById(id).className='arrow'+(on?' on':'');
+  // ── PFEILE ──
+  const arr=(id,on)=>{const el=document.getElementById(id);if(el)el.className='arrow'+(on?' on':'');};
   arr('a1',inVF.length>0);
   arr('a2',inAZ.some(a=>a._alleVF));
   arr('a3',inZB.length>0);
