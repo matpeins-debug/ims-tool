@@ -86,14 +86,14 @@ body.light .k-status.aktiv{color:#047857;}
 .zone-head.z-sl{background:var(--z-sl-dim);border:1px solid var(--z-sl-mid);border-bottom:none;}
 .zone-head.z-nb{background:var(--z-nb-dim);border:1px solid var(--z-nb-mid);border-bottom:none;}
 .zone-head.z-vs{background:var(--z-vs-dim);border:1px solid var(--z-vs-mid);border-bottom:none;}
-.zone-title{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap;}
+.zone-title{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .zone-title.z-vf{color:var(--z-vf);}
 .zone-title.z-az{color:var(--z-az);}
 .zone-title.z-zb{color:var(--z-zb);}
 .zone-title.z-sl{color:var(--z-sl);}
 .zone-title.z-nb{color:var(--z-nb);}
 .zone-title.z-vs{color:var(--z-vs);}
-.zone-count{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;white-space:nowrap;}
+.zone-count{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;white-space:nowrap;flex-shrink:0;}
 .zone-body{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:0 0 var(--radius) var(--radius);overflow-y:auto;padding:3px;display:flex;flex-direction:column;gap:3px;}
 .zone-body.zb-az{border-color:var(--z-az-mid);}
 .zone-body.zb-sl{border-color:var(--z-sl-mid);}
@@ -165,14 +165,14 @@ body.light .sb-s2{color:#2563eb;}
 body.light .sb-s3{color:#dc2626;}
 
 /* ── AZ GRID ───────────────────────────────────────── */
-.az-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap);align-content:start;}
+.az-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap);align-content:start;}
 
 /* ── WARN BADGE ────────────────────────────────────── */
 .warn-badge{display:inline-flex;align-items:center;gap:3px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--danger);background:var(--danger-dim);border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:2px 8px;}
 
 /* ── ZONE SIZES ────────────────────────────────────── */
-.zone-vf{flex:0.8;}
-.zone-az{flex:3;}
+.zone-vf{flex:1.2;}
+.zone-az{flex:2;}
 .zone-zb{flex:0.8;}
 .zone-sl{flex:0.8;}
 .zone-nb{flex:0.8;}
@@ -263,7 +263,7 @@ body.light .sb-s3{color:#dc2626;}
   </div>
   <div class="arrow" id="a4">▸</div>
   <div class="zone zone-nb">
-    <div class="zone-head z-nb"><span class="zone-title z-nb">Nachbearbeitung</span><span class="zone-count" id="nb-c" style="color:var(--z-nb)">0</span></div>
+    <div class="zone-head z-nb"><span class="zone-title z-nb">Nachbearb.</span><span class="zone-count" id="nb-c" style="color:var(--z-nb)">0</span></div>
     <div class="zone-body zb-nb" id="nbList"></div>
   </div>
   <div class="arrow" id="a5">▸</div>
