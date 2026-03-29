@@ -23,16 +23,16 @@
   --radius:10px;--gap:4px;
 }
 body.light {
-  --bg:#dfe4ee;--surface:#dfe4ee;--surface2:#edf0f6;--border:#b0b8cc;
-  --accent:#00a87a;--accent-dim:#00a87a15;--accent-mid:#00a87a30;
+  --bg:#e8ecf4;--surface:#f2f4f8;--surface2:#e0e4ee;--border:#a0a8c0;
+  --accent:#00a87a;--accent-dim:#00a87a25;--accent-mid:#00a87a50;
   --text:#141824;--text2:#485068;--text3:#7080a0;
-  --danger:#dc2626;--danger-dim:#dc262615;
-  --z-vf:#ca9a06;--z-vf-dim:#ca9a0615;--z-vf-mid:#ca9a0630;
-  --z-az:#00a87a;--z-az-dim:#00a87a15;--z-az-mid:#00a87a30;
-  --z-zb:#2563eb;--z-zb-dim:#2563eb15;--z-zb-mid:#2563eb30;
-  --z-sl:#d97706;--z-sl-dim:#d9770615;--z-sl-mid:#d9770630;
-  --z-nb:#9333ea;--z-nb-dim:#9333ea15;--z-nb-mid:#9333ea30;
-  --z-vs:#0891b2;--z-vs-dim:#0891b215;--z-vs-mid:#0891b230;
+  --danger:#dc2626;--danger-dim:#dc262620;
+  --z-vf:#b8960a;--z-vf-dim:#b8960a20;--z-vf-mid:#b8960a50;
+  --z-az:#008a64;--z-az-dim:#008a6420;--z-az-mid:#008a6450;
+  --z-zb:#1d4ed8;--z-zb-dim:#1d4ed820;--z-zb-mid:#1d4ed850;
+  --z-sl:#c2680a;--z-sl-dim:#c2680a20;--z-sl-mid:#c2680a50;
+  --z-nb:#7c22ce;--z-nb-dim:#7c22ce20;--z-nb-mid:#7c22ce50;
+  --z-vs:#0e7490;--z-vs-dim:#0e749020;--z-vs-mid:#0e749050;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
@@ -111,7 +111,7 @@ body.light .k-status.aktiv{color:#047857;}
 .kachel.tuerkis{border-color:var(–z-vs);background:var(–z-vs-dim);}
 .kachel.leer{border:1.5px dashed var(–border);background:transparent;display:flex;align-items:center;justify-content:center;min-height:44px;}
 .kachel.blockiert{border-color:var(–danger)!important;border-width:2px;background:rgba(239,68,68,0.12)!important;}
-body.light .kachel.blockiert{background:rgba(220,38,38,0.14)!important;}
+body.light .kachel.blockiert{background:rgba(220,38,38,0.18)!important;}
 .kachel.highlight{box-shadow:0 0 0 2px var(–accent),0 0 12px var(–accent-dim);transform:scale(1.02);z-index:2;position:relative;}
 
 .k-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
@@ -140,7 +140,7 @@ body.light .kachel.blockiert{background:rgba(220,38,38,0.14)!important;}
 /* ── VF KOMPAKT ────────────────────────────────────── */
 .vf-row{display:flex;align-items:center;gap:6px;background:var(–surface2);border:1.5px solid var(–border);border-radius:6px;padding:4px 8px;transition:all .2s;position:relative;}
 .vf-row.blockiert{border-color:var(–danger)!important;border-width:2px;background:rgba(239,68,68,0.12)!important;}
-body.light .vf-row.blockiert{background:rgba(220,38,38,0.14)!important;}
+body.light .vf-row.blockiert{background:rgba(220,38,38,0.18)!important;}
 .vf-row.aktiv{border-color:var(–z-az);background:var(–z-az-dim);}
 .vf-row.highlight{box-shadow:0 0 0 2px var(–accent),0 0 12px var(–accent-dim);z-index:2;}
 .vf-nr{font-family:‘IBM Plex Mono’,monospace;font-size:13px;font-weight:700;color:var(–text);white-space:nowrap;flex-shrink:0;}
