@@ -371,10 +371,15 @@ function hl(a){return isMatch(a)?' highlight':'';}
 function kategorisiere(o){
   const inVF=[],inAZ=[],inZB=[],inSL=[],inNB=[],inVS=[];
   o.forEach(a=>{
+    // Alte fertige Aufträge (>30 Tage) komplett ignorieren
+    if(a.fertig&&a.fertigAm){
+      const tage=(Date.now()-new Date(a.fertigAm).getTime())/(1000*60*60*24);
+      if(tage>30)return;
+    }
     const vf=getVFaps(a),hatVF=vf.length>0,eineF=hatVF&&vf.some(ap=>sf(a,ap)),alleF=hatVF&&vf.every(ap=>sf(a,ap));
     const zbL=ta(a,'Zusammenbau'),zbG=tg(a,'Zusammenbau'),zbF=sf(a,'Zusammenbau');
     const nbL=ta(a,'Nachbearbeitung'),nbG=tg(a,'Nachbearbeitung'),nbF=sf(a,'Nachbearbeitung');
-    if(a.fertig)inVS.push(a);  // Komplett fertig → immer Versand
+    if(a.fertig)inVS.push(a);
     else if(nbF)inVS.push(a);
     else if(nbL||nbG)inNB.push(a);
     else if(zbF)inSL.push(a);
@@ -419,15 +424,7 @@ async function load(){
   try{
     const r=await fetch(SB_URL+'/rest/v1/ims_data?id=eq.main&select=auftraege',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
     if(!r.ok)throw new Error(r.status);const d=await r.json();
-    auftraege=(d[0]?.auftraege||[]).filter(a=>{
-      if(!a.fertig) return true;
-      // Fertige Aufträge nur behalten wenn in den letzten 8h fertig gemeldet (für Versand-Anzeige)
-      if(a.fertigAm){
-        const h=( Date.now()-new Date(a.fertigAm).getTime())/(1000*60*60);
-        if(h<8) return true;
-      }
-      return false;
-    });
+    auftraege=(d[0]?.auftraege||[]);
     document.getElementById('sd').className='sync-dot ok';
     document.getElementById('sl').textContent='Sync '+new Date().toLocaleTimeString('de',{hour:'2-digit',minute:'2-digit'});
     render();
