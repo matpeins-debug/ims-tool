@@ -373,10 +373,11 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
   <div class="tab" onclick="switchTab('bearbeitung')" id="tab-btn-bearbeitung">⚙ In Bearbeitung</div>
   <div class="tab" onclick="switchTab('stoerung')" id="tab-btn-stoerung">⚠ Störungen</div>
   <div class="tab" onclick="switchTab('ap-CNC')">🔧 CNC</div>
-  <div class="tab" onclick="switchTab('ap-AP-Armatur')">🔩 AP-Armatur</div>
+  <div class="tab" onclick="switchTab('ap-AP-Armatur 1')">🔩 AP·1</div>
+  <div class="tab" onclick="switchTab('ap-AP-Armatur 2')">🔩 AP·2</div>
   <div class="tab" onclick="switchTab('ap-UP-Armatur 1')">🔩 UP·1</div>
   <div class="tab" onclick="switchTab('ap-UP-Armatur 2')">🔩 UP·2</div>
-  <div class="tab" onclick="switchTab('ap-Zusammenbau')">🏗 Zusammenbau</div>
+  <div class="tab" onclick="switchTab('ap-Zusammenbau')">🏗 Schäumen</div>
   <div class="tab" onclick="switchTab('ap-Nachbearbeitung')">🔨 Nachbearbeitung</div>
   <div class="tab" onclick="switchTab('versand')">🚚 Versand</div>
   <div class="tab" onclick="switchTab('ap-Heizung')">🌡 Heizung</div>
@@ -397,10 +398,11 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
     <div onclick="switchTab('bearbeitung');closeMobileMenu('⚙ In Bearbeitung')" class="mob-item" id="mob-btn-bearbeitung">⚙ In Bearbeitung</div>
     <div onclick="switchTab('stoerung');closeMobileMenu('⚠ Störungen')" class="mob-item" id="mob-btn-stoerung">⚠ Störungen</div>
     <div onclick="switchTab('ap-CNC');closeMobileMenu('🔧 CNC')" class="mob-item">🔧 CNC</div>
-    <div onclick="switchTab('ap-AP-Armatur');closeMobileMenu('🔩 AP-Armatur')" class="mob-item">🔩 AP-Armatur</div>
+    <div onclick="switchTab('ap-AP-Armatur 1');closeMobileMenu('🔩 AP·1')" class="mob-item">🔩 AP·1</div>
+    <div onclick="switchTab('ap-AP-Armatur 2');closeMobileMenu('🔩 AP·2')" class="mob-item">🔩 AP·2</div>
     <div onclick="switchTab('ap-UP-Armatur 1');closeMobileMenu('🔩 UP·1')" class="mob-item">🔩 UP·1</div>
     <div onclick="switchTab('ap-UP-Armatur 2');closeMobileMenu('🔩 UP·2')" class="mob-item">🔩 UP·2</div>
-    <div onclick="switchTab('ap-Zusammenbau');closeMobileMenu('🏗 Zusammenbau')" class="mob-item">🏗 Zusammenbau</div>
+    <div onclick="switchTab('ap-Zusammenbau');closeMobileMenu('🏗 Schäumen')" class="mob-item">🏗 Schäumen</div>
     <div onclick="switchTab('ap-Nachbearbeitung');closeMobileMenu('🔨 Nachbearbeitung')" class="mob-item">🔨 Nachbearbeitung</div>
     <div onclick="switchTab('versand');closeMobileMenu('🚚 Versand')" class="mob-item">🚚 Versand</div>
     <div onclick="switchTab('ap-Heizung');closeMobileMenu('🌡 Heizung')" class="mob-item">🌡 Heizung</div>
@@ -622,11 +624,11 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────
 const GRUPPEN = {
-  '0': { name:'Gruppe 0', aps:['CNC','AP-Armatur','Zusammenbau','Nachbearbeitung'] },
+  '0': { name:'Gruppe 0', aps:['CNC','AP-Armatur 1','AP-Armatur 2','Zusammenbau','Nachbearbeitung'] },
   '1': { name:'Gruppe 1', aps:['CNC','UP-Armatur 1','UP-Armatur 2','Zusammenbau','Nachbearbeitung'] },
   '2': { name:'Gruppe 2', aps:['Heizung'] },
-  '3': { name:'Gruppe 3', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'] },
-  '4': { name:'Gruppe 4', aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'] },
+  '3': { name:'Gruppe 3', aps:['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2','Heizung'] },
+  '4': { name:'Gruppe 4', aps:['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2','Heizung'] },
   '5': { name:'Gruppe 5', aps:['CNC','UP-Armatur 1','UP-Armatur 2','Einbauelement'] },
   '6': { name:'Gruppe 6', aps:['Versand'] },
 };
@@ -639,18 +641,20 @@ const BLOCKIERUNG_GRUENDE = [
 
 const AP_PARALLEL = {
   'UP-Armatur 1': 'UP-Armatur', 'UP-Armatur 2': 'UP-Armatur',
+  'AP-Armatur 1': 'AP-Armatur', 'AP-Armatur 2': 'AP-Armatur',
 };
-const ARBEITSPLAETZE = ['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung','Zusammenbau','Nachbearbeitung','Einbauelement'];
+const ARBEITSPLAETZE = ['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2','Heizung','Zusammenbau','Nachbearbeitung','Einbauelement'];
 const ARBEITSPLAETZE_PLANUNG = ['CNC','AP-Armatur','UP-Armatur','Heizung','Zusammenbau','Einbauelement'];
 const AP_KAPAZITAET = {
   'CNC': 200, 'AP-Armatur': 150, 'UP-Armatur': 50,
   'Heizung': 100, 'Zusammenbau': 150, 'Einbauelement': 20,
+  'AP-Armatur 1': 75, 'AP-Armatur 2': 75,
   'UP-Armatur 1': 25, 'UP-Armatur 2': 25,
   'Nachbearbeitung': 75,
 };
 const ABHAENGIGKEITEN = {
-  'Zusammenbau': ['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2'],
-  'Nachbearbeitung': ['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Zusammenbau'],
+  'Zusammenbau': ['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2'],
+  'Nachbearbeitung': ['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2','Zusammenbau'],
 };
 // APs die Fotodokumentation bei S3 erfordern
 const AP_FOTO_REQUIRED = ['UP-Armatur 1','UP-Armatur 2'];
@@ -1163,7 +1167,7 @@ function renderStationDots(a) {
   return [...aps].map(ap => {
     const apKey = ap.replace(/[^a-z0-9]/gi,'_');
     const fertig = a.stationFertig && a.stationFertig[apKey];
-    const short = ap.replace('UP-Armatur','UP').replace('AP-Armatur','AP').replace('Zusammenbau','ZB').replace('Einbauelement','EB').replace('Heizung','HZ');
+    const short = ap.replace('AP-Armatur 1','AP1').replace('AP-Armatur 2','AP2').replace('AP-Armatur','AP').replace('UP-Armatur','UP').replace('Zusammenbau','Schäumen').replace('Einbauelement','EB').replace('Heizung','HZ').replace('Nachbearbeitung','NB');
     return `<span title="${ap}" style="display:inline-flex;align-items:center;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;background:${fertig?'#00c89622':'var(--surface2)'};color:${fertig?'var(--accent)':'var(--text3)'};border:1px solid ${fertig?'#00c89644':'var(--border)'}">${fertig?'✓':''} ${short}</span>`;
   }).join('');
 }
@@ -1205,8 +1209,10 @@ async function saveHalleVersand(id) {
 }
 
 // ─── ARBEITSPLATZ ANSICHT ─────────────────────────────────────────────────
+const AP_DISPLAY = {'Zusammenbau':'Schäumen'};
+function apDisplay(ap){return AP_DISPLAY[ap]||ap;}
 function renderAP(ap) {
-  document.getElementById('apTabTitle').textContent = ap;
+  document.getElementById('apTabTitle').textContent = apDisplay(ap);
   const list = document.getElementById('apTabList');
   const countEl = document.getElementById('apTabCount');
   const suche = (document.getElementById('apSuchfeld')?.value||'').toLowerCase().trim();
@@ -1344,7 +1350,7 @@ function renderAP(ap) {
         </div>` : ''}
 
         ${stationFertig
-          ? `<div class="hallen-fertig-info">✓ ${ap} fertig</div>
+          ? `<div class="hallen-fertig-info">✓ ${apDisplay(ap)} fertig</div>
              <div class="fertig-zeit">${stationZeit}</div>
              <button class="btn-edit" style="margin-top:8px;padding:4px 10px;font-size:12px" onclick="markStationUndo('${a.id}','${ap}','${apKey}')">Rückgängig</button>`
           : `
@@ -1369,8 +1375,8 @@ function renderAP(ap) {
                 </label>
               </div>
              <button class="btn-fertig" style="width:100%;justify-content:center;padding:14px;font-size:14px;margin-top:4px;${!(a.fotoDoku&&a.fotoDoku[apKey])?'opacity:0.4;cursor:not-allowed;':''}"
-               ${!(a.fotoDoku&&a.fotoDoku[apKey])?'disabled':''} onclick="markStationFertig('${a.id}','${ap}','${apKey}')">✓ ${ap} fertig</button>
-             ` : `<button class="btn-fertig" style="width:100%;justify-content:center;padding:14px;font-size:14px;margin-top:4px" onclick="markStationFertig('${a.id}','${ap}','${apKey}')">✓ ${ap} fertig</button>`
+               ${!(a.fotoDoku&&a.fotoDoku[apKey])?'disabled':''} onclick="markStationFertig('${a.id}','${ap}','${apKey}')">✓ ${apDisplay(ap)} fertig</button>
+             ` : `<button class="btn-fertig" style="width:100%;justify-content:center;padding:14px;font-size:14px;margin-top:4px" onclick="markStationFertig('${a.id}','${ap}','${apKey}')">✓ ${apDisplay(ap)} fertig</button>`
           }`
         }`;
       grid.appendChild(card);
@@ -2062,8 +2068,8 @@ function addGruppeRow(gruppeVal='', stkVal='') {
   div.innerHTML = `
     <select class="form-input gruppe-sel" style="font-size:13px">
       <option value="">– keine –</option>
-      <option value="0" ${gruppeVal==='0'?'selected':''}>Gruppe 0 – CNC, AP-Armatur, Zusammenbau, Nachbearbeitung</option>
-      <option value="1" ${gruppeVal==='1'?'selected':''}>Gruppe 1 – CNC, UP-Armatur 1+2, Zusammenbau, Nachbearbeitung</option>
+      <option value="0" ${gruppeVal==='0'?'selected':''}>Gruppe 0 – CNC, AP-1+2, Schäumen, Nachbearbeitung</option>
+      <option value="1" ${gruppeVal==='1'?'selected':''}>Gruppe 1 – CNC, UP-Armatur 1+2, Schäumen, Nachbearbeitung</option>
       <option value="2" ${gruppeVal==='2'?'selected':''}>Gruppe 2 – Heizung</option>
       <option value="3" ${gruppeVal==='3'?'selected':''}>Gruppe 3 – CNC, AP, UP-1+2, Heizung</option>
       <option value="4" ${gruppeVal==='4'?'selected':''}>Gruppe 4 – CNC, AP, UP-1+2, Heizung</option>
