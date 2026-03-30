@@ -598,6 +598,13 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
         <input class="form-input" id="inp-notiz" type="text" placeholder="z.B. DRINGEND, Spedition Dachser...">
       </div>
       <div class="form-group form-full">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" id="inp-highprio" style="width:20px;height:20px;cursor:pointer;accent-color:var(--danger)">
+          <span style="font-size:14px;font-weight:600;color:var(--text)">🔥 High Priority</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:auto">Feuer-Symbol bei Arbeitsstationen</span>
+        </label>
+      </div>
+      <div class="form-group form-full">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <label class="form-label" style="margin:0">Gruppen & Stückzahlen</label>
           <button type="button" class="btn btn-ghost btn-sm" onclick="addGruppeRow()">+ Gruppe hinzufügen</button>
@@ -625,11 +632,9 @@ const GRUPPEN = {
 };
 const BLOCKIERUNG_GRUENDE = [
   'Material fehlt',
-  'Maßabklärung',
-  'Technische Zeichnung fehlt',
-  'Maschine defekt',
-  'Kapazität nicht verfügbar',
-  'Kundenrückfrage offen',
+  'Kundenabklärung',
+  'Interne Abklärung',
+  'MATERIAL BEIGESTELLT',
 ];
 
 const AP_PARALLEL = {
@@ -1313,6 +1318,7 @@ function renderAP(ap) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
           ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
           <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}</div>
+          ${a.highPrio?'<span style="font-size:22px;filter:saturate(1.5)" title="High Priority">🔥</span>':''}
         </div>
         <div class="hallen-kunde">${a.kunde}</div>
         ${a.blockierungen&&Object.keys(a.blockierungen).length>0?`<div style="background:#ff445522;border:1px solid var(--danger);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12px;color:var(--danger);font-weight:700">🔒 ${Object.values(a.blockierungen)[0]}</div>`:""}        ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:10px">⚡ ${a.notiz}</div>`:''}
@@ -2118,6 +2124,7 @@ function openEdit(id) {
   document.getElementById('inp-notiz').value=a.notiz||'';
   document.getElementById('inp-kommission').value=a.kommission||'';
   document.getElementById('inp-prio').value=a.prio||'';
+  document.getElementById('inp-highprio').checked=!!a.highPrio;
   // Gruppen wiederherstellen
   document.getElementById('gruppenRows').innerHTML='';
   const gruppen = a.gruppen && a.gruppen.length > 0 ? a.gruppen : (a.gruppe ? [{gruppe:a.gruppe, stk:a.stk||0}] : []);
@@ -2136,6 +2143,7 @@ function clearForm() {
   document.getElementById('inp-prio').value='';
   document.getElementById('inp-sklasse').value='S2';
   document.getElementById('inp-versandart').value='Paketdienst';
+  document.getElementById('inp-highprio').checked=false;
   document.getElementById('gruppenRows').innerHTML='';
 }
 
@@ -2147,6 +2155,7 @@ async function saveAuftrag() {
   const versandart=document.getElementById('inp-versandart').value;
   const notiz=document.getElementById('inp-notiz').value.trim();
   const kommission=document.getElementById('inp-kommission').value.trim();
+  const highPrio=document.getElementById('inp-highprio').checked;
   const prioInput=parseInt(document.getElementById('inp-prio').value);
   const gruppen=getGruppenData();
   // Gesamt-Stückzahl = Summe aller Gruppen
@@ -2155,11 +2164,11 @@ async function saveAuftrag() {
 
   if(editingId) {
     const a=auftraege.find(x=>x.id===editingId);
-    if(a) Object.assign(a,{nr,kunde,datum,sklasse,versandart,notiz,kommission,stk,gruppen,prio:prioInput||a.prio});
+    if(a) Object.assign(a,{nr,kunde,datum,sklasse,versandart,notiz,kommission,stk,gruppen,highPrio,prio:prioInput||a.prio});
   } else {
     const newPrio = prioInput || getNextPrio(datum);
     auftraege.filter(x=>x.datum===datum&&x.prio>=newPrio).forEach(x=>x.prio++);
-    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,kommission,stk,gruppen,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString()});
+    auftraege.push({id:Date.now().toString(),nr,kunde,datum,sklasse,versandart,notiz,kommission,stk,gruppen,highPrio,prio:newPrio,fertig:false,erstelltAm:new Date().toISOString()});
     auftraege.filter(x=>x.datum===datum).sort((a,b)=>a.prio-b.prio).forEach((x,i)=>x.prio=i+1);
   }
   selectedDatum=datum;
