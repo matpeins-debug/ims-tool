@@ -272,7 +272,7 @@ body.light .k-dot.f{border-color:#40b890;color:#008060;background:#d0f0e4;}
     <div class="zone-body zb-az" id="azBody"><div class="az-grid" id="azGrid"></div></div>
   </div>
   <div class="zone zone-zb">
-    <div class="zone-head z-zb"><span class="zone-title z-zb">Zusammenbau</span><span class="zone-count" id="zb-c" style="color:var(--z-zb)">0</span></div>
+    <div class="zone-head z-zb"><span class="zone-title z-zb">Schäumen</span><span class="zone-count" id="zb-c" style="color:var(--z-zb)">0</span></div>
     <div class="zone-body" id="zbList"></div>
   </div>
   <div class="zone zone-sl">
@@ -306,9 +306,9 @@ const SB_URL='https://elwlptapzwwqhjuxnnws.supabase.co';
 const SB_KEY='sb_publishable_MbE6UlJorEnYMe6w77Lixw_ttcF5gBx';
 let auftraege=[];let searchTerm='';let sFilter='';
 
-const GR={'0':{aps:['CNC','AP-Armatur','Zusammenbau','Nachbearbeitung']},'1':{aps:['CNC','UP-Armatur 1','UP-Armatur 2','Zusammenbau','Nachbearbeitung']},'2':{aps:['Heizung']},'3':{aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung']},'4':{aps:['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung']},'5':{aps:['CNC','UP-Armatur 1','UP-Armatur 2','Einbauelement']},'6':{aps:['Versand']}};
-const VF_APS=['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung'];
-const ALL_APS=['CNC','AP-Armatur','UP-Armatur 1','UP-Armatur 2','Heizung','Zusammenbau','Nachbearbeitung','Einbauelement'];
+const GR={'0':{aps:['CNC','AP-Armatur 1','AP-Armatur 2','Zusammenbau','Nachbearbeitung']},'1':{aps:['CNC','UP-Armatur 1','UP-Armatur 2','Zusammenbau','Nachbearbeitung']},'2':{aps:['Heizung']},'3':{aps:['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2','Heizung']},'4':{aps:['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2','Heizung']},'5':{aps:['CNC','UP-Armatur 1','UP-Armatur 2','Einbauelement']},'6':{aps:['Versand']}};
+const VF_APS=['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2','Heizung'];
+const ALL_APS=['CNC','AP-Armatur 1','AP-Armatur 2','UP-Armatur 1','UP-Armatur 2','Heizung','Zusammenbau','Nachbearbeitung','Einbauelement'];
 
 function fmtNr(n){const s=String(n).replace(/\s/g,'');return s.length>4?s.slice(0,4)+'\u2009'+s.slice(4):s;}
 function getAPs(a){const s=new Set();(a.gruppen||(a.gruppe?[{gruppe:a.gruppe}]:[])).forEach(g=>{if(GR[g.gruppe])GR[g.gruppe].aps.forEach(ap=>s.add(ap));});return[...s];}
@@ -322,6 +322,16 @@ function sf(a,ap){
     const other=ap==='UP-Armatur 1'?'UP-Armatur 2':'UP-Armatur 1';
     const ok=other.replace(/[^a-z0-9]/gi,'_');
     if(a.stationFertig[other]||a.stationFertig[ok])return true;
+  }
+  // AP1 ↔ AP2 gekoppelt: einer fertig = beide fertig
+  if(ap==='AP-Armatur 1'||ap==='AP-Armatur 2'){
+    const other=ap==='AP-Armatur 1'?'AP-Armatur 2':'AP-Armatur 1';
+    const ok=other.replace(/[^a-z0-9]/gi,'_');
+    if(a.stationFertig[other]||a.stationFertig[ok])return true;
+  }
+  // Legacy: altes 'AP-Armatur' (ohne Nummer) zählt für beide
+  if(ap==='AP-Armatur 1'||ap==='AP-Armatur 2'){
+    if(a.stationFertig['AP-Armatur']||a.stationFertig['AP_Armatur'])return true;
   }
   return false;
 }
@@ -341,7 +351,7 @@ function ta(a,ap){
 }
 function sbadge(sk){const s=(sk||'').toLowerCase();return s?'<span class="sb sb-'+s+'">'+sk+'</span>':'';}
 function fire(a){return a.highPrio?'<span style="font-size:14px" title="High Priority">🔥</span>':'';}
-function apShort(ap){return ap.replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ').replace('Einbauelement','EB');}
+function apShort(ap){return ap.replace('AP-Armatur 1','AP1').replace('AP-Armatur 2','AP2').replace('AP-Armatur','AP').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ').replace('Einbauelement','EB');}
 function isBlk(a){return(a.blockierungen&&Object.keys(a.blockierungen).length>0)||(a.blockierung&&String(a.blockierung).trim()!=='');}
 function blkTxt(a){if(a.blockierungen&&Object.keys(a.blockierungen).length>0)return Object.values(a.blockierungen).filter(Boolean).join(', ');if(a.blockierung)return String(a.blockierung).trim();return'';}
 function isMatch(a){if(!searchTerm)return true;const t=searchTerm.toLowerCase();return String(a.nr).includes(t)||String(a.kunde||'').toLowerCase().includes(t);}
