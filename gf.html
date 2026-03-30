@@ -1063,7 +1063,7 @@ function renderAuftraege() {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
             ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text)">${fmtNr(a.nr)}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text)">${fmtNr(a.nr)}${a.highPrio?' 🔥':''}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span class="s-badge badge-${a.sklasse.toLowerCase()}">${a.sklasse}</span>
@@ -1104,7 +1104,7 @@ function renderAuftraege() {
     row.style.cssText = '';
     row.innerHTML=`
       <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
-      <div class="auftrag-nr" style="font-size:12px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}</div>
+      <div class="auftrag-nr" style="font-size:12px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' 🔥':''}</div>
       <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
@@ -1317,7 +1317,7 @@ function renderAP(ap) {
       card.innerHTML = `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
           ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}</div>
+          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
           ${a.highPrio?'<span style="font-size:22px;filter:saturate(1.5)" title="High Priority">🔥</span>':''}
         </div>
         <div class="hallen-kunde">${a.kunde}</div>
@@ -1581,7 +1581,7 @@ function renderOffen() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}</div>
+        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
@@ -1701,7 +1701,7 @@ function renderGF() {
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn);line-height:1">${String(a.prio||'–').padStart(2,'0')}</span>
         <div>
-          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}</div>
+          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
           <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-top:4px">${a.sklasse}</span>
         </div>
         <div style="margin-left:auto">
@@ -1992,7 +1992,7 @@ function renderHalle() {
     card.innerHTML=`
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}</div>
+        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
       ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:8px">⚡ ${a.notiz}</div>`:''}
@@ -2256,7 +2256,7 @@ function renderStoerung() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}</div>
+        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
@@ -2474,7 +2474,7 @@ function renderZeiten() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text)">${fmtNr(a.nr)}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--text)">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
           <span class="s-badge badge-${(a.sklasse||'s2').toLowerCase()}">${a.sklasse||'S2'}</span>
           ${a.fertig?'<span style="font-size:11px;color:var(--accent);font-weight:600">✓ Fertig</span>':'<span style="font-size:11px;color:var(--text3)">○ Offen</span>'}
         </div>
