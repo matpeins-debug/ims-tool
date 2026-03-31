@@ -525,22 +525,35 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
 
 <!-- ZEITEN TAB -->
 <div id="tab-zeiten" class="main hidden">
-  <div class="section-header">
-    <div class="section-title">⏱ Zeiten bearbeiten</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <input type="text" id="zeitenSuche" placeholder="🔍 Auftrag oder Kunde..."
-        oninput="renderZeiten()"
-        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:220px;"
-        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-      <select id="zeitenFilter" onchange="renderZeiten()"
-        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;">
-        <option value="alle">Alle</option>
-        <option value="mitTimer">Nur mit Zeiten</option>
-        <option value="offen">Nur offene</option>
-      </select>
-    </div>
+  <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
+    <button class="btn" id="zeitenSubEdit" onclick="switchZeitenSub('edit')" style="border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;border-radius:0;padding:10px 20px;font-weight:700;color:var(--accent);background:transparent">⏱ Bearbeiten</button>
+    <button class="btn" id="zeitenSubDash" onclick="switchZeitenSub('dash')" style="border:none;border-bottom:2px solid transparent;margin-bottom:-2px;border-radius:0;padding:10px 20px;font-weight:600;color:var(--text3);background:transparent">📊 Dashboard</button>
   </div>
-  <div id="zeitenList"></div>
+
+  <!-- SUB: Bearbeiten -->
+  <div id="zeitenViewEdit">
+    <div class="section-header">
+      <div class="section-title">⏱ Zeiten bearbeiten</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="text" id="zeitenSuche" placeholder="🔍 Auftrag oder Kunde..."
+          oninput="renderZeiten()"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:220px;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        <select id="zeitenFilter" onchange="renderZeiten()"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;">
+          <option value="alle">Alle</option>
+          <option value="mitTimer">Nur mit Zeiten</option>
+          <option value="offen">Nur offene</option>
+        </select>
+      </div>
+    </div>
+    <div id="zeitenList"></div>
+  </div>
+
+  <!-- SUB: Dashboard -->
+  <div id="zeitenViewDash" style="display:none">
+    <div id="zeitenDashboard"></div>
+  </div>
 </div>
 
 <!-- MODAL -->
@@ -2670,6 +2683,153 @@ async function saveNewTimer(auftragId) {
   document.querySelector('[style*="position:fixed"][style*="z-index:200"]')?.remove();
   await saveToStorage();
   renderZeiten();
+}
+
+// ─── ZEITEN SUB-TABS ──────────────────────────────────────────────────────
+function switchZeitenSub(sub) {
+  document.getElementById('zeitenViewEdit').style.display = sub==='edit' ? '' : 'none';
+  document.getElementById('zeitenViewDash').style.display = sub==='dash' ? '' : 'none';
+  document.getElementById('zeitenSubEdit').style.borderBottomColor = sub==='edit' ? 'var(--accent)' : 'transparent';
+  document.getElementById('zeitenSubEdit').style.color = sub==='edit' ? 'var(--accent)' : 'var(--text3)';
+  document.getElementById('zeitenSubDash').style.borderBottomColor = sub==='dash' ? 'var(--accent)' : 'transparent';
+  document.getElementById('zeitenSubDash').style.color = sub==='dash' ? 'var(--accent)' : 'var(--text3)';
+  if(sub==='dash') renderZeitenDashboard();
+}
+
+function renderZeitenDashboard() {
+  const dash = document.getElementById('zeitenDashboard');
+  const mitTimer = auftraege.filter(a => a.timers && Object.keys(a.timers).length > 0);
+
+  if(mitTimer.length === 0) {
+    dash.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Noch keine Zeitdaten vorhanden</div></div>';
+    return;
+  }
+
+  // ── Station-Statistiken berechnen ──
+  const stationStats = {};
+  mitTimer.forEach(a => {
+    const stk = a.stk || 1;
+    Object.entries(a.timers).forEach(([key, td]) => {
+      const stationName = key.replace(a.id+'_','').replace(/_/g,' ');
+      // Display-Name
+      const display = stationName.replace('Zusammenbau','Schäumen');
+      if(!stationStats[display]) stationStats[display] = { totalMin: 0, totalStk: 0, count: 0, auftraege: [] };
+      const min = calcTotalMin(td);
+      if(min > 0) {
+        stationStats[display].totalMin += min;
+        stationStats[display].totalStk += stk;
+        stationStats[display].count++;
+        stationStats[display].auftraege.push({ nr: a.nr, kunde: a.kunde, min, stk, minProStk: Math.round(min/stk*10)/10 });
+      }
+    });
+  });
+
+  const stations = Object.entries(stationStats)
+    .filter(([,s]) => s.count > 0)
+    .sort((a,b) => b[1].totalMin - a[1].totalMin);
+
+  if(stations.length === 0) {
+    dash.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Noch keine auswertbaren Zeiten</div></div>';
+    return;
+  }
+
+  // ── Max-Werte für Balkendarstellung ──
+  const maxAvg = Math.max(...stations.map(([,s]) => s.totalMin / s.totalStk));
+  const maxTotal = Math.max(...stations.map(([,s]) => s.totalMin));
+
+  // ── KPI Cards ──
+  const totalMin = stations.reduce((s,[,st]) => s + st.totalMin, 0);
+  const totalAuftraege = mitTimer.length;
+  const engpass = stations[0];
+
+  let html = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:6px">Gesamt erfasst</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--text)">${formatMinutes(totalMin)}</div>
+        <div style="font-size:11px;color:var(--text3)">${totalAuftraege} Aufträge mit Zeiten</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:6px">Stationen aktiv</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--text)">${stations.length}</div>
+        <div style="font-size:11px;color:var(--text3)">${stations.map(([n])=>n).join(', ')}</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid ${engpass?'var(--danger)':'var(--border)'};border-radius:10px;padding:16px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--danger);margin-bottom:6px">🔥 Engpass</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--danger)">${engpass?engpass[0]:'–'}</div>
+        <div style="font-size:11px;color:var(--text3)">${engpass?formatMinutes(engpass[1].totalMin)+' gesamt':''}</div>
+      </div>
+    </div>`;
+
+  // ── Stationen-Balkendiagramm: Ø min/Stk ──
+  html += `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">Ø Minuten pro Stück</div>
+      ${stations.map(([name, s]) => {
+        const avg = Math.round(s.totalMin / s.totalStk * 10) / 10;
+        const pct = maxAvg > 0 ? Math.round(avg / maxAvg * 100) : 0;
+        const isTop = name === engpass[0];
+        return `<div style="display:grid;grid-template-columns:120px 1fr 70px;gap:10px;align-items:center;margin-bottom:8px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:${isTop?'var(--danger)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+          <div style="background:var(--surface2);border-radius:4px;height:22px;overflow:hidden;position:relative">
+            <div style="height:100%;width:${pct}%;background:${isTop?'var(--danger)':'var(--accent)'};border-radius:4px;transition:width .5s"></div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--text);text-align:right">${avg} min</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // ── Stationen-Balkendiagramm: Gesamtzeit ──
+  html += `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">Gesamtzeit pro Station</div>
+      ${stations.map(([name, s]) => {
+        const pct = maxTotal > 0 ? Math.round(s.totalMin / maxTotal * 100) : 0;
+        const isTop = name === engpass[0];
+        return `<div style="display:grid;grid-template-columns:120px 1fr 90px;gap:10px;align-items:center;margin-bottom:8px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:${isTop?'var(--danger)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+          <div style="background:var(--surface2);border-radius:4px;height:22px;overflow:hidden;position:relative">
+            <div style="height:100%;width:${pct}%;background:${isTop?'var(--danger)':'var(--accent)'};border-radius:4px;transition:width .5s"></div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--text);text-align:right">${formatMinutes(s.totalMin)} <span style="color:var(--text3);font-weight:400">(${s.count})</span></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // ── Top 10 langsamste Aufträge (min/Stk) ──
+  const allEntries = [];
+  stations.forEach(([name, s]) => {
+    s.auftraege.forEach(a => allEntries.push({ station: name, ...a }));
+  });
+  const slowest = allEntries.sort((a,b) => b.minProStk - a.minProStk).slice(0, 10);
+  const fastest = [...allEntries].sort((a,b) => a.minProStk - b.minProStk).slice(0, 10);
+
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+      <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:12px">🐢 Langsamste (min/Stk)</div>
+      ${slowest.map((e,i) => `
+        <div style="display:grid;grid-template-columns:24px 80px 1fr 60px 70px;gap:6px;align-items:center;padding:5px 0;${i>0?'border-top:1px solid var(--border)':''}">
+          <span style="font-size:11px;color:var(--text3)">${i+1}.</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">${fmtNr(e.nr)}</span>
+          <span style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.station}</span>
+          <span style="font-size:10px;color:var(--text3);text-align:right">${e.stk} Stk</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--danger);text-align:right">${e.minProStk} min</span>
+        </div>`).join('')}
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+      <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:12px">🚀 Schnellste (min/Stk)</div>
+      ${fastest.map((e,i) => `
+        <div style="display:grid;grid-template-columns:24px 80px 1fr 60px 70px;gap:6px;align-items:center;padding:5px 0;${i>0?'border-top:1px solid var(--border)':''}">
+          <span style="font-size:11px;color:var(--text3)">${i+1}.</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">${fmtNr(e.nr)}</span>
+          <span style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.station}</span>
+          <span style="font-size:10px;color:var(--text3);text-align:right">${e.stk} Stk</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--accent);text-align:right">${e.minProStk} min</span>
+        </div>`).join('')}
+    </div>
+  </div>`;
+
+  dash.innerHTML = html;
 }
 
 // ─── START ────────────────────────────────────────────────────────────────
