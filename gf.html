@@ -515,7 +515,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
     <div class="section-title" id="apTabTitle"></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="apTabCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
-      <input type="text" id="apSuchfeld" placeholder="🔍 Suche..." oninput="renderAP(document.getElementById('apTabTitle').textContent)"
+      <input type="text" id="apSuchfeld" placeholder="🔍 Suche..." oninput="renderAP(document.getElementById('apTabTitle').dataset.ap||document.getElementById('apTabTitle').textContent)"
         style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:160px;"
         onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
     </div>
@@ -847,7 +847,7 @@ async function loadFromStorage() {
     if (!document.getElementById('tab-offen').classList.contains('hidden')) renderOffen();
     if (!document.getElementById('tab-bearbeitung').classList.contains('hidden')) renderBearbeitung();
     if (!document.getElementById('tab-stoerung').classList.contains('hidden')) renderStoerung();
-    if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').textContent);
+    if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').dataset.ap||document.getElementById('apTabTitle').textContent);
     if (!document.getElementById('tab-zeiten').classList.contains('hidden')) renderZeiten();
   } catch(e) {
     console.error('Storage error:', e);
@@ -1166,7 +1166,11 @@ function renderStationDots(a) {
   if(aps.size === 0) return '';
   return [...aps].map(ap => {
     const apKey = ap.replace(/[^a-z0-9]/gi,'_');
-    const fertig = a.stationFertig && a.stationFertig[apKey];
+    const COUPLED_DOTS = {'AP-Armatur 1':'AP-Armatur 2','AP-Armatur 2':'AP-Armatur 1','UP-Armatur 1':'UP-Armatur 2','UP-Armatur 2':'UP-Armatur 1'};
+    const pk = COUPLED_DOTS[ap] ? COUPLED_DOTS[ap].replace(/[^a-z0-9]/gi,'_') : null;
+    let fertig = a.stationFertig && (a.stationFertig[apKey] || a.stationFertig[ap]);
+    if(!fertig && pk && a.stationFertig) fertig = a.stationFertig[pk] || a.stationFertig[COUPLED_DOTS[ap]];
+    if(!fertig && (ap==='AP-Armatur 1'||ap==='AP-Armatur 2') && a.stationFertig) fertig = a.stationFertig['AP_Armatur']||a.stationFertig['AP-Armatur'];
     const short = ap.replace('AP-Armatur 1','AP1').replace('AP-Armatur 2','AP2').replace('AP-Armatur','AP').replace('UP-Armatur','UP').replace('Zusammenbau','Schäumen').replace('Einbauelement','EB').replace('Heizung','HZ').replace('Nachbearbeitung','NB');
     return `<span title="${ap}" style="display:inline-flex;align-items:center;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;background:${fertig?'#00c89622':'var(--surface2)'};color:${fertig?'var(--accent)':'var(--text3)'};border:1px solid ${fertig?'#00c89644':'var(--border)'}">${fertig?'✓':''} ${short}</span>`;
   }).join('');
@@ -1213,6 +1217,7 @@ const AP_DISPLAY = {'Zusammenbau':'Schäumen'};
 function apDisplay(ap){return AP_DISPLAY[ap]||ap;}
 function renderAP(ap) {
   document.getElementById('apTabTitle').textContent = apDisplay(ap);
+  document.getElementById('apTabTitle').dataset.ap = ap;
   const list = document.getElementById('apTabList');
   const countEl = document.getElementById('apTabCount');
   const suche = (document.getElementById('apSuchfeld')?.value||'').toLowerCase().trim();
@@ -1228,10 +1233,20 @@ function renderAP(ap) {
       return a.nr.localeCompare(b.nr, undefined, {numeric:true});
     });
 
-  // Split: offen vs. station-erledigt
+  // Split: offen vs. station-erledigt (AP1↔AP2 und UP1↔UP2 gekoppelt)
   const apKey = ap.replace(/[^a-z0-9]/gi,'_');
-  const offen = relevant.filter(a => !(a.stationFertig && a.stationFertig[apKey]));
-  const erledigt = relevant.filter(a => a.stationFertig && a.stationFertig[apKey]);
+  const COUPLED = {'AP-Armatur 1':'AP-Armatur 2','AP-Armatur 2':'AP-Armatur 1','UP-Armatur 1':'UP-Armatur 2','UP-Armatur 2':'UP-Armatur 1'};
+  const partnerKey = COUPLED[ap] ? COUPLED[ap].replace(/[^a-z0-9]/gi,'_') : null;
+  function isApFertig(a) {
+    if(!a.stationFertig) return false;
+    if(a.stationFertig[apKey] || a.stationFertig[ap]) return true;
+    if(partnerKey && (a.stationFertig[partnerKey] || a.stationFertig[COUPLED[ap]])) return true;
+    // Legacy: altes AP-Armatur ohne Nummer
+    if((ap==='AP-Armatur 1'||ap==='AP-Armatur 2') && (a.stationFertig['AP_Armatur']||a.stationFertig['AP-Armatur'])) return true;
+    return false;
+  }
+  const offen = relevant.filter(a => !isApFertig(a));
+  const erledigt = relevant.filter(a => isApFertig(a));
 
   countEl.textContent = `${offen.length} offen · ${erledigt.length} erledigt`;
 
@@ -1269,10 +1284,9 @@ function renderAP(ap) {
         if(rel.length>0) stkForAP = rel.reduce((s,g)=>s+(g.stk||0),0);
       }
 
-      // Station fertig?
-      const apKey = ap.replace(/[^a-z0-9]/gi,'_');
-      const stationFertig = a.stationFertig && a.stationFertig[apKey];
-      const stationZeit = stationFertig ? formatZeit(stationFertig) : '';
+      // Station fertig? (gekoppelt: AP1↔AP2, UP1↔UP2)
+      const stationFertig = isApFertig(a);
+      const stationZeit = stationFertig ? formatZeit(a.stationFertig[apKey]||a.stationFertig[ap]||(partnerKey?a.stationFertig[partnerKey]:null)||(COUPLED[ap]?a.stationFertig[COUPLED[ap]]:null)||a.stationFertig['AP_Armatur']||'') : '';
 
       // Timer state
       const timerKey = `${a.id}_${apKey}`;
@@ -1516,7 +1530,7 @@ async function saveBlockierung(id, apKey, grund) {
   // Re-render current AP tab so all cards turn red immediately
   if(!document.getElementById('tab-ap').classList.contains('hidden')) {
     const apTitle = document.getElementById('apTabTitle');
-    if(apTitle && apTitle.textContent) renderAP(apTitle.textContent);
+    if(apTitle && (apTitle.dataset.ap||apTitle.textContent)) renderAP(apTitle.dataset.ap||apTitle.textContent);
   }
 }
 
@@ -1526,7 +1540,7 @@ async function saveFotoDoku(id, apKey, checked) {
   a.fotoDoku[apKey] = checked;
   await saveToStorage();
   // Fertig-Button aktivieren/deaktivieren ohne komplett neu zu rendern
-  const btn = document.querySelector(`button[onclick="markStationFertig('${id}','${document.getElementById('apTabTitle').textContent}','${apKey}')"]`);
+  const btn = document.querySelector(`button[onclick="markStationFertig('${id}','${document.getElementById('apTabTitle').dataset.ap||document.getElementById('apTabTitle').textContent}','${apKey}')"]`);
   if(btn) { btn.disabled = !checked; btn.style.opacity = checked?'1':'0.4'; btn.style.cursor = checked?'pointer':'not-allowed'; }
 }
 
