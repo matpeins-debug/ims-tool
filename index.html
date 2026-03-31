@@ -458,7 +458,7 @@ if(localStorage.getItem('ims_auth') === 'imsflow') {
     <div class="section-title" id="apTabTitle"></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="apTabCount" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)"></div>
-      <input type="text" id="apSuchfeld" placeholder="🔍 Suche..." oninput="renderAP(document.getElementById('apTabTitle').textContent)"
+      <input type="text" id="apSuchfeld" placeholder="🔍 Suche..." oninput="renderAP(document.getElementById('apTabTitle').dataset.ap||document.getElementById('apTabTitle').textContent)"
         style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:160px;"
         onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
     </div>
@@ -757,7 +757,7 @@ async function loadFromStorage() {
     if (!document.getElementById('tab-offen').classList.contains('hidden')) renderOffen();
     if (!document.getElementById('tab-bearbeitung').classList.contains('hidden')) renderBearbeitung();
     if (!document.getElementById('tab-stoerung').classList.contains('hidden')) renderStoerung();
-    if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').textContent);
+    if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').dataset.ap||document.getElementById('apTabTitle').textContent);
   } catch(e) {
     console.error('Storage error:', e);
     const local = localStorage.getItem('ims_auftraege_local');
@@ -970,7 +970,7 @@ function renderAuftraege() {
     row.style.cssText = '';
     row.innerHTML=`
       <div id="prio-cell-${a.id}">${renderPrioCell(a)}</div>
-      <div class="auftrag-nr" style="font-size:12px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' 🔥':''}</div>
+      <div class="auftrag-nr" style="font-size:12px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onmouseenter="openPosPopup('${a.id}','${a.nr}',event)" onmouseleave="schedulePosClose()" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' 🔥':''}</div>
       <div id="stk-cell-${a.id}">${renderStkCell(a)}</div>
       <div>
         <div class="auftrag-kunde">${a.kunde}</div>
@@ -1028,7 +1028,11 @@ function renderStationDots(a) {
   if(aps.size === 0) return '';
   return [...aps].map(ap => {
     const apKey = ap.replace(/[^a-z0-9]/gi,'_');
-    const fertig = a.stationFertig && a.stationFertig[apKey];
+    const COUPLED_DOTS = {'AP-Armatur 1':'AP-Armatur 2','AP-Armatur 2':'AP-Armatur 1','UP-Armatur 1':'UP-Armatur 2','UP-Armatur 2':'UP-Armatur 1'};
+    const pk = COUPLED_DOTS[ap] ? COUPLED_DOTS[ap].replace(/[^a-z0-9]/gi,'_') : null;
+    let fertig = a.stationFertig && (a.stationFertig[apKey] || a.stationFertig[ap]);
+    if(!fertig && pk && a.stationFertig) fertig = a.stationFertig[pk] || a.stationFertig[COUPLED_DOTS[ap]];
+    if(!fertig && (ap==='AP-Armatur 1'||ap==='AP-Armatur 2') && a.stationFertig) fertig = a.stationFertig['AP_Armatur']||a.stationFertig['AP-Armatur'];
     const short = ap.replace('AP-Armatur 1','AP1').replace('AP-Armatur 2','AP2').replace('AP-Armatur','AP').replace('UP-Armatur','UP').replace('Zusammenbau','Schäumen').replace('Einbauelement','EB').replace('Heizung','HZ').replace('Nachbearbeitung','NB');
     return `<span title="${ap}" style="display:inline-flex;align-items:center;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;background:${fertig?'#00c89622':'var(--surface2)'};color:${fertig?'var(--accent)':'var(--text3)'};border:1px solid ${fertig?'#00c89644':'var(--border)'}">${fertig?'✓':''} ${short}</span>`;
   }).join('');
@@ -1075,6 +1079,7 @@ const AP_DISPLAY = {'Zusammenbau':'Schäumen'};
 function apDisplay(ap){return AP_DISPLAY[ap]||ap;}
 function renderAP(ap) {
   document.getElementById('apTabTitle').textContent = apDisplay(ap);
+  document.getElementById('apTabTitle').dataset.ap = ap;
   const list = document.getElementById('apTabList');
   const countEl = document.getElementById('apTabCount');
   const suche = (document.getElementById('apSuchfeld')?.value||'').toLowerCase().trim();
@@ -1083,30 +1088,37 @@ function renderAP(ap) {
     .filter(a => !a.fertig)
     .filter(a => !suche || (a.nr||'').toLowerCase().includes(suche) || (a.kunde||'').toLowerCase().includes(suche))
     .sort((a,b) => {
-      const apKey = ap.replace(/[^a-z0-9]/gi,'_');
-      const aFertig = !!(a.stationFertig && a.stationFertig[apKey]);
-      const bFertig = !!(b.stationFertig && b.stationFertig[apKey]);
-      // Fertig gemeldete nach hinten
-      if(aFertig !== bFertig) return aFertig ? 1 : -1;
-      // Dann nach Datum
       if(a.datum !== b.datum) return a.datum.localeCompare(b.datum);
-      // Innerhalb des Tages: nach Priorität
       if(a.prio && b.prio) return a.prio - b.prio;
       if(a.prio) return -1;
       if(b.prio) return 1;
       return a.nr.localeCompare(b.nr, undefined, {numeric:true});
     });
 
-  countEl.textContent = `${relevant.length} Aufträge`;
+  // Split: offen vs. station-erledigt (AP1↔AP2 und UP1↔UP2 gekoppelt)
+  const apKey = ap.replace(/[^a-z0-9]/gi,'_');
+  const COUPLED = {'AP-Armatur 1':'AP-Armatur 2','AP-Armatur 2':'AP-Armatur 1','UP-Armatur 1':'UP-Armatur 2','UP-Armatur 2':'UP-Armatur 1'};
+  const partnerKey = COUPLED[ap] ? COUPLED[ap].replace(/[^a-z0-9]/gi,'_') : null;
+  function isApFertig(a) {
+    if(!a.stationFertig) return false;
+    if(a.stationFertig[apKey] || a.stationFertig[ap]) return true;
+    if(partnerKey && (a.stationFertig[partnerKey] || a.stationFertig[COUPLED[ap]])) return true;
+    if((ap==='AP-Armatur 1'||ap==='AP-Armatur 2') && (a.stationFertig['AP_Armatur']||a.stationFertig['AP-Armatur'])) return true;
+    return false;
+  }
+  const offen = relevant.filter(a => !isApFertig(a));
+  const erledigt = relevant.filter(a => isApFertig(a));
+
+  countEl.textContent = `${offen.length} offen · ${erledigt.length} erledigt`;
 
   if(relevant.length === 0) {
-    list.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine offenen Aufträge für ${ap}</div></div>`;
+    list.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Keine offenen Aufträge für ${apDisplay(ap)}</div></div>`;
     return;
   }
 
-  // Gruppierung nach Datum
+  // Gruppierung offene nach Datum
   const nachDatum = {};
-  relevant.forEach(a => {
+  offen.forEach(a => {
     if(!nachDatum[a.datum]) nachDatum[a.datum] = [];
     nachDatum[a.datum].push(a);
   });
@@ -1133,10 +1145,9 @@ function renderAP(ap) {
         if(rel.length>0) stkForAP = rel.reduce((s,g)=>s+(g.stk||0),0);
       }
 
-      // Station fertig?
-      const apKey = ap.replace(/[^a-z0-9]/gi,'_');
-      const stationFertig = a.stationFertig && a.stationFertig[apKey];
-      const stationZeit = stationFertig ? formatZeit(stationFertig) : '';
+      // Station fertig? (gekoppelt: AP1↔AP2, UP1↔UP2)
+      const stationFertig = isApFertig(a);
+      const stationZeit = stationFertig ? formatZeit(a.stationFertig[apKey]||a.stationFertig[ap]||(partnerKey?a.stationFertig[partnerKey]:null)||(COUPLED[ap]?a.stationFertig[COUPLED[ap]]:null)||a.stationFertig['AP_Armatur']||'') : '';
 
       // Timer state
       const timerKey = `${a.id}_${apKey}`;
@@ -1184,7 +1195,7 @@ function renderAP(ap) {
       card.innerHTML = `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
           ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
+          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onmouseenter="openPosPopup('${a.id}','${a.nr}',event)" onmouseleave="schedulePosClose()" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
           ${a.highPrio?'<span style="font-size:22px;filter:saturate(1.5)" title="High Priority">🔥</span>':''}
         </div>
         <div class="hallen-kunde">${a.kunde}</div>
@@ -1248,6 +1259,36 @@ function renderAP(ap) {
 
     list.appendChild(grid);
   });
+
+  // ── ERLEDIGT-SEKTION ──
+  if(erledigt.length > 0) {
+    const erlHeader = document.createElement('div');
+    erlHeader.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:700;color:var(--accent);padding:20px 0 8px;border-top:2px solid var(--accent);margin-top:16px;display:flex;align-items:center;gap:8px;';
+    erlHeader.innerHTML = `✓ Erledigt <span style="font-weight:400;color:var(--text3);font-size:12px">(${erledigt.length})</span>`;
+    list.appendChild(erlHeader);
+
+    const erlGrid = document.createElement('div');
+    erlGrid.className = 'hallen-grid';
+    erlGrid.style.opacity = '0.6';
+
+    erledigt.forEach(a => {
+      const stationZeit = a.stationFertig[apKey] ? formatZeit(a.stationFertig[apKey]) : '';
+      const card = document.createElement('div');
+      card.className = 'hallen-card card-fertig';
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onmouseenter="openPosPopup('${a.id}','${a.nr}',event)" onmouseleave="schedulePosClose()" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
+          <span class="s-badge badge-${a.sklasse.toLowerCase()}">${a.sklasse}</span>
+        </div>
+        <div class="hallen-kunde">${a.kunde}</div>
+        <div class="hallen-fertig-info" style="margin-top:6px">✓ ${apDisplay(ap)} fertig</div>
+        <div class="fertig-zeit">${stationZeit}</div>
+        <button class="btn-edit" style="margin-top:6px;padding:3px 8px;font-size:11px" onclick="markStationUndo('${a.id}','${ap}','${apKey}')">↩ Rückgängig</button>`;
+      erlGrid.appendChild(card);
+    });
+
+    list.appendChild(erlGrid);
+  }
 }
 
 // ─── TIMER ────────────────────────────────────────────────────────────────
@@ -1349,7 +1390,7 @@ async function saveBlockierung(id, apKey, grund) {
   // Re-render current AP tab so all cards turn red immediately
   if(!document.getElementById('tab-ap').classList.contains('hidden')) {
     const apTitle = document.getElementById('apTabTitle');
-    if(apTitle && apTitle.textContent) renderAP(apTitle.textContent);
+    if(apTitle && (apTitle.dataset.ap||apTitle.textContent)) renderAP(apTitle.dataset.ap||apTitle.textContent);
   }
 }
 
@@ -1359,7 +1400,7 @@ async function saveFotoDoku(id, apKey, checked) {
   a.fotoDoku[apKey] = checked;
   await saveToStorage();
   // Fertig-Button aktivieren/deaktivieren ohne komplett neu zu rendern
-  const btn = document.querySelector(`button[onclick="markStationFertig('${id}','${document.getElementById('apTabTitle').textContent}','${apKey}')"]`);
+  const btn = document.querySelector(`button[onclick="markStationFertig('${id}','${document.getElementById('apTabTitle').dataset.ap||document.getElementById('apTabTitle').textContent}','${apKey}')"]`);
   if(btn) { btn.disabled = !checked; btn.style.opacity = checked?'1':'0.4'; btn.style.cursor = checked?'pointer':'not-allowed'; }
 }
 
@@ -1447,7 +1488,7 @@ function renderOffen() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
+        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onmouseenter="openPosPopup('${a.id}','${a.nr}',event)" onmouseleave="schedulePosClose()" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
@@ -1548,7 +1589,7 @@ function renderGF() {
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn);line-height:1">${String(a.prio||'–').padStart(2,'0')}</span>
         <div>
-          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
+          <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onmouseenter="openPosPopup('${a.id}','${a.nr}',event)" onmouseleave="schedulePosClose()" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
           <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-top:4px">${a.sklasse}</span>
         </div>
         <div style="margin-left:auto">
@@ -1809,7 +1850,7 @@ function renderHalle() {
     card.innerHTML=`
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
+        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onmouseenter="openPosPopup('${a.id}','${a.nr}',event)" onmouseleave="schedulePosClose()" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
       ${a.kommission?`<div style="font-size:13px;color:var(--warn);font-weight:700;margin-bottom:4px">📋 ${a.kommission}</div>`:''}${a.notiz?`<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:8px">⚡ ${a.notiz}</div>`:''}
@@ -2073,7 +2114,7 @@ function renderStoerung() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         ${a.prio?`<span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--warn)">${String(a.prio).padStart(2,'0')}</span>`:''}
-        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="openPosPopup('${a.id}','${a.nr}',event)" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
+        <div class="hallen-nr" style="margin-bottom:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onmouseenter="openPosPopup('${a.id}','${a.nr}',event)" onmouseleave="schedulePosClose()" title="Positionen anzeigen">${fmtNr(a.nr)}${a.highPrio?' <span style="font-size:18px">🔥</span>':''}</div>
         <span class="s-badge badge-${a.sklasse.toLowerCase()}" style="margin-left:auto">${a.sklasse}</span>
       </div>
       <div class="hallen-kunde">${a.kunde}</div>
@@ -2241,58 +2282,87 @@ initBin().then(() => {
 });
 
 // ─── POSITIONS POPUP ─────────────────────────────────────────────────────
+let posPopupTimer = null;
 function openPosPopup(id, nr, event) {
   event && event.stopPropagation();
+  if(posPopupTimer) { clearTimeout(posPopupTimer); posPopupTimer=null; }
   const a = auftraege.find(x=>x.id===id);
   if(!a) return;
   const popup = document.getElementById('posPopup');
   const body = document.getElementById('posPopupBody');
   document.getElementById('posPopupNr').textContent = fmtNr(nr);
 
-  // Check if positions data exists
+  const gruppen = a.gruppen && a.gruppen.length > 0 ? a.gruppen : (a.gruppe ? [{gruppe:a.gruppe, stk:a.stk}] : []);
+  const gruppenHtml = gruppen.length > 0 ? `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+      ${gruppen.map(g => {
+        const gr = GRUPPEN[g.gruppe];
+        const aps = gr ? gr.aps.map(ap=>ap.replace('AP-Armatur 1','AP1').replace('AP-Armatur 2','AP2').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ').replace('Zusammenbau','Schäumen').replace('Nachbearbeitung','NB').replace('Einbauelement','EB')).join(' → ') : '';
+        return '<div style="font-size:11px;color:var(--text2);background:var(--surface2);padding:3px 8px;border-radius:4px;border:1px solid var(--border)"><strong style="color:var(--text)">G'+g.gruppe+'</strong> '+g.stk+' Stk <span style="color:var(--text3);font-size:10px">'+aps+'</span></div>';
+      }).join('')}
+    </div>` : '';
+
+  const allAps = new Set();
+  gruppen.forEach(g => { if(GRUPPEN[g.gruppe]) GRUPPEN[g.gruppe].aps.forEach(ap => allAps.add(ap)); });
+  const stationHtml = allAps.size > 0 ? `
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+      ${[...allAps].map(ap => {
+        const apKey = ap.replace(/[^a-z0-9]/gi,'_');
+        const fertig = a.stationFertig && (a.stationFertig[apKey] || a.stationFertig[ap]);
+        const short = ap.replace('AP-Armatur 1','AP1').replace('AP-Armatur 2','AP2').replace('UP-Armatur 1','UP1').replace('UP-Armatur 2','UP2').replace('Heizung','HZ').replace('Zusammenbau','Schäumen').replace('Nachbearbeitung','NB').replace('Einbauelement','EB');
+        return '<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:'+(fertig?'#00c89622':'var(--surface2)')+';color:'+(fertig?'var(--accent)':'var(--text3)')+';border:1px solid '+(fertig?'#00c89644':'var(--border)')+'">'+(fertig?'✓ ':'')+short+'</span>';
+      }).join('')}
+    </div>` : '';
+
+  let posHtml = '';
   if(a.positionen && a.positionen.length > 0) {
-    body.innerHTML = `
+    posHtml = `
       <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead>
-          <tr style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px">
-            <th style="text-align:left;padding:4px 8px 8px 0;font-weight:600">Pos</th>
-            <th style="text-align:left;padding:4px 8px 8px 0;font-weight:600">Artikel</th>
-            <th style="text-align:left;padding:4px 8px 8px 0;font-weight:600">Bezeichnung</th>
-            <th style="text-align:right;padding:4px 0 8px 0;font-weight:600">Menge</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${a.positionen.map((p,i) => `
-            <tr style="border-top:1px solid var(--border)">
-              <td style="padding:7px 8px 7px 0;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:11px">${p.pos||'-'}</td>
-              <td style="padding:7px 8px 7px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent)">${p.artikel||'-'}</td>
-              <td style="padding:7px 8px 7px 0;color:var(--text)">${p.bezeichnung||'-'}</td>
-              <td style="padding:7px 0;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text)">${p.menge||'-'}</td>
-            </tr>`).join('')}
-        </tbody>
+        <thead><tr style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px">
+          <th style="text-align:left;padding:4px 8px 8px 0;font-weight:600">Pos</th>
+          <th style="text-align:left;padding:4px 8px 8px 0;font-weight:600">Artikel</th>
+          <th style="text-align:left;padding:4px 8px 8px 0;font-weight:600">Bezeichnung</th>
+          <th style="text-align:right;padding:4px 0 8px 0;font-weight:600">Menge</th>
+        </tr></thead>
+        <tbody>${a.positionen.map(p => `<tr style="border-top:1px solid var(--border)">
+          <td style="padding:7px 8px 7px 0;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:11px">${p.pos||'-'}</td>
+          <td style="padding:7px 8px 7px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent)">${p.artikel||'-'}</td>
+          <td style="padding:7px 8px 7px 0;color:var(--text)">${p.bezeichnung||'-'}</td>
+          <td style="padding:7px 0;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text)">${p.menge||'-'}</td>
+        </tr>`).join('')}</tbody>
       </table>`;
-  } else {
-    body.innerHTML = `
-      <div style="text-align:center;padding:24px 0;color:var(--text3)">
-        <div style="font-size:28px;margin-bottom:8px">📋</div>
-        <div style="font-size:13px">Noch keine Positionsdaten verfügbar</div>
-        <div style="font-size:11px;margin-top:4px;color:var(--text3)">Wird später via Qlik/ams.erp befüllt</div>
-      </div>`;
   }
 
-  // Position popup near click
+  const metaHtml = `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--text)">${a.stk||'–'} Stk</span>
+      <span class="s-badge badge-${(a.sklasse||'s2').toLowerCase()}">${a.sklasse||'S2'}</span>
+      ${a.highPrio?'<span style="font-size:16px">🔥</span>':''}
+      ${a.fertig?'<span style="font-size:11px;color:var(--accent)">✓ Fertig</span>':''}
+      ${a.blockierung?'<span style="font-size:11px;color:var(--danger)">⚠ '+a.blockierung+'</span>':''}
+    </div>
+    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">${a.kunde}</div>
+    ${a.kommission?'<div style="font-size:11px;color:var(--warn);margin-bottom:4px">📋 '+a.kommission+'</div>':''}
+    ${a.notiz?'<div style="font-size:11px;color:var(--text2);margin-bottom:6px">⚡ '+a.notiz+'</div>':''}`;
+
+  body.innerHTML = metaHtml + gruppenHtml + stationHtml + (posHtml || '<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0">Noch keine Positionsdaten</div>');
+
   popup.style.display = 'block';
-  document.getElementById('posPopupBackdrop').style.display = 'block';
+  popup.style.transform = '';
   if(event) {
-    const x = Math.min(event.clientX, window.innerWidth - 440);
-    const y = Math.min(event.clientY + 10, window.innerHeight - 380);
+    const x = Math.min(event.clientX + 12, window.innerWidth - 440);
+    const y = Math.min(event.clientY - 10, window.innerHeight - 380);
     popup.style.left = Math.max(8, x) + 'px';
     popup.style.top = Math.max(8, y) + 'px';
-  } else {
-    popup.style.left = '50%';
-    popup.style.top = '50%';
-    popup.style.transform = 'translate(-50%,-50%)';
   }
+}
+
+function schedulePosClose() {
+  posPopupTimer = setTimeout(closePosPopup, 300);
+}
+
+function cancelPosClose() {
+  if(posPopupTimer) { clearTimeout(posPopupTimer); posPopupTimer=null; }
 }
 
 function closePosPopup() {
@@ -2307,7 +2377,7 @@ function closePosPopup() {
 <div class="ac-dropdown hidden" id="ac-kunde" style="position:fixed;z-index:99999"></div>
 
 <!-- POSITIONS POPUP -->
-<div id="posPopup" style="display:none;position:fixed;z-index:99998;background:var(--surface);border:2px solid var(--accent);border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.4);min-width:300px;max-width:420px;font-family:'IBM Plex Sans',sans-serif;">
+<div id="posPopup" onmouseenter="cancelPosClose()" onmouseleave="schedulePosClose()" style="display:none;position:fixed;z-index:99998;background:var(--surface);border:2px solid var(--accent);border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.4);min-width:300px;max-width:440px;font-family:'IBM Plex Sans',sans-serif;">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
     <div>
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:2px">Auftragspositionen</div>
