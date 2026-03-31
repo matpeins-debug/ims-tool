@@ -383,6 +383,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
   <div class="tab" onclick="switchTab('ap-Heizung')">🌡 Heizung</div>
   <div class="tab" onclick="switchTab('ap-Einbauelement')">📦 Einbauelement</div>
   <div class="tab" onclick="switchTab('zeiten')">⏱ Zeiten</div>
+  <div class="tab" onclick="switchTab('kapazitaet')">📈 Kapazität</div>
 </div>
 
 <!-- MOBILE DROPDOWN -->
@@ -408,6 +409,7 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
     <div onclick="switchTab('ap-Heizung');closeMobileMenu('🌡 Heizung')" class="mob-item">🌡 Heizung</div>
     <div onclick="switchTab('ap-Einbauelement');closeMobileMenu('📦 Einbauelement')" class="mob-item">📦 Einbauelement</div>
     <div onclick="switchTab('zeiten');closeMobileMenu('⏱ Zeiten')" class="mob-item">⏱ Zeiten</div>
+    <div onclick="switchTab('kapazitaet');closeMobileMenu('📈 Kapazität')" class="mob-item">📈 Kapazität</div>
   </div>
 </div>
 
@@ -554,6 +556,20 @@ if(localStorage.getItem('ims_auth_gf') === 'imsbox') {
   <div id="zeitenViewDash" style="display:none">
     <div id="zeitenDashboard"></div>
   </div>
+</div>
+
+<!-- KAPAZITÄT TAB -->
+<div id="tab-kapazitaet" class="main hidden">
+  <div class="section-header">
+    <div class="section-title">📈 Wochenkapazität</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="kapaWocheOffset--;renderKapazitaet()">← Vorige</button>
+      <span id="kapaWocheLabel" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text)"></span>
+      <button class="btn btn-ghost btn-sm" onclick="kapaWocheOffset++;renderKapazitaet()">Nächste →</button>
+      <button class="btn btn-ghost btn-sm" onclick="kapaWocheOffset=0;renderKapazitaet()">Heute</button>
+    </div>
+  </div>
+  <div id="kapaContent"></div>
 </div>
 
 <!-- MODAL -->
@@ -862,6 +878,7 @@ async function loadFromStorage() {
     if (!document.getElementById('tab-stoerung').classList.contains('hidden')) renderStoerung();
     if (!document.getElementById('tab-ap').classList.contains('hidden')) renderAP(document.getElementById('apTabTitle').dataset.ap||document.getElementById('apTabTitle').textContent);
     if (!document.getElementById('tab-zeiten').classList.contains('hidden')) renderZeiten();
+    if (!document.getElementById('tab-kapazitaet').classList.contains('hidden')) renderKapazitaet();
   } catch(e) {
     console.error('Storage error:', e);
     const local = localStorage.getItem('ims_auftraege_local');
@@ -954,7 +971,7 @@ document.addEventListener('click', e => {
 });
 
 function switchTab(tab) {
-  const allTabs = ['planung','versand','bearbeitung','stoerung','gf','offen','ap','zeiten'];
+  const allTabs = ['planung','versand','bearbeitung','stoerung','gf','offen','ap','zeiten','kapazitaet'];
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick')===`switchTab('${tab}')`));
   allTabs.forEach(t => document.getElementById('tab-'+t) && document.getElementById('tab-'+t).classList.add('hidden'));
   if(tab.startsWith('ap-')) {
@@ -969,6 +986,7 @@ function switchTab(tab) {
   if(tab==='stoerung') renderStoerung();
   if(tab==='bearbeitung') renderBearbeitung();
   if(tab==='zeiten') renderZeiten();
+  if(tab==='kapazitaet') renderKapazitaet();
 }
 
 // ─── WOCHE ────────────────────────────────────────────────────────────────
@@ -2683,6 +2701,177 @@ async function saveNewTimer(auftragId) {
   document.querySelector('[style*="position:fixed"][style*="z-index:200"]')?.remove();
   await saveToStorage();
   renderZeiten();
+}
+
+// ─── WOCHENKAPAZITÄT ──────────────────────────────────────────────────────
+let kapaWocheOffset = 0;
+
+function getKapaWoche() {
+  const now = new Date();
+  now.setDate(now.getDate() + kapaWocheOffset * 7);
+  const day = now.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon = new Date(now);
+  mon.setDate(now.getDate() + diff);
+  const days = [];
+  for(let i = 0; i < 5; i++) {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    days.push(toDateStr(d));
+  }
+  return days;
+}
+
+function renderKapazitaet() {
+  const content = document.getElementById('kapaContent');
+  const woche = getKapaWoche();
+  const heute = toDateStr(new Date());
+
+  // Wochen-Label
+  document.getElementById('kapaWocheLabel').textContent = 'KW ' + getKW(woche[0]) + ' (' + formatDatum(woche[0]) + ' – ' + formatDatum(woche[4]) + ')';
+
+  // Stationen für Planung (merged: AP-Armatur = AP1+AP2, UP-Armatur = UP1+UP2)
+  const stationen = ARBEITSPLAETZE_PLANUNG;
+
+  // Pro Tag + Station: geplante Stk berechnen
+  const tagesData = {};
+  woche.forEach(d => {
+    tagesData[d] = {};
+    stationen.forEach(st => tagesData[d][st] = 0);
+  });
+
+  auftraege.filter(a => !a.fertig && woche.includes(a.datum)).forEach(a => {
+    const gruppen = a.gruppen && a.gruppen.length > 0 ? a.gruppen : (a.gruppe ? [{gruppe:a.gruppe, stk:a.stk}] : []);
+    gruppen.forEach(g => {
+      if(!GRUPPEN[g.gruppe]) return;
+      const stk = g.stk || 0;
+      GRUPPEN[g.gruppe].aps.forEach(ap => {
+        // Merge: AP-Armatur 1/2 → AP-Armatur, UP-Armatur 1/2 → UP-Armatur
+        const merged = AP_PARALLEL[ap] || ap;
+        if(tagesData[a.datum] && tagesData[a.datum][merged] !== undefined) {
+          tagesData[a.datum][merged] += stk;
+        }
+      });
+    });
+  });
+
+  // Wochen-Summe pro Station
+  const wochenSum = {};
+  stationen.forEach(st => {
+    wochenSum[st] = woche.reduce((s, d) => s + (tagesData[d][st]||0), 0);
+  });
+
+  // Max für Balkenskalierung
+  const wochenKapa = {};
+  stationen.forEach(st => {
+    wochenKapa[st] = (AP_KAPAZITAET[st]||0) * 5; // 5 Arbeitstage
+  });
+  const maxVal = Math.max(...stationen.map(st => Math.max(wochenSum[st], wochenKapa[st])), 1);
+
+  // ── KPI Summary ──
+  const totalGeplant = Object.values(wochenSum).reduce((s,v) => s+v, 0);
+  const totalKapa = Object.values(wochenKapa).reduce((s,v) => s+v, 0);
+  const auslastung = totalKapa > 0 ? Math.round(totalGeplant / totalKapa * 100) : 0;
+  const auslColor = auslastung > 100 ? 'var(--danger)' : auslastung > 80 ? 'var(--warn,#f59e0b)' : 'var(--accent)';
+
+  let html = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:6px">Geplant (Woche)</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--text)">${totalGeplant} <span style="font-size:14px;color:var(--text3)">Stk</span></div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:6px">Kapazität (Woche)</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--text)">${totalKapa} <span style="font-size:14px;color:var(--text3)">Stk</span></div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid ${auslColor};border-radius:10px;padding:16px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:${auslColor};margin-bottom:6px">Auslastung</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:${auslColor}">${auslastung}%</div>
+      </div>
+    </div>`;
+
+  // ── Wochen-Balkendiagramm pro Station ──
+  html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">Wochenauslastung pro Station</div>
+    ${stationen.map(st => {
+      const geplant = wochenSum[st];
+      const kapa = wochenKapa[st];
+      if(kapa === 0 && geplant === 0) return '';
+      const pct = maxVal > 0 ? Math.round(geplant / maxVal * 100) : 0;
+      const kapaPct = maxVal > 0 ? Math.round(kapa / maxVal * 100) : 0;
+      const over = geplant > kapa;
+      const stAusl = kapa > 0 ? Math.round(geplant/kapa*100) : 0;
+      const col = over ? 'var(--danger)' : stAusl > 80 ? 'var(--warn,#f59e0b)' : 'var(--accent)';
+      const display = st.replace('Zusammenbau','Schäumen');
+      return `<div style="display:grid;grid-template-columns:100px 1fr 100px;gap:10px;align-items:center;margin-bottom:10px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:${over?'var(--danger)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${display}</div>
+        <div style="position:relative;background:var(--surface2);border-radius:4px;height:26px;overflow:hidden">
+          <div style="position:absolute;left:${kapaPct}%;top:0;bottom:0;width:2px;background:var(--text3);opacity:0.5;z-index:1" title="Kapazität: ${kapa} Stk"></div>
+          <div style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .5s;display:flex;align-items:center;padding-left:6px">
+            ${pct>15?'<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:white;font-weight:600">'+geplant+'</span>':''}
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right">
+          <span style="font-weight:700;color:${col}">${geplant}</span><span style="color:var(--text3)"> / ${kapa}</span>
+          <span style="font-size:10px;color:${col};margin-left:4px">${stAusl}%</span>
+        </div>
+      </div>`;
+    }).join('')}
+    <div style="font-size:10px;color:var(--text3);margin-top:8px">Senkrechte Linie = Kapazitätsgrenze</div>
+  </div>`;
+
+  // ── Tagesansicht: Heatmap ──
+  html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">Tagesverteilung</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12px">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:8px 12px 8px 0;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Station</th>
+            ${woche.map(d => {
+              const isH = d===heute;
+              return '<th style="text-align:center;padding:8px 6px;color:'+(isH?'var(--accent)':'var(--text3)')+';font-size:10px;text-transform:uppercase;letter-spacing:0.5px;'+(isH?'border-bottom:2px solid var(--accent)':'')+'">'
+                +getWochentag(d).slice(0,2)+'<br>'+formatDatum(d).slice(0,5)+'</th>';
+            }).join('')}
+            <th style="text-align:center;padding:8px 6px;color:var(--text);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700">Σ</th>
+            <th style="text-align:center;padding:8px 6px;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.5px">Kapa</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stationen.map(st => {
+            const kapa = AP_KAPAZITAET[st]||0;
+            const wSum = wochenSum[st];
+            const display = st.replace('Zusammenbau','Schäumen');
+            if(kapa===0 && wSum===0) return '';
+            return '<tr style="border-top:1px solid var(--border)">'+
+              '<td style="padding:8px 12px 8px 0;font-weight:600;color:var(--text);white-space:nowrap">'+display+'</td>'+
+              woche.map(d => {
+                const v = tagesData[d][st]||0;
+                const isH = d===heute;
+                const over = v > kapa;
+                const pct = kapa > 0 ? v/kapa : 0;
+                const bg = v===0?'transparent':over?'#ef444430':pct>0.8?'#f59e0b25':'#00c89620';
+                const tc = v===0?'var(--text3)':over?'var(--danger)':pct>0.8?'var(--warn,#f59e0b)':'var(--text)';
+                return '<td style="text-align:center;padding:8px 6px;background:'+bg+';color:'+tc+';font-weight:'+(v>0?'700':'400')+';'+(isH?'border-left:1px solid var(--accent);border-right:1px solid var(--accent)':'')+'">'+v+'</td>';
+              }).join('')+
+              '<td style="text-align:center;padding:8px 6px;font-weight:700;color:'+(wSum>kapa*5?'var(--danger)':'var(--text)')+'">'+wSum+'</td>'+
+              '<td style="text-align:center;padding:8px 6px;color:var(--text3)">'+kapa*5+'</td>'+
+            '</tr>';
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  content.innerHTML = html;
+}
+
+function getKW(dateStr) {
+  const d = new Date(dateStr);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
 }
 
 // ─── ZEITEN SUB-TABS ──────────────────────────────────────────────────────
