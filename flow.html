@@ -356,6 +356,71 @@ function isBlk(a){return(a.blockierungen&&Object.keys(a.blockierungen).length>0)
 function blkTxt(a){if(a.blockierungen&&Object.keys(a.blockierungen).length>0)return Object.values(a.blockierungen).filter(Boolean).join(', ');if(a.blockierung)return String(a.blockierung).trim();return'';}
 function isMatch(a){if(!searchTerm)return true;const t=searchTerm.toLowerCase();return String(a.nr).includes(t)||String(a.kunde||'').toLowerCase().includes(t);}
 function isActive(a){return ALL_APS.some(ap=>ta(a,ap));}
+
+// Durchlaufzeit: wann ist der Auftrag in die aktuelle Zone gekommen?
+function zoneEntry(a, zone) {
+  // VF: erstelltAm
+  if(zone==='vf') return a.erstelltAm || null;
+  // AZ: spätester VF-stationFertig
+  if(zone==='az') {
+    const vfAps = getVFaps(a);
+    if(!a.stationFertig || vfAps.length===0) return a.erstelltAm || null;
+    let latest = null;
+    vfAps.forEach(ap => {
+      const k = ap.replace(/[^a-z0-9]/gi,'_');
+      const t = a.stationFertig[k] || a.stationFertig[ap];
+      if(t && (!latest || t > latest)) latest = t;
+    });
+    return latest || a.erstelltAm || null;
+  }
+  // ZB: erster Zusammenbau-Timer-Start
+  if(zone==='zb') {
+    if(a.timers) {
+      const k = Object.keys(a.timers).find(k=>k.toLowerCase().includes('zusammenbau'));
+      if(k && a.timers[k].start) return a.timers[k].start;
+    }
+    return null;
+  }
+  // Slot: Zusammenbau stationFertig
+  if(zone==='sl') {
+    if(a.stationFertig) return a.stationFertig['Zusammenbau'] || a.stationFertig['Zusammenbau'.replace(/[^a-z0-9]/gi,'_')] || null;
+    return null;
+  }
+  // NB: erster NB-Timer-Start
+  if(zone==='nb') {
+    if(a.timers) {
+      const k = Object.keys(a.timers).find(k=>k.toLowerCase().includes('nachbearbeitung'));
+      if(k && a.timers[k].start) return a.timers[k].start;
+    }
+    return null;
+  }
+  // VS: NB stationFertig
+  if(zone==='vs') {
+    if(a.stationFertig) return a.stationFertig['Nachbearbeitung'] || a.stationFertig['Nachbearbeitung'.replace(/[^a-z0-9]/gi,'_')] || null;
+    return null;
+  }
+  return null;
+}
+function fmtAge(isoStr) {
+  if(!isoStr) return '';
+  const ms = Date.now() - new Date(isoStr).getTime();
+  if(ms < 0) return '';
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  if(h >= 24) { const d = Math.floor(h/24); return d+'d '+(h%24)+'h'; }
+  if(h > 0) return h+'h '+m+'m';
+  return m+'m';
+}
+function ageHtml(a, zone) {
+  const entry = zoneEntry(a, zone);
+  if(!entry) return '';
+  const age = fmtAge(entry);
+  if(!age) return '';
+  const ms = Date.now() - new Date(entry).getTime();
+  const h = ms/3600000;
+  const color = h > 48 ? 'var(--danger)' : h > 8 ? 'var(--warn,#f59e0b)' : 'var(--text3)';
+  return '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:'+color+';margin-top:2px">⏱ '+age+'</div>';
+}
 // Timer JEMALS gestartet – NUCLEAR: durchsucht das GESAMTE Auftrags-JSON
 function tg(a,ap){
   // 1. Prüfe timers direkt
@@ -482,7 +547,7 @@ function render(){
     const sCls=b?'rot':act?'aktiv':f;
     const sTxt=b?'⚠ '+blkTxt(a):act?'⚙ IN BEARBEITUNG':(alle?'✓ ABHOLBEREIT':'⏳ IN ARBEIT');
     const dot=act&&!b?'<span class="aktiv-dot"></span>':'';
-    return'<div class="kachel '+cls+'"><div class="k-row"><div class="k-nr '+(b?'rot':f)+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-row"><div class="k-stk">'+a.stk+' <span>Stk</span></div></div><div class="k-dots">'+dots+'</div><div class="k-status '+sCls+'">'+sTxt+dot+'</div></div>';
+    return'<div class="kachel '+cls+'"><div class="k-row"><div class="k-nr '+(b?'rot':f)+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-row"><div class="k-stk">'+a.stk+' <span>Stk</span></div></div><div class="k-dots">'+dots+'</div><div class="k-status '+sCls+'">'+sTxt+dot+'</div>'+ageHtml(a,'az')+'</div>';
   }).join('');}
   const azO=inAZ.length>8,azC=document.getElementById('az-c');
   azC.innerHTML=azO?inAZ.length+' <span class="warn-badge">⚠ &gt;8</span>':inAZ.length+' / 8';
@@ -492,14 +557,14 @@ function render(){
   const zbShow=filterSearch(sortNr(inZB));
   const zbEl=document.getElementById('zbList');
   if(!zbShow.length){zbEl.innerHTML=emptyHtml(hf?'kein Treffer':'zieht aus AZ');}
-  else{zbEl.innerHTML=zbShow.map(a=>{const b=isBlk(a),act=isActive(a),dot=act&&!b?'<span class="aktiv-dot"></span>':'';return'<div class="kachel blau'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'blau')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status aktiv">⚙ IN BEARBEITUNG'+dot+'</div>')+'</div>';}).join('');}
+  else{zbEl.innerHTML=zbShow.map(a=>{const b=isBlk(a),act=isActive(a),dot=act&&!b?'<span class="aktiv-dot"></span>':'';return'<div class="kachel blau'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'blau')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status aktiv">⚙ IN BEARBEITUNG'+dot+'</div>')+ageHtml(a,'zb')+'</div>';}).join('');}
   document.getElementById('zb-c').textContent=inZB.length;
 
   // SLOT
   const slShow=filterSearch(sortNr(inSL));
   const slEl=document.getElementById('slotList'),slO=inSL.length>3;
   if(!slShow.length){slEl.innerHTML=emptyHtml(hf?'kein Treffer':'○ frei')+(!hf?emptyHtml('○ frei')+emptyHtml('○ frei'):'');}
-  else{slEl.innerHTML=slShow.map(a=>{const b=isBlk(a),act=isActive(a),dot=act&&!b?'<span class="aktiv-dot"></span>':'';return'<div class="kachel gruen'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'gruen')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status orange">bereit für NB'+dot+'</div>')+'</div>';}).join('');
+  else{slEl.innerHTML=slShow.map(a=>{const b=isBlk(a),act=isActive(a),dot=act&&!b?'<span class="aktiv-dot"></span>':'';return'<div class="kachel gruen'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'gruen')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status orange">bereit für NB'+dot+'</div>')+ageHtml(a,'sl')+'</div>';}).join('');
     if(!hf)for(let i=inSL.length;i<3;i++)slEl.innerHTML+=emptyHtml('○ frei');}
   const slC=document.getElementById('slot-c');
   slC.innerHTML=slO?inSL.length+' <span class="warn-badge">⚠ &gt;3</span>':inSL.length+' / 3';
@@ -509,7 +574,7 @@ function render(){
   const nbShow=filterSearch(sortNr(inNB));
   const nbEl=document.getElementById('nbList');
   if(!nbShow.length){nbEl.innerHTML=emptyHtml(noHit);}
-  else{nbEl.innerHTML=nbShow.map(a=>{const b=isBlk(a),act=isActive(a),dot=act&&!b?'<span class="aktiv-dot"></span>':'';return'<div class="kachel violett'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'violett')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status aktiv">⚙ IN BEARBEITUNG'+dot+'</div>')+'</div>';}).join('');}
+  else{nbEl.innerHTML=nbShow.map(a=>{const b=isBlk(a),act=isActive(a),dot=act&&!b?'<span class="aktiv-dot"></span>':'';return'<div class="kachel violett'+(b?' blockiert':'')+'"><div class="k-row"><div class="k-nr '+(b?'rot':'violett')+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+(b?'<div class="k-status rot">⚠ '+blkTxt(a)+'</div>':'<div class="k-status aktiv">⚙ IN BEARBEITUNG'+dot+'</div>')+ageHtml(a,'nb')+'</div>';}).join('');}
   document.getElementById('nb-c').textContent=inNB.length;
 
   // VS
@@ -527,7 +592,7 @@ function render(){
     if(b) status='<div class="k-status rot">⚠ '+blkTxt(a)+'</div>';
     else if(fertig) status='<div class="k-status gruen">👍 VERSENDET</div>';
     else if(act) status='<div class="k-status aktiv">⚙ IN BEARBEITUNG'+dot+'</div>';
-    return'<div class="kachel '+cls+'"><div class="k-row"><div class="k-nr '+nrCls+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+status+'</div>';
+    return'<div class="kachel '+cls+'"><div class="k-row"><div class="k-nr '+nrCls+'">'+fmtNr(a.nr)+'</div>'+sbadge(a.sklasse)+fire(a)+'</div><div class="k-kunde">'+a.kunde+'</div><div class="k-stk">'+a.stk+' <span>Stk</span></div>'+status+(fertig?'':ageHtml(a,'vs'))+'</div>';
   }).join('');}
   document.getElementById('vs-c').textContent=inVS.length;
 }
