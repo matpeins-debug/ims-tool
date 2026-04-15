@@ -1,0 +1,19 @@
+# Lokales Monitoring + Analyse — enthält Kundendaten, nie pushen
+_analyse/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node / Tools (falls später dazu)
+node_modules/
+.env
+.env.local

@@ -1352,7 +1352,20 @@ async function timerStart(id, apKey, ap) {
   if(!a.timers) a.timers = {};
   const timerKey = `${id}_${apKey}`;
   const existing = a.timers[timerKey] || {};
-  a.timers[timerKey] = { ...existing, start: new Date().toISOString(), end: null };
+
+  // GUARD gegen "Zeiten gehen verloren": wenn ein Timer bereits läuft (start gesetzt, end fehlt),
+  // muss zuerst implizit gestoppt werden - also die bisher aufgelaufene Zeit auf totalMs addieren,
+  // bevor ein neuer start gesetzt wird. Ohne diesen Check überschreibt ein doppelter Klick auf
+  // "Beginn" den laufenden start und die Zeit dazwischen ist weg.
+  let totalMs = existing.totalMs || 0;
+  if (existing.start && !existing.end) {
+    const elapsed = Date.now() - new Date(existing.start).getTime();
+    if (elapsed > 0) totalMs += elapsed;
+    console.warn('[ims-tool] timerStart: laufender Timer wurde automatisch gestoppt',
+                 timerKey, '+', Math.round(elapsed/60000), 'min gerettet');
+  }
+
+  a.timers[timerKey] = { totalMs, start: new Date().toISOString(), end: null };
   await saveToStorage();
   if(ap==='Versand') renderHalle();
   else renderAP(ap);

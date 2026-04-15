@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IMS Station</title>
+<style>
+  :root {
+    --bg:       #0b0f14;
+    --surface:  #111821;
+    --surface2: #1a2230;
+    --border:   #27324a;
+    --text:     #e7eef7;
+    --text2:    #9aa7b8;
+    --text3:    #6b7a90;
+    --accent:   #22c28a;
+    --warn:     #e8a53b;
+    --danger:   #e74c5e;
+    --blue:     #3da5ff;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; min-height: 100vh; }
+  a, button { font-family: inherit; }
+
+  /* ─── LOGIN ───────────────────────────────────────────────────────────── */
+  #login {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); z-index: 100;
+  }
+  #login form {
+    background: var(--surface); padding: 32px; border-radius: 16px; border: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 12px; min-width: 280px;
+  }
+  #login h2 { margin: 0 0 8px 0; color: var(--accent); }
+  #login input {
+    padding: 14px; font-size: 18px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+  }
+  #login button {
+    padding: 14px; font-size: 16px; border-radius: 8px; border: 0;
+    background: var(--accent); color: #062013; font-weight: 600; cursor: pointer;
+  }
+  #login .err { color: var(--danger); font-size: 13px; min-height: 16px; }
+
+  /* ─── HEADER ──────────────────────────────────────────────────────────── */
+  header {
+    display: flex; align-items: center; gap: 14px; padding: 12px 18px;
+    background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+  }
+  header .station {
+    background: var(--accent); color: #062013; font-weight: 700; font-size: 18px;
+    padding: 8px 16px; border-radius: 8px; letter-spacing: 0.02em;
+  }
+  header .title { font-size: 14px; color: var(--text2); }
+  header .sync { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+  header .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text3); }
+  header .sync-dot.ok { background: var(--accent); }
+  header .sync-dot.loading { background: var(--warn); animation: pulse 1s infinite; }
+  header .sync-dot.err { background: var(--danger); }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }
+  header .logout { background: transparent; border: 1px solid var(--border); color: var(--text2); padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+
+  /* ─── MAIN ────────────────────────────────────────────────────────────── */
+  main { padding: 16px; display: grid; gap: 12px; max-width: 1400px; margin: 0 auto; }
+  main.empty { display: flex; align-items: center; justify-content: center; min-height: 60vh; color: var(--text3); font-size: 18px; text-align: center; }
+
+  /* ─── KARTE ──────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px; display: grid; gap: 10px;
+  }
+  .card.blocked { border-color: var(--warn); background: #1a1510; }
+  .card.running { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34,194,138,0.15); }
+  .card.overdue { border-color: var(--danger); }
+
+  .card-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .card-nr { font-size: 22px; font-weight: 700; letter-spacing: 0.01em; }
+  .card-kunde { font-size: 16px; color: var(--text); font-weight: 500; }
+  .card-stk { font-size: 14px; color: var(--text2); font-variant-numeric: tabular-nums; }
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.03em; }
+  .badge.s0 { background: #334257; color: #cfd8e6; }
+  .badge.s1 { background: #264d40; color: #a7ead0; }
+  .badge.s2 { background: #3d4a26; color: #d4ea9a; }
+  .badge.s3 { background: #4d2f26; color: #ffc9b5; }
+  .badge.termin { background: var(--surface2); color: var(--text2); }
+  .badge.termin.warn   { background: #3a2d14; color: #ffd999; }
+  .badge.termin.today  { background: #2d3a14; color: #c8e499; }
+  .badge.termin.over   { background: #4a1c26; color: #ffc0c8; }
+  .badge.highprio { background: var(--danger); color: #fff; }
+
+  .card-meta { display: flex; flex-wrap: wrap; gap: 14px; color: var(--text2); font-size: 13px; }
+  .card-notiz { padding: 8px 10px; background: var(--surface2); border-radius: 6px; font-size: 13px; color: var(--text2); white-space: pre-wrap; }
+
+  .timer-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; }
+  .timer-label { font-size: 12px; color: var(--text3); }
+  .timer-val { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 600; }
+  .timer-val.running { color: var(--accent); }
+
+  .vorgaenger-warn { color: var(--warn); font-size: 13px; padding: 8px 10px; background: #2a1f10; border-left: 3px solid var(--warn); border-radius: 4px; }
+  .blocked-warn { color: var(--warn); font-size: 13px; font-weight: 600; padding: 8px 10px; background: #2a1f10; border-left: 3px solid var(--warn); border-radius: 4px; }
+
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .actions.three { grid-template-columns: 1fr 1fr 1fr; }
+  .btn {
+    padding: 16px 14px; font-size: 16px; font-weight: 600; border-radius: 10px; border: 0; cursor: pointer;
+    color: #062013; background: var(--accent); transition: transform 0.06s ease, opacity 0.2s ease;
+    min-height: 56px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.stop   { background: var(--danger); color: #fff; }
+  .btn.ghost  { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn.warn   { background: var(--warn); color: #1a1208; }
+  .btn.fertig { background: var(--blue); color: #01152a; }
+
+  /* ─── MODAL ───────────────────────────────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; min-width: 280px; max-width: 420px; width: 100%;
+    display: grid; gap: 12px;
+  }
+  .modal h3 { margin: 0; font-size: 18px; }
+  .modal .opt { padding: 14px; background: var(--surface2); border-radius: 8px; cursor: pointer; text-align: left; border: 0; color: var(--text); font-size: 15px; }
+  .modal .opt:hover { background: #212b3c; }
+  .modal .cancel { background: transparent; border: 1px solid var(--border); color: var(--text2); padding: 10px; border-radius: 8px; cursor: pointer; }
+
+  /* ─── TOAST ───────────────────────────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--accent); padding: 12px 20px;
+    border-radius: 10px; font-size: 14px; z-index: 60; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: slideUp 0.25s ease;
+  }
+  .toast.err { border-color: var(--danger); }
+  @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  /* ─── RESPONSIVE ──────────────────────────────────────────────────────── */
+  @media (min-width: 900px) {
+    main { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="login" style="display:none">
+  <form onsubmit="return doLogin(event)">
+    <h2>🔧 IMS Station</h2>
+    <input id="loginPw" type="password" placeholder="Passwort" autocomplete="off">
+    <button type="submit">Einloggen</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- Header -->
+<header id="header" style="display:none">
+  <div class="station" id="stationLabel">—</div>
+  <div class="title">IMS Produktion</div>
+  <div class="sync"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">—</span></div>
+  <button class="logout" onclick="doLogout()">Logout</button>
+</header>
+
+<!-- Main -->
+<main id="main" class="empty">Lade…</main>
+
+<!-- Station-Picker (wenn kein ?ap= in URL) -->
+<div id="picker" style="display:none; padding:24px; max-width:500px; margin:40px auto;">
+  <h2 style="color:var(--accent); margin-top:0;">🔧 IMS Station wählen</h2>
+  <p style="color:var(--text2); font-size:14px;">Öffne diese Seite mit <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">?ap=…</code> als Bookmark pro Tablet.</p>
+  <div id="pickerList" style="display:grid; gap:8px; margin-top:20px;"></div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// station.html — Tablet-Ansicht pro Arbeitsplatz
+// URL: station.html?ap=cnc  (ap1, ap2, up1, up2, heizung, zusammenbau, nachbearbeitung, einbauelement, versand)
+// ─────────────────────────────────────────────────────────────────────────────
+'use strict';
+
+const AP = IMS.resolveAP(IMS.route.ap);          // 'CNC' | 'AP-Armatur 1' | ...
+const STATION_NAMEN = {
+  'CNC': 'CNC',
+  'AP-Armatur 1': 'AP-ARMATUR 1',
+  'AP-Armatur 2': 'AP-ARMATUR 2',
+  'UP-Armatur 1': 'UP-ARMATUR 1',
+  'UP-Armatur 2': 'UP-ARMATUR 2',
+  'Heizung': 'HEIZUNG',
+  'Zusammenbau': 'ZUSAMMENBAU',
+  'Nachbearbeitung': 'NACHBEARBEITUNG',
+  'Einbauelement': 'EINBAUELEMENT',
+  'Versand': 'VERSAND',
+};
+
+let pollTimer = null;
+let liveTickers = {};
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+function boot() {
+  if (!AP || !STATION_NAMEN[AP]) {
+    showPicker();
+    return;
+  }
+
+  document.getElementById('stationLabel').textContent = '🔧 ' + STATION_NAMEN[AP];
+  document.title = 'Station ' + STATION_NAMEN[AP];
+
+  if (!IMS.isAuthed()) {
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('login').style.display = 'flex';
+    document.getElementById('loginPw').focus();
+  } else {
+    startApp();
+  }
+}
+
+function showPicker() {
+  document.getElementById('main').style.display = 'none';
+  const picker = document.getElementById('picker');
+  picker.style.display = 'block';
+
+  const stationen = [
+    { key: 'cnc',             label: 'CNC' },
+    { key: 'ap1',             label: 'AP-Armatur 1' },
+    { key: 'ap2',             label: 'AP-Armatur 2' },
+    { key: 'up1',             label: 'UP-Armatur 1' },
+    { key: 'up2',             label: 'UP-Armatur 2' },
+    { key: 'heizung',         label: 'Heizung' },
+    { key: 'zusammenbau',     label: 'Zusammenbau' },
+    { key: 'nachbearbeitung', label: 'Nachbearbeitung' },
+    { key: 'einbauelement',   label: 'Einbauelement' },
+    { key: 'versand',         label: 'Versand' },
+  ];
+
+  document.getElementById('pickerList').innerHTML = stationen.map(s =>
+    `<a href="?ap=${s.key}" class="btn" style="display:block; text-align:center; text-decoration:none;">${s.label}</a>`
+  ).join('');
+}
+
+function doLogin(e) {
+  e.preventDefault();
+  const pw = document.getElementById('loginPw').value;
+  if (IMS.authCheck(pw)) {
+    document.getElementById('login').style.display = 'none';
+    startApp();
+  } else {
+    document.getElementById('loginErr').textContent = 'Falsches Passwort';
+  }
+  return false;
+}
+
+function doLogout() {
+  IMS.logout();
+  location.reload();
+}
+
+async function startApp() {
+  document.getElementById('header').style.display = 'flex';
+  document.getElementById('main').style.display = 'grid';
+  await refresh();
+  pollTimer = setInterval(refresh, IMS.CONFIG.POLL_MS);
+}
+
+// ─── SYNC ────────────────────────────────────────────────────────────────────
+function setSync(state, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'loading' ? 'loading' : state === 'err' ? 'err' : '');
+  lbl.textContent = label;
+}
+
+async function refresh() {
+  try {
+    setSync('loading', 'Lade…');
+    await IMS.store.load();
+    setSync('ok', 'Synchronisiert');
+    render();
+  } catch (e) {
+    console.error('[station] refresh error', e);
+    setSync('err', 'Fehler');
+  }
+}
+
+// ─── FILTER ──────────────────────────────────────────────────────────────────
+// Aufträge für diese Station:
+//   - hat diesen AP laut Gruppen
+//   - AP ist noch nicht station-fertig
+//   - Auftrag selbst ist noch nicht "fertig"
+function auftraegeFuerStation() {
+  return IMS.store.auftraege
+    .filter(a => !a.fertig)
+    .filter(a => IMS.isAPOffen(a, AP))
+    .sort(sortFn);
+}
+
+function sortFn(a, b) {
+  // 1) laufender Timer für diese Station → ganz oben
+  const aLauf = IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]);
+  const bLauf = IMS.istTimerAktiv(b.timers && b.timers[IMS.timerKey(b.id, AP)]);
+  if (aLauf !== bLauf) return aLauf ? -1 : 1;
+
+  // 2) HighPrio
+  if (!!a.highPrio !== !!b.highPrio) return a.highPrio ? -1 : 1;
+
+  // 3) Termin (nächster zuerst)
+  const aT = a.datum || '9999-12-31';
+  const bT = b.datum || '9999-12-31';
+  if (aT !== bT) return aT < bT ? -1 : 1;
+
+  // 4) Auftragsnummer
+  return (a.nr || '').localeCompare(b.nr || '');
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  // Live-Ticker stoppen (werden neu aufgebaut)
+  Object.values(liveTickers).forEach(clearInterval);
+  liveTickers = {};
+
+  const list = auftraegeFuerStation();
+  const main = document.getElementById('main');
+
+  if (!list.length) {
+    main.className = 'empty';
+    main.innerHTML = '<div>✓ Keine offenen Aufträge für ' + STATION_NAMEN[AP] + '</div>';
+    return;
+  }
+
+  main.className = '';
+  main.innerHTML = list.map(renderCard).join('');
+
+  // Live-Ticker für laufende Timer starten
+  list.forEach(a => {
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    if (IMS.istTimerAktiv(td)) startLiveTicker(a.id, td);
+  });
+}
+
+function renderCard(a) {
+  const key = IMS.timerKey(a.id, AP);
+  const td = a.timers && a.timers[key];
+  const running = IMS.istTimerAktiv(td);
+  const blocked = IMS.hatBlockierung(a, AP);
+  const vorgaenger = IMS.sindVorgaengerFertig(a, AP);
+  const tage = IMS.tageBis(a.datum);
+  const overdue = tage !== null && tage < 0;
+  const cls = ['card', running && 'running', blocked && 'blocked', overdue && 'overdue'].filter(Boolean).join(' ');
+
+  const sklasse = String(a.sklasse || '').toLowerCase().replace(/\s/g, '');
+  const sBadge = a.sklasse ? `<span class="badge ${sklasse}">${a.sklasse.toUpperCase()}</span>` : '';
+  const hpBadge = a.highPrio ? '<span class="badge highprio">HIGH</span>' : '';
+
+  let terminBadge = '';
+  if (a.datum) {
+    let tCls = 'termin';
+    if (tage !== null) {
+      if (tage < 0)       tCls += ' over';
+      else if (tage === 0) tCls += ' today';
+      else if (tage <= 3)  tCls += ' warn';
+    }
+    const tLabel = IMS.formatDatum(a.datum) + (tage !== null ? (tage === 0 ? ' (heute)' : tage < 0 ? ` (${Math.abs(tage)}d über)` : ` (in ${tage}d)`) : '');
+    terminBadge = `<span class="badge ${tCls}">${tLabel}</span>`;
+  }
+
+  const stk = a.stk ? `${a.stk} Stk` : '';
+  const kommission = a.kommission ? `<div class="card-meta"><span>Kommission: ${esc(a.kommission)}</span></div>` : '';
+  const notiz = a.notiz ? `<div class="card-notiz">${esc(a.notiz)}</div>` : '';
+
+  const timerVal = IMS.formatElapsed(IMS.calcTotalMs(td));
+  const timerRow = `<div class="timer-row">
+    <span class="timer-label">Zeit ${STATION_NAMEN[AP]}</span>
+    <span class="timer-val ${running ? 'running' : ''}" id="timer-${a.id}">${timerVal}</span>
+  </div>`;
+
+  let warnRow = '';
+  if (blocked) {
+    warnRow = `<div class="blocked-warn">⚠ BLOCKIERT: ${esc(a.blockierungen[AP])}</div>`;
+  } else if (!vorgaenger) {
+    warnRow = `<div class="vorgaenger-warn">⏳ Vorgänger-Station noch nicht fertig</div>`;
+  }
+
+  // Action-Buttons
+  let actions = '';
+  if (running) {
+    actions = `<div class="actions">
+      <button class="btn stop" onclick="onStop('${a.id}')">■ Stopp</button>
+      <button class="btn fertig" onclick="onFertig('${a.id}')">✓ Fertig</button>
+    </div>`;
+  } else {
+    const startDisabled = blocked || !vorgaenger ? 'disabled' : '';
+    actions = `<div class="actions three">
+      <button class="btn" onclick="onStart('${a.id}')" ${startDisabled}>▶ Beginn</button>
+      <button class="btn warn" onclick="onBlock('${a.id}')">⏸ Blockieren</button>
+      <button class="btn fertig" onclick="onFertig('${a.id}')">✓ Fertig</button>
+    </div>`;
+  }
+
+  return `<div class="${cls}">
+    <div class="card-head">
+      <span class="card-nr">${esc(a.nr || '?')}</span>
+      ${sBadge}${hpBadge}${terminBadge}
+    </div>
+    <div class="card-kunde">${esc(a.kunde || '')}</div>
+    <div class="card-meta">${stk ? `<span>${stk}</span>` : ''}</div>
+    ${kommission}
+    ${notiz}
+    ${warnRow}
+    ${timerRow}
+    ${actions}
+  </div>`;
+}
+
+function startLiveTicker(auftragId, td) {
+  if (liveTickers[auftragId]) clearInterval(liveTickers[auftragId]);
+  liveTickers[auftragId] = setInterval(() => {
+    const el = document.getElementById('timer-' + auftragId);
+    if (!el) { clearInterval(liveTickers[auftragId]); return; }
+    el.textContent = IMS.formatElapsed(IMS.calcTotalMs(td));
+  }, 1000);
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+async function onStart(id) {
+  try {
+    setSync('loading', 'Starte…');
+    await IMS.store.timerStart(id, AP);
+    setSync('ok', 'Gestartet ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) {
+    toast('Fehler beim Starten', true);
+    setSync('err', 'Fehler');
+  }
+}
+
+async function onStop(id) {
+  try {
+    setSync('loading', 'Stoppe…');
+    await IMS.store.timerStop(id, AP);
+    setSync('ok', 'Gestoppt ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) {
+    toast('Fehler beim Stoppen', true);
+    setSync('err', 'Fehler');
+  }
+}
+
+async function onFertig(id) {
+  if (!confirm('Station "' + STATION_NAMEN[AP] + '" als fertig markieren?')) return;
+  try {
+    setSync('loading', 'Speichere…');
+    await IMS.store.markStationFertig(id, AP);
+    setSync('ok', 'Fertig ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) {
+    toast('Fehler', true);
+    setSync('err', 'Fehler');
+  }
+}
+
+function onBlock(id) {
+  const a = IMS.store.getAuftrag(id);
+  if (!a) return;
+  const current = (a.blockierungen && a.blockierungen[AP]) || null;
+
+  const bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  const optionen = IMS.BLOCKIERUNG_GRUENDE.map(g =>
+    `<button class="opt" data-grund="${esc(g)}">${esc(g)}</button>`
+  ).join('');
+  const aufheben = current ? `<button class="opt" style="color:#22c28a" data-grund="__clear">✓ Blockierung aufheben</button>` : '';
+
+  bd.innerHTML = `<div class="modal">
+    <h3>Blockierung ${current ? 'ändern' : 'setzen'}</h3>
+    ${optionen}
+    ${aufheben}
+    <button class="cancel">Abbrechen</button>
+  </div>`;
+  document.body.appendChild(bd);
+
+  bd.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.opt');
+    if (!btn) {
+      if (e.target === bd || e.target.classList.contains('cancel')) bd.remove();
+      return;
+    }
+    const grund = btn.dataset.grund === '__clear' ? null : btn.dataset.grund;
+    bd.remove();
+    try {
+      setSync('loading', 'Speichere…');
+      await IMS.store.setBlockierung(id, AP, grund);
+      setSync('ok', 'Gespeichert ✓');
+      render();
+      setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+    } catch (err) {
+      toast('Fehler', true);
+      setSync('err', 'Fehler');
+    }
+  });
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function toast(msg, isErr) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── GO ──────────────────────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
