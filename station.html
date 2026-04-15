@@ -6,17 +6,18 @@
 <title>IMS Station</title>
 <style>
   :root {
-    --bg:       #0b0f14;
-    --surface:  #111821;
-    --surface2: #1a2230;
-    --border:   #27324a;
-    --text:     #e7eef7;
-    --text2:    #9aa7b8;
-    --text3:    #6b7a90;
-    --accent:   #22c28a;
-    --warn:     #e8a53b;
-    --danger:   #e74c5e;
-    --blue:     #3da5ff;
+    /* Light Mode ist permanenter Default (Feedback 2026-04-15: "den dunklen Modus verwendet niemand") */
+    --bg:       #f5f7fa;
+    --surface:  #ffffff;
+    --surface2: #eef1f6;
+    --border:   #d5dbe5;
+    --text:     #1a1d27;
+    --text2:    #4b5563;
+    --text3:    #8892a6;
+    --accent:   #00a87a;
+    --warn:     #d98200;
+    --danger:   #d63040;
+    --blue:     #0066cc;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; min-height: 100vh; }
@@ -38,7 +39,7 @@
   }
   #login button {
     padding: 14px; font-size: 16px; border-radius: 8px; border: 0;
-    background: var(--accent); color: #062013; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: #ffffff; font-weight: 600; cursor: pointer;
   }
   #login .err { color: var(--danger); font-size: 13px; min-height: 16px; }
 
@@ -48,7 +49,7 @@
     background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
   }
   header .station {
-    background: var(--accent); color: #062013; font-weight: 700; font-size: 18px;
+    background: var(--accent); color: #ffffff; font-weight: 700; font-size: 18px;
     padding: 8px 16px; border-radius: 8px; letter-spacing: 0.02em;
   }
   header .title { font-size: 14px; color: var(--text2); }
@@ -69,23 +70,23 @@
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
     padding: 16px; display: grid; gap: 10px;
   }
-  .card.blocked { border-color: var(--warn); background: #1a1510; }
-  .card.running { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34,194,138,0.15); }
-  .card.overdue { border-color: var(--danger); }
+  .card.blocked { border-color: var(--warn); background: #fff4e0; }
+  .card.running { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,168,122,0.18); background: #f0fbf6; }
+  .card.overdue { border-color: var(--danger); background: #fff0f2; }
 
   .card-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .card-nr { font-size: 22px; font-weight: 700; letter-spacing: 0.01em; }
   .card-kunde { font-size: 16px; color: var(--text); font-weight: 500; }
   .card-stk { font-size: 14px; color: var(--text2); font-variant-numeric: tabular-nums; }
   .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.03em; }
-  .badge.s0 { background: #334257; color: #cfd8e6; }
-  .badge.s1 { background: #264d40; color: #a7ead0; }
-  .badge.s2 { background: #3d4a26; color: #d4ea9a; }
-  .badge.s3 { background: #4d2f26; color: #ffc9b5; }
+  .badge.s0 { background: #ece4ff; color: #5a3fa8; }
+  .badge.s1 { background: #e0ecff; color: #0a4fa0; }
+  .badge.s2 { background: #d9f4e6; color: #006b4a; }
+  .badge.s3 { background: #ffe5d0; color: #a04a00; }
   .badge.termin { background: var(--surface2); color: var(--text2); }
-  .badge.termin.warn   { background: #3a2d14; color: #ffd999; }
-  .badge.termin.today  { background: #2d3a14; color: #c8e499; }
-  .badge.termin.over   { background: #4a1c26; color: #ffc0c8; }
+  .badge.termin.warn   { background: #fff1d0; color: #8a5a00; }
+  .badge.termin.today  { background: #e3f5c8; color: #3f6800; }
+  .badge.termin.over   { background: #ffd9df; color: #8a1a28; }
   .badge.highprio { background: var(--danger); color: #fff; }
 
   .card-meta { display: flex; flex-wrap: wrap; gap: 14px; color: var(--text2); font-size: 13px; }
@@ -96,22 +97,22 @@
   .timer-val { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 600; }
   .timer-val.running { color: var(--accent); }
 
-  .vorgaenger-warn { color: var(--warn); font-size: 13px; padding: 8px 10px; background: #2a1f10; border-left: 3px solid var(--warn); border-radius: 4px; }
-  .blocked-warn { color: var(--warn); font-size: 13px; font-weight: 600; padding: 8px 10px; background: #2a1f10; border-left: 3px solid var(--warn); border-radius: 4px; }
+  .vorgaenger-warn { color: #8a5a00; font-size: 13px; padding: 8px 10px; background: #fff4e0; border-left: 3px solid var(--warn); border-radius: 4px; }
+  .blocked-warn { color: #8a5a00; font-size: 13px; font-weight: 600; padding: 8px 10px; background: #fff4e0; border-left: 3px solid var(--warn); border-radius: 4px; }
 
   .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .actions.three { grid-template-columns: 1fr 1fr 1fr; }
   .btn {
     padding: 16px 14px; font-size: 16px; font-weight: 600; border-radius: 10px; border: 0; cursor: pointer;
-    color: #062013; background: var(--accent); transition: transform 0.06s ease, opacity 0.2s ease;
+    color: #ffffff; background: var(--accent); transition: transform 0.06s ease, opacity 0.2s ease;
     min-height: 56px;
   }
   .btn:active { transform: scale(0.98); }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn.stop   { background: var(--danger); color: #fff; }
-  .btn.ghost  { background: transparent; color: var(--text); border: 1px solid var(--border); }
-  .btn.warn   { background: var(--warn); color: #1a1208; }
-  .btn.fertig { background: var(--blue); color: #01152a; }
+  .btn.ghost  { background: #ffffff; color: var(--text); border: 1px solid var(--border); }
+  .btn.warn   { background: var(--warn); color: #ffffff; }
+  .btn.fertig { background: var(--blue); color: #ffffff; }
 
   /* ─── MODAL ───────────────────────────────────────────────────────────── */
   .modal-backdrop {
@@ -125,14 +126,14 @@
   }
   .modal h3 { margin: 0; font-size: 18px; }
   .modal .opt { padding: 14px; background: var(--surface2); border-radius: 8px; cursor: pointer; text-align: left; border: 0; color: var(--text); font-size: 15px; }
-  .modal .opt:hover { background: #212b3c; }
+  .modal .opt:hover { background: #dfe5ee; }
   .modal .cancel { background: transparent; border: 1px solid var(--border); color: var(--text2); padding: 10px; border-radius: 8px; cursor: pointer; }
 
   /* ─── TOAST ───────────────────────────────────────────────────────────── */
   .toast {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     background: var(--surface); border: 1px solid var(--accent); padding: 12px 20px;
-    border-radius: 10px; font-size: 14px; z-index: 60; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border-radius: 10px; font-size: 14px; z-index: 60; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
     animation: slideUp 0.25s ease;
   }
   .toast.err { border-color: var(--danger); }
@@ -474,7 +475,7 @@ function onBlock(id) {
   const optionen = IMS.BLOCKIERUNG_GRUENDE.map(g =>
     `<button class="opt" data-grund="${esc(g)}">${esc(g)}</button>`
   ).join('');
-  const aufheben = current ? `<button class="opt" style="color:#22c28a" data-grund="__clear">✓ Blockierung aufheben</button>` : '';
+  const aufheben = current ? `<button class="opt" style="color:#00a87a" data-grund="__clear">✓ Blockierung aufheben</button>` : '';
 
   bd.innerHTML = `<div class="modal">
     <h3>Blockierung ${current ? 'ändern' : 'setzen'}</h3>
