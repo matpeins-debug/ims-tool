@@ -1074,6 +1074,31 @@ async function saveHalleVersand(id) {
   if(a){ a.versandart=sel.value; await saveToStorage(); renderHalle(); }
 }
 
+// Nächster Werktag (Mo–Fr): Fr → Mo, Sa → Mo, So → Mo, sonst +1 Tag.
+function nextWorkingDay(fromDateStr) {
+  const d = fromDateStr ? new Date(fromDateStr) : new Date();
+  do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6);
+  return toDateStr(d);
+}
+
+// Versand-Auftrag auf nächsten Werktag verschieben + HighPrio setzen.
+// Rückmeldung MA 2026-04-15: Aufträge die nicht geliefert werden konnten
+// müssen weiter geschoben werden können; am nächsten Tag hohe Priorität.
+async function versandWeiterschieben(id) {
+  const a = auftraege.find(x => x.id === id);
+  if(!a) return;
+  const neu = nextWorkingDay(a.datum || toDateStr(new Date()));
+  const wt  = getWochentag(neu);
+  const dat = formatDatum(neu);
+  if(!confirm(`Auftrag ${a.nr} (${a.kunde}) auf ${wt}, ${dat} verschieben?\n\nWird automatisch als 🔥 HighPrio markiert.`)) return;
+  a.datum = neu;
+  a.highPrio = true;
+  await saveToStorage();
+  renderHalle();
+  renderWoche();
+  renderAuftraege();
+}
+
 // ─── ARBEITSPLATZ ANSICHT ─────────────────────────────────────────────────
 const AP_DISPLAY = {'Zusammenbau':'Schäumen'};
 function apDisplay(ap){return AP_DISPLAY[ap]||ap;}
@@ -1116,20 +1141,33 @@ function renderAP(ap) {
     return;
   }
 
-  // Gruppierung offene nach Datum
+  // Gruppierung: laufender Timer ganz oben als eigener "Aktiv"-Block, dann nach Datum
   const nachDatum = {};
   offen.forEach(a => {
-    if(!nachDatum[a.datum]) nachDatum[a.datum] = [];
-    nachDatum[a.datum].push(a);
+    const td = a.timers && a.timers[`${a.id}_${apKey}`];
+    const isRunningNow = td && td.start && !td.end;
+    const key = isRunningNow ? '__aktiv' : a.datum;
+    if(!nachDatum[key]) nachDatum[key] = [];
+    nachDatum[key].push(a);
   });
 
   list.innerHTML='';
-  Object.keys(nachDatum).sort().forEach(datum => {
-    const isHeute = datum === toDateStr(new Date());
-    // Datums-Header
+  const gruppenKeys = Object.keys(nachDatum).sort((x,y) => {
+    if(x === '__aktiv') return -1;
+    if(y === '__aktiv') return 1;
+    return x.localeCompare(y);
+  });
+  gruppenKeys.forEach(datum => {
+    const isAktiv = datum === '__aktiv';
+    const isHeute = !isAktiv && datum === toDateStr(new Date());
+    // Datums-Header (bzw. "Läuft gerade"-Header)
     const header = document.createElement('div');
-    header.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;color:var(--text);padding:16px 0 10px;border-bottom:2px solid var(--border);margin-bottom:12px;';
-    header.textContent = `${getWochentag(datum)}, ${formatDatum(datum)}${isHeute?' – HEUTE':''}`;
+    header.style.cssText = isAktiv
+      ? 'font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:700;color:var(--accent);padding:16px 0 10px;border-bottom:2px solid var(--accent);margin-bottom:12px;'
+      : 'font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;color:var(--text);padding:16px 0 10px;border-bottom:2px solid var(--border);margin-bottom:12px;';
+    header.textContent = isAktiv
+      ? `▶ Läuft gerade (${nachDatum[datum].length})`
+      : `${getWochentag(datum)}, ${formatDatum(datum)}${isHeute?' – HEUTE':''}`;
     list.appendChild(header);
 
     // Kacheln-Grid
@@ -1841,15 +1879,27 @@ function renderHalle() {
     return;
   }
   grid.innerHTML='';
-  const versandbereitOffen = offen.filter(a=>isVersandbereit(a));
-  const nochNicht = offen.filter(a=>!isVersandbereit(a));
+  const versandRunningFilter = (a) => {
+    const t = a.timers && a.timers[`${a.id}_Versand`];
+    return t && t.start && !t.end;
+  };
+  const runningOffen = offen.filter(versandRunningFilter);
+  const runningIds = new Set(runningOffen.map(a=>a.id));
+  const versandbereitOffen = offen.filter(a=>!runningIds.has(a.id) && isVersandbereit(a));
+  const nochNicht = offen.filter(a=>!runningIds.has(a.id) && !isVersandbereit(a));
+  if(runningOffen.length > 0) {
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);padding:4px 0 2px;border-bottom:2px solid var(--accent);margin-bottom:4px';
+    hdr.textContent = `▶ Läuft gerade (${runningOffen.length})`;
+    grid.appendChild(hdr);
+  }
   if(versandbereitOffen.length > 0) {
     const hdr = document.createElement('div');
     hdr.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);padding:4px 0 2px;border-bottom:2px solid var(--accent);margin-bottom:4px';
     hdr.textContent = `✓ Versandbereit (${versandbereitOffen.length})`;
     grid.appendChild(hdr);
   }
-  [...versandbereitOffen,...nochNicht,...fertigH].forEach(a=>{
+  [...runningOffen,...versandbereitOffen,...nochNicht,...fertigH].forEach(a=>{
     const vIcon=VERSAND_ICONS[a.versandart]||'';
     const vClass=VERSAND_CLASS[a.versandart]||'';
     const versandKey = `${a.id}_Versand`;
@@ -1885,6 +1935,11 @@ function renderHalle() {
           </div>
         </div>
       </div>
+      ${!a.fertig ? `
+      <!-- WEITERSCHIEBEN auf nächsten Werktag -->
+      <div style="margin-bottom:10px">
+        <button class="btn-edit" style="width:100%;justify-content:center;padding:10px;font-size:13px;border:1px solid var(--border);background:var(--surface2)" onclick="versandWeiterschieben('${a.id}')">→ Morgen (🔥 HighPrio)</button>
+      </div>` : ''}
       ${a.fertig
         ?`<div style="margin-bottom:8px">
             <div class="hallen-fertig-info">✓ Versandbereit</div>
