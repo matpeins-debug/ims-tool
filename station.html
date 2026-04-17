@@ -284,13 +284,16 @@
     padding:18px 16px;text-align:center;color:var(--text3);font-size:14px;font-style:italic;
     background:var(--surface);border:1px dashed var(--border);border-radius:10px;
   }
-  /* Spalten: Prio · Zeit · Nr · Kunde · Kommission · Stk · IST · Rueckgaengig */
+  /* Spalten: Prio · Zeit · Nr · Kunde · Kommission · Stk · IST · Rueckgaengig
+     Alle Spalten fix ODER fr-mit-min — letzte Spalte FEST, sonst driften
+     Header und Zeilen auseinander (Header hat leer, Zeilen haben Button). */
   .done-row,
   .done-header-row{
     display:grid;
-    grid-template-columns:44px 66px 90px minmax(0,1fr) minmax(0,1.3fr) 74px 74px auto;
+    grid-template-columns:44px 74px 96px minmax(0,1fr) minmax(0,1.3fr) 74px 74px 124px;
     gap:14px;align-items:center;
   }
+  .done-row .btn-undo{width:100%;justify-content:center}
   .done-header-row{
     padding:10px 16px;background:#f0f3f8;border-bottom:1px solid var(--border);
     font-size:11px;font-weight:700;color:var(--text3);
