@@ -612,7 +612,10 @@ function renderCard(a, isHero, avgMs) {
 
   // Timer-Box
   const timerVal = IMS.formatElapsed(IMS.calcTotalMs(td));
-  const avgTxt = avgMs ? `<span class="timer-ref">∅ Station: <b>${IMS.formatMs(avgMs)}</b></span>` : '';
+  // ∅-Zeit-Anzeige vorerst deaktiviert — muss erst auf Validitaet geprueft werden
+  // (siehe avgMsForAP: kein Stueckzahl-Bezug, kein Auftragstyp-Filter).
+  // Wird reaktiviert mit Positions-Integration / Plan-Zeiten aus ERP.
+  const avgTxt = '';
   const timerBtn = running
     ? `<button class="btn-timer pause" onclick="onStop('${a.id}')">⏸ Pause</button>`
     : `<button class="btn-timer start" onclick="onStart('${a.id}')" ${blocked || !vorgaenger ? 'disabled' : ''}>▶ Start</button>`;
@@ -626,19 +629,8 @@ function renderCard(a, isHero, avgMs) {
     ${timerBtn}
   </div>`;
 
-  // Progress (nur wenn running + avg verfügbar)
-  let progress = '';
-  if (isHero && running && avgMs) {
-    const ist = IMS.calcTotalMs(td);
-    const pct = Math.min(Math.round(ist / avgMs * 100), 150);
-    const cls2 = pct > 100 ? 'over' : pct > 80 ? 'warn' : '';
-    const rest = Math.max(avgMs - ist, 0);
-    const restLabel = rest > 0 ? `noch ca. <b>${IMS.formatMs(rest)}</b>` : `<b>${IMS.formatMs(ist - avgMs)} über ∅</b>`;
-    progress = `<div class="progress">
-      <div class="progress-bar"><div class="progress-fill ${cls2}" style="width:${Math.min(pct,100)}%"></div></div>
-      <div class="progress-info"><span>${restLabel}</span><span><b>${IMS.formatMs(ist)}</b> / ∅ ${IMS.formatMs(avgMs)}</span></div>
-    </div>`;
-  }
+  // Progress-Bar vorerst deaktiviert (benoetigt validen Plan-/Schnitt-Wert)
+  const progress = '';
 
   // Warnings
   let warnRow = '';
