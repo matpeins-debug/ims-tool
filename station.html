@@ -69,12 +69,26 @@
   .section-active .section-head::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.55;transform:scale(0.85)}}
 
-  .queue-wrap{display:flex;flex-direction:column;gap:12px}
+  .queue-wrap{display:flex;flex-direction:column;gap:8px}
   .queue-head{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);padding:12px 2px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
   .queue-head .next{color:var(--text2);text-transform:none;letter-spacing:0;font-weight:500;font-size:13px}
   .queue-head .next b{color:var(--text);font-weight:700}
 
-  /* Queue: Multi-Column-Flow (statt Grid — keine Row-Lücken) */
+  /* Datum-Gruppen: jeder Liefertag bekommt einen eigenen Block mit Header */
+  .date-group{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .date-group-head{
+    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+    padding:10px 14px;border-radius:10px;background:var(--surface2);
+    border-left:4px solid var(--text3);
+  }
+  .date-group-head.today{background:#e3f5c8;border-left-color:var(--accent)}
+  .date-group-head.warn{background:#fff1d0;border-left-color:var(--warn)}
+  .date-group-head.over{background:#ffd9df;border-left-color:var(--danger)}
+  .date-group-datum{font-size:17px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+  .date-group-rel{font-size:13px;font-weight:600;color:var(--text2)}
+  .date-group-count{font-size:12px;font-weight:600;color:var(--text3);margin-left:auto}
+
+  /* Queue: Multi-Column-Flow (pro Datum-Gruppe) */
   .section-queue{column-count:1;column-gap:14px}
   @media (min-width:720px){.section-queue{column-count:2}}
   @media (min-width:1100px){.section-queue{column-count:3}}
@@ -437,20 +451,57 @@ function auftraegeFuerStation() {
 }
 
 function sortFn(a, b) {
-  // 1) laufender Timer zuerst
+  // 1) laufender Timer zuerst (wird später in Hero-Sektion gezeigt)
   const aL = IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]);
   const bL = IMS.istTimerAktiv(b.timers && b.timers[IMS.timerKey(b.id, AP)]);
   if (aL !== bL) return aL ? -1 : 1;
-  // 2) HighPrio
-  if (!!a.highPrio !== !!b.highPrio) return a.highPrio ? -1 : 1;
-  // 3) Termin
+  // 2) PRIMAER: Lieferdatum (so sortiert IMS intern alles)
   const aT = a.datum || '9999-12-31';
   const bT = b.datum || '9999-12-31';
   if (aT !== bT) return aT < bT ? -1 : 1;
-  // 4) Prio-Feld
+  // 3) HighPrio innerhalb des Liefertags
+  if (!!a.highPrio !== !!b.highPrio) return a.highPrio ? -1 : 1;
+  // 4) Tagesoptimierung (a.prio = Position innerhalb des Liefertags)
   if ((a.prio || 999) !== (b.prio || 999)) return (a.prio || 999) - (b.prio || 999);
-  // 5) Auftragsnummer
+  // 5) Auftragsnummer als letzter Tiebreaker
   return (a.nr || '').localeCompare(b.nr || '');
+}
+
+// Queue-Gruppierung nach Lieferdatum
+function groupByDatum(list) {
+  const groups = new Map();
+  list.forEach(a => {
+    const key = a.datum || '__nodate__';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(a);
+  });
+  // Bereits durch sortFn in richtiger Reihenfolge → iteration preserves insertion
+  return [...groups.entries()];
+}
+
+// Langes Datum: "Donnerstag, 17.04.2026"
+const _WT_LANG = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+function formatDatumLang(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return `${_WT_LANG[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+}
+
+// Relativer Tageshinweis als Text
+function relDayText(tage) {
+  if (tage === null) return '';
+  if (tage < 0)  return `${Math.abs(tage)} ${Math.abs(tage)===1?'Tag':'Tage'} über`;
+  if (tage === 0) return 'heute';
+  if (tage === 1) return 'morgen';
+  return `in ${tage} Tagen`;
+}
+function dateGroupClass(tage) {
+  if (tage === null) return '';
+  if (tage < 0)   return 'over';
+  if (tage === 0) return 'today';
+  if (tage <= 3)  return 'warn';
+  return '';
 }
 
 // ∅-Zeit der letzten 10 abgeschlossenen Aufträge für diese Station
@@ -495,11 +546,28 @@ function render() {
   if (queue.length) {
     const next = queue[0];
     const nextHtml = next
-      ? `<span class="next">Als Nächstes: <b>${fmtPrio(next)} · ${fmtNr(next)}</b> ${esc(next.kunde || '')}</span>`
+      ? `<span class="next">Als Nächstes: <b>${esc(fmtPrio(next))} · ${esc(fmtNrWithSpace(next))}</b> ${esc(next.kunde || '')}</span>`
       : '';
+    // Queue nach Lieferdatum gruppieren
+    const groups = groupByDatum(queue);
+    const groupsHtml = groups.map(([datum, cards]) => {
+      const tage = (datum === '__nodate__') ? null : IMS.tageBis(datum);
+      const datumLabel = (datum === '__nodate__') ? 'Ohne Liefertermin' : formatDatumLang(datum);
+      const relLabel = relDayText(tage);
+      const cls = dateGroupClass(tage);
+      const countTxt = cards.length + ' ' + (cards.length === 1 ? 'Auftrag' : 'Aufträge');
+      return `<div class="date-group">
+        <div class="date-group-head ${cls}">
+          <span class="date-group-datum">${esc(datumLabel)}</span>
+          ${relLabel ? `<span class="date-group-rel">· ${esc(relLabel)}</span>` : ''}
+          <span class="date-group-count">${esc(countTxt)}</span>
+        </div>
+        <section class="section-queue">${cards.map(a => renderCard(a, false, avgMs)).join('')}</section>
+      </div>`;
+    }).join('');
     html += `<div class="queue-wrap">
       <div class="queue-head"><span>Warteschlange (${queue.length})</span>${nextHtml}</div>
-      <section class="section-queue">${queue.map(a => renderCard(a, false, avgMs)).join('')}</section>
+      ${groupsHtml}
     </div>`;
   }
 
@@ -535,7 +603,8 @@ function renderCard(a, isHero, avgMs) {
   const sklasse = String(a.sklasse || '').toLowerCase().replace(/\s/g, '');
   const sBadge = a.sklasse ? `<span class="badge ${sklasse}">${esc(a.sklasse)}</span>` : '';
   const hpBadge = a.highPrio ? '<span class="badge highprio">High Prio</span>' : '';
-  const terminBadge = renderTerminBadge(a, tage);
+  // Termin-Chip nur im Hero (Queue hat Gruppen-Header mit Datum)
+  const terminBadge = isHero ? renderTerminBadge(a, tage) : '';
 
   const stk = a.stk ? `<div class="card-stk">${esc(a.stk)} <span class="unit">Stk</span></div>` : '';
   const kommission = a.kommission ? `<div class="card-komm">Kommission: ${esc(a.kommission)}</div>` : '';
@@ -543,7 +612,7 @@ function renderCard(a, isHero, avgMs) {
 
   // Timer-Box
   const timerVal = IMS.formatElapsed(IMS.calcTotalMs(td));
-  const avgTxt = avgMs ? `<span class="timer-ref">∅ bisher <b>${IMS.formatMs(avgMs)}</b></span>` : '';
+  const avgTxt = avgMs ? `<span class="timer-ref">∅ Station: <b>${IMS.formatMs(avgMs)}</b></span>` : '';
   const timerBtn = running
     ? `<button class="btn-timer pause" onclick="onStop('${a.id}')">⏸ Pause</button>`
     : `<button class="btn-timer start" onclick="onStart('${a.id}')" ${blocked || !vorgaenger ? 'disabled' : ''}>▶ Start</button>`;
@@ -648,13 +717,15 @@ function renderNr(a) {
 function renderTerminBadge(a, tage) {
   if (!a.datum) return '';
   let cls = 'termin';
-  let label;
-  if (tage === null)      label = IMS.formatDatum(a.datum);
-  else if (tage < 0)      { cls += ' over';  label = `${Math.abs(tage)} ${Math.abs(tage)===1?'Tag':'Tage'} über`; }
-  else if (tage === 0)    { cls += ' today'; label = 'heute'; }
-  else if (tage === 1)    { cls += ' warn';  label = 'morgen'; }
-  else if (tage <= 3)     { cls += ' warn';  label = `in ${tage} Tagen`; }
-  else                    { label = `in ${tage} Tagen`; }
+  if (tage !== null) {
+    if (tage < 0)       cls += ' over';
+    else if (tage === 0) cls += ' today';
+    else if (tage <= 3)  cls += ' warn';
+  }
+  // Hero: volles Datum + Relativ ("Fr, 22.04. · in 5 Tagen")
+  const datumKurz = IMS.formatDatum(a.datum);
+  const rel = relDayText(tage);
+  const label = rel ? `${datumKurz} · ${rel}` : datumKurz;
   return `<span class="badge ${cls}">${esc(label)}</span>`;
 }
 
@@ -665,6 +736,12 @@ function fmtPrioNum(a) {
 }
 function fmtPrio(a) { return fmtPrioNum(a); }
 function fmtNr(a) { return String(a.nr || '?'); }
+// "2023680" → "2023 680" (mit Leerzeichen wenn Jahr-Präfix erkennbar)
+function fmtNrWithSpace(a) {
+  const nr = String(a.nr || '?');
+  const m = nr.match(/^(\d{4})[\s\u2009\u202F]*(.+)$/);
+  return m ? `${m[1]} ${m[2]}` : nr;
+}
 
 function renderBlockActive(a) {
   const current = a.blockierungen[AP];
