@@ -13,8 +13,10 @@
     --bg:#f5f7fa; --surface:#ffffff; --surface2:#eef1f6; --border:#d5dbe5;
     --text:#1a1d27; --text2:#4b5563; --text3:#8892a6;
     --accent:#00a87a; --warn:#d98200; --danger:#d63040; --blue:#0066cc;
+    --purple:#7c3aed; --purple-dark:#5b21b6;
+    --teal:#0e7490; --teal-dark:#164e63;
     --komm:#0d8a5e;
-    --high-bg:#fff0f2; --high-border:#d63040;
+    --high-bg:#f3eefc; --high-border:#7c3aed;
     --block-bg:#fff4e0; --block-border:#d98200;
     --run-bg:#f0fbf6; --run-border:#00a87a;
     --soon-stripe:#d98200;
@@ -99,7 +101,7 @@
   .section-active .card{display:grid;gap:10px}
   .section-queue .card > *{margin:0 0 10px 0}
   .section-queue .card > *:last-child{margin-bottom:0}
-  .card.prio-high{background:var(--high-bg);border-color:var(--high-border);border-left:4px solid var(--danger)}
+  .card.prio-high{background:var(--high-bg);border-color:var(--high-border);border-left:4px solid var(--purple)}
   .card.prio-soon{border-left:4px solid var(--soon-stripe)}
   .card.blocked{background:var(--block-bg);border-color:var(--block-border);border-left:4px solid var(--warn)}
   .card.running{background:var(--run-bg);border-color:var(--run-border);border-left:6px solid var(--accent);box-shadow:0 4px 20px rgba(0,168,122,0.18)}
@@ -118,7 +120,7 @@
 
   .card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .card-prio{font-size:13px;font-weight:800;color:#fff;background:var(--text2);padding:3px 8px;border-radius:5px;letter-spacing:0.04em;font-variant-numeric:tabular-nums;min-width:30px;text-align:center}
-  .card.prio-high .card-prio{background:var(--danger)}
+  .card.prio-high .card-prio{background:var(--purple)}
   .card.running .card-prio{background:var(--accent)}
   .card-nr-wrap{display:inline-flex;align-items:baseline;gap:0}
   .card-nr-jahr{font-size:20px;font-weight:500;color:var(--text2);font-variant-numeric:tabular-nums}
@@ -135,7 +137,9 @@
   .badge.s1{background:#e0ecff;color:#0a4fa0}
   .badge.s2{background:#d9f4e6;color:#006b4a}
   .badge.s3{background:#ffe5d0;color:#a04a00}
-  .badge.highprio{background:var(--danger);color:#fff}
+  .badge.highprio{background:var(--purple);color:#fff}
+  .badge.effort-l{background:#cffafe;color:var(--teal-dark)}
+  .badge.effort-xl{background:var(--teal-dark);color:#fff}
   .badge.termin{background:var(--surface2);color:var(--text2);text-transform:none;letter-spacing:0;font-weight:600;font-size:12px;padding:3px 9px;font-variant-numeric:tabular-nums}
   .badge.termin.warn{background:#fff1d0;color:#8a5a00}
   .badge.termin.today{background:#e3f5c8;color:#2d5400;font-weight:700}
@@ -146,6 +150,9 @@
   .stk-plan-row{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
   .card-stk{font-size:46px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--text)}
   .card-stk .unit{font-size:18px;font-weight:600;color:var(--text2);margin-left:4px}
+  /* Stk-Aufwand-Kodierung (>=30 = gross, >=75 = mega) */
+  .card-stk.stk-l{color:var(--teal)}
+  .card-stk.stk-xl{color:var(--teal-dark)}
   .card.running.hero .card-stk{font-size:52px}
 
   .card-notiz{padding:10px 12px;background:#fffbe6;border-left:3px solid #ffe066;border-radius:6px;font-size:13px;color:#8a6d00;white-space:pre-wrap;font-weight:500}
@@ -606,7 +613,12 @@ function renderCard(a, isHero, avgMs) {
   // Termin-Chip nur im Hero (Queue hat Gruppen-Header mit Datum)
   const terminBadge = isHero ? renderTerminBadge(a, tage) : '';
 
-  const stk = a.stk ? `<div class="card-stk">${esc(a.stk)} <span class="unit">Stk</span></div>` : '';
+  const sCls = stkClass(a.stk);
+  const stk = a.stk ? `<div class="card-stk ${sCls}">${esc(a.stk)} <span class="unit">Stk</span></div>` : '';
+  // Effort-Badge bei grossen Auftraegen in Chip-Zeile
+  const effortBadge = sCls === 'stk-xl' ? `<span class="badge effort-xl">Grossauftrag</span>`
+                    : sCls === 'stk-l'  ? `<span class="badge effort-l">Umfangreich</span>`
+                    : '';
   const kommission = a.kommission ? `<div class="card-komm">Kommission: ${esc(a.kommission)}</div>` : '';
   const notiz = a.notiz ? `<div class="card-notiz">${esc(a.notiz)}</div>` : '';
 
@@ -666,7 +678,7 @@ function renderCard(a, isHero, avgMs) {
   const headSection = `
     <div class="card-head">${prioPill}${nrHtml}</div>
     ${a.kunde ? `<div class="card-kunde">${esc(a.kunde)}</div>` : ''}
-    <div class="chips">${sBadge}${hpBadge}${terminBadge}</div>
+    <div class="chips">${sBadge}${hpBadge}${effortBadge}${terminBadge}</div>
     ${kommission}
     ${stk}
     ${notiz}
@@ -719,6 +731,14 @@ function renderTerminBadge(a, tage) {
   const rel = relDayText(tage);
   const label = rel ? `${datumKurz} · ${rel}` : datumKurz;
   return `<span class="badge ${cls}">${esc(label)}</span>`;
+}
+
+// Aufwand-Klassifikation nach Stueckzahl
+function stkClass(n) {
+  const v = Number(n) || 0;
+  if (v >= 75) return 'stk-xl';
+  if (v >= 30) return 'stk-l';
+  return '';
 }
 
 function fmtPrioNum(a) {
