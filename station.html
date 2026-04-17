@@ -726,14 +726,14 @@ function renderCard(a, isHero, avgMs) {
     </label>
   </div>` : '';
 
-  // Fertig-Button (groß, dynamische Subline)
+  // Fertig-Button: gross, Subline nur wenn Timer laeuft (dann ist der auto-Stopp
+  // die einzige nicht-offensichtliche Info; 'naechste Station' stimmt ohnehin
+  // nicht immer und ist fuer trainierte MA redundant)
   const fertigDisabled = blocked || (isFotoPflicht);
-  const fertigSub = running
-    ? 'Timer stoppt automatisch · Auftrag → nächste Station'
-    : 'Auftrag → nächste Station';
+  const fertigSubHtml = running ? `<span class="fertig-sub">Timer stoppt automatisch</span>` : '';
   const fertigBtn = `<button class="btn-fertig" id="fertig-${esc(a.id)}" onclick="onFertig('${a.id}')" ${fertigDisabled ? 'disabled' : ''}>
     <span class="fertig-main">FERTIG</span>
-    <span class="fertig-sub">${esc(fertigSub)}</span>
+    ${fertigSubHtml}
   </button>`;
 
   // Content
