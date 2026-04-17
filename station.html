@@ -90,17 +90,16 @@
   .date-group-rel{font-size:13px;font-weight:600;color:var(--text2)}
   .date-group-count{font-size:12px;font-weight:600;color:var(--text3);margin-left:auto}
 
-  /* Queue: Multi-Column-Flow (pro Datum-Gruppe) */
-  .section-queue{column-count:1;column-gap:14px}
-  @media (min-width:720px){.section-queue{column-count:2}}
-  @media (min-width:1100px){.section-queue{column-count:3}}
-  .section-queue > .card{display:inline-block;width:100%;margin-bottom:14px;break-inside:avoid;page-break-inside:avoid;-webkit-column-break-inside:avoid}
+  /* Queue als echtes Grid: Karten in sauberen Reihen, gleich hoch */
+  .section-queue{display:grid;gap:14px;grid-template-columns:1fr;align-items:stretch}
+  @media (min-width:720px){.section-queue{grid-template-columns:repeat(auto-fit,minmax(380px,1fr));grid-auto-rows:1fr}}
+  /* Karte als flex-col, Fertig-Block sitzt am Boden */
+  .section-queue > .card{display:flex;flex-direction:column;gap:10px;height:100%}
+  .section-queue > .card .fertig-divider{margin-top:auto}
 
   /* ── CARD BASIS ──────────────────────────────────────── */
   .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;border-left:4px solid transparent}
   .section-active .card{display:grid;gap:10px}
-  .section-queue .card > *{margin:0 0 10px 0}
-  .section-queue .card > *:last-child{margin-bottom:0}
   .card.prio-high{background:var(--high-bg);border-color:var(--high-border);border-left:4px solid var(--purple)}
   .card.prio-soon{border-left:4px solid var(--soon-stripe)}
   .card.blocked{background:var(--block-bg);border-color:var(--block-border);border-left:4px solid var(--warn)}
