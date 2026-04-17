@@ -311,6 +311,15 @@
       }
       return true;
     },
+
+    // Rueckgaengig-Funktion: Fertig-Meldung zuruecknehmen (Timer bleibt wie er ist)
+    async undoStationFertig(id, apFull) {
+      const a = this.getAuftrag(id);
+      if (!a || !a.stationFertig) return false;
+      delete a.stationFertig[apFull];
+      await this.save();
+      return true;
+    },
   };
 
   // ─── EXPORT ────────────────────────────────────────────────────────────────

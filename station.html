@@ -76,19 +76,21 @@
   .queue-head .next{color:var(--text2);text-transform:none;letter-spacing:0;font-weight:500;font-size:13px}
   .queue-head .next b{color:var(--text);font-weight:700}
 
-  /* Datum-Gruppen: jeder Liefertag bekommt einen eigenen Block mit Header */
-  .date-group{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  /* Datum-Gruppen: jeder Liefertag bekommt einen kraeftigen Block-Header */
+  .date-group{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+  .date-group:first-child{margin-top:8px}
   .date-group-head{
-    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
-    padding:10px 14px;border-radius:10px;background:var(--surface2);
-    border-left:4px solid var(--text3);
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    padding:14px 18px;border-radius:10px;background:#e4e9f1;
+    border-left:6px solid #6b7a94;
   }
-  .date-group-head.today{background:#e3f5c8;border-left-color:var(--accent)}
-  .date-group-head.warn{background:#fff1d0;border-left-color:var(--warn)}
-  .date-group-head.over{background:#ffd9df;border-left-color:var(--danger)}
-  .date-group-datum{font-size:17px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
-  .date-group-rel{font-size:13px;font-weight:600;color:var(--text2)}
-  .date-group-count{font-size:12px;font-weight:600;color:var(--text3);margin-left:auto}
+  .date-group-head.today{background:#d9f4c8;border-left-color:var(--accent)}
+  .date-group-head.warn {background:#ffe9b8;border-left-color:var(--warn)}
+  .date-group-head.soon {background:#dbeafe;border-left-color:#2563eb}
+  .date-group-head.over {background:#ffd0d8;border-left-color:var(--danger)}
+  .date-group-datum{font-size:20px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
+  .date-group-rel{font-size:14px;font-weight:600;color:var(--text2)}
+  .date-group-count{font-size:13px;font-weight:600;color:var(--text2);margin-left:auto}
 
   /* Queue als echtes Grid: Karten in sauberen Reihen, gleich hoch */
   .section-queue{display:grid;gap:14px;grid-template-columns:1fr;align-items:stretch}
@@ -228,6 +230,50 @@
   .positionen-placeholder .icon{font-size:28px;opacity:0.35}
   .positionen-placeholder .head{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.02em}
   .positionen-placeholder .sub{font-size:12px;color:var(--text3);max-width:260px;line-height:1.4}
+
+  /* ── HEUTE ERLEDIGT (Tages-Tabelle) ──────────────────── */
+  .done-wrap{display:flex;flex-direction:column;gap:10px;margin-top:28px}
+  .done-head{
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    padding:14px 18px;border-radius:10px;background:#d9f4c8;border-left:6px solid var(--accent);
+  }
+  .done-head-title{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .done-head-title::before{content:"✓ ";color:var(--accent)}
+  .done-head-count{font-size:14px;font-weight:600;color:var(--text2)}
+  .done-head-total{font-size:13px;font-weight:600;color:var(--text2);margin-left:auto}
+  .done-head-total b{color:var(--text);font-variant-numeric:tabular-nums}
+  .done-table{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden}
+  .done-row{
+    display:grid;grid-template-columns:auto auto 1fr auto auto auto;gap:14px;align-items:center;
+    padding:12px 16px;border-bottom:1px solid var(--border);opacity:0.92;
+  }
+  .done-row:last-child{border-bottom:0}
+  .done-row:hover{background:#fafbfd;opacity:1}
+  .done-row .time{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:13px;color:var(--text2);font-weight:600}
+  .done-row .time::before{content:"✓ ";color:var(--accent);font-weight:700}
+  .done-row .prio{font-size:12px;font-weight:800;color:#fff;background:var(--text2);padding:2px 7px;border-radius:4px;font-variant-numeric:tabular-nums;letter-spacing:0.04em}
+  .done-row .prio.high{background:var(--purple)}
+  .done-row .nr-kunde{display:flex;align-items:baseline;gap:10px;min-width:0;overflow:hidden}
+  .done-row .nr{font-size:15px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .done-row .kunde{font-size:14px;color:var(--text2);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .done-row .stk{font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .done-row .ist{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .done-row .ist-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:-1px}
+  .btn-undo{
+    background:transparent;border:1px solid var(--border);color:var(--text2);
+    padding:7px 12px;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:4px;min-height:34px;
+  }
+  .btn-undo:hover,.btn-undo:active{background:var(--surface2);border-color:var(--text2);color:var(--text)}
+  @media (max-width:720px){
+    .done-row{grid-template-columns:auto 1fr auto;row-gap:4px;padding:10px 12px}
+    .done-row .prio{grid-row:1;grid-column:1}
+    .done-row .time{grid-row:1;grid-column:2;justify-self:start}
+    .done-row .btn-undo{grid-row:1;grid-column:3}
+    .done-row .nr-kunde{grid-row:2;grid-column:1 / 3}
+    .done-row .stk{grid-row:2;grid-column:3;justify-self:end}
+    .done-row .ist{grid-row:3;grid-column:1 / 4}
+  }
 
   /* ── CUSTOM CONFIRM MODAL ─────────────────────────────── */
   .modal-backdrop{position:fixed;inset:0;background:rgba(10,15,25,0.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.15s ease}
@@ -456,6 +502,16 @@ function auftraegeFuerStation() {
   return IMS.store.auftraege.filter(a => !a.fertig).filter(a => IMS.isAPOffen(a, AP)).sort(sortFn);
 }
 
+// Heute (seit 00:00) an dieser Station fertig gemeldet — fuer Tages-Tabelle
+function auftraegeHeuteFertig() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const startIso = startOfDay.toISOString();
+  return IMS.store.auftraege
+    .filter(a => a.stationFertig && a.stationFertig[AP] && a.stationFertig[AP] >= startIso)
+    .sort((a, b) => (a.stationFertig[AP] > b.stationFertig[AP] ? -1 : 1)); // neueste zuerst
+}
+
 function sortFn(a, b) {
   // 1) laufender Timer zuerst (wird später in Hero-Sektion gezeigt)
   const aL = IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]);
@@ -507,6 +563,7 @@ function dateGroupClass(tage) {
   if (tage < 0)   return 'over';
   if (tage === 0) return 'today';
   if (tage <= 3)  return 'warn';
+  if (tage <= 7)  return 'soon';
   return '';
 }
 
@@ -530,9 +587,10 @@ function render() {
   liveTickers = {};
 
   const list = auftraegeFuerStation();
+  const doneToday = auftraegeHeuteFertig();
   const main = document.getElementById('main');
 
-  if (!list.length) {
+  if (!list.length && !doneToday.length) {
     main.className = 'empty';
     main.innerHTML = '<div>✓ Keine offenen Aufträge für ' + esc(STATION_NAMEN[AP]) + '</div>';
     return;
@@ -575,6 +633,11 @@ function render() {
       <div class="queue-head"><span>Warteschlange (${queue.length})</span>${nextHtml}</div>
       ${groupsHtml}
     </div>`;
+  }
+
+  // Tages-Tabelle: Heute erledigt
+  if (doneToday.length) {
+    html += renderDoneToday(doneToday);
   }
 
   main.innerHTML = html;
@@ -768,6 +831,56 @@ function renderBlockActive(a) {
   </div>`;
 }
 
+// ─── TAGES-TABELLE: Heute erledigt ───────────────────────────────────────────
+function renderDoneToday(list) {
+  // Summe der IST-Zeiten heute
+  let totalMs = 0;
+  list.forEach(a => {
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    if (td && td.totalMs) totalMs += td.totalMs;
+  });
+  const totalLbl = totalMs > 0 ? IMS.formatMs(totalMs) : '—';
+
+  const rows = list.map(a => {
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    const istLbl = td && td.totalMs ? IMS.formatMs(td.totalMs) : '—';
+    const zeit = formatUhrzeit(a.stationFertig[AP]);
+    const prioCls = a.highPrio ? 'prio high' : 'prio';
+    const nrFmt = fmtNrWithSpace(a);
+    const stk = a.stk ? `${esc(a.stk)} Stk` : '';
+    return `<div class="done-row">
+      <span class="${prioCls}">${esc(fmtPrioNum(a))}</span>
+      <span class="time">${esc(zeit)}</span>
+      <span class="nr-kunde">
+        <span class="nr">${esc(nrFmt)}</span>
+        <span class="kunde">${esc(a.kunde || '')}</span>
+      </span>
+      <span class="stk">${esc(stk)}</span>
+      <span class="ist" title="Ist-Zeit">
+        <span class="ist-lbl">Ist</span>${esc(istLbl)}
+      </span>
+      <button class="btn-undo" onclick="onUndoFertig('${esc(a.id)}')">↶ Rückgängig</button>
+    </div>`;
+  }).join('');
+
+  const countLbl = list.length + ' ' + (list.length === 1 ? 'Auftrag' : 'Aufträge');
+  return `<div class="done-wrap">
+    <div class="done-head">
+      <span class="done-head-title">Heute erledigt</span>
+      <span class="done-head-count">${esc(countLbl)}</span>
+      <span class="done-head-total">Gesamt-Zeit: <b>${esc(totalLbl)}</b></span>
+    </div>
+    <div class="done-table">${rows}</div>
+  </div>`;
+}
+
+function formatUhrzeit(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
 function startLiveTicker(auftragId, td) {
   if (liveTickers[auftragId]) clearInterval(liveTickers[auftragId]);
   liveTickers[auftragId] = setInterval(() => {
@@ -820,6 +933,30 @@ function onFertig(id) {
         setSync('loading', 'Speichere…');
         await IMS.store.markStationFertig(id, AP);
         setSync('ok', 'Fertig ✓');
+        render();
+        setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+      } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+    },
+  });
+}
+
+// Rueckgaengig: Fertig-Meldung zuruecknehmen, Auftrag kommt zurueck in Queue
+function onUndoFertig(id) {
+  const a = IMS.store.getAuftrag(id);
+  if (!a) return;
+  showConfirmModal({
+    title: 'Fertig-Meldung zurücknehmen?',
+    auftrag: `<span class="nr">${esc(fmtNrWithSpace(a))}</span> · ${esc(a.kunde || '')}`,
+    consequences: [
+      `Der Auftrag erscheint wieder in der Warteschlange von <b>${esc(STATION_NAMEN[AP])}</b>`,
+      `Der Timer bleibt wie er ist (gestoppte Zeit wird nicht gelöscht)`,
+    ],
+    confirmLabel: 'Ja, zurücknehmen',
+    onConfirm: async () => {
+      try {
+        setSync('loading', 'Nehme zurück…');
+        await IMS.store.undoStationFertig(id, AP);
+        setSync('ok', 'Zurückgenommen ✓');
         render();
         setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
       } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
