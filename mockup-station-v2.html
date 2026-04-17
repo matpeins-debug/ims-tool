@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mockup v6 — Station Redesign (Usability-Fix)</title>
+<title>Mockup v7 — Station Redesign (Typografie-Fix)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg:#f5f7fa; --surface:#ffffff; --surface2:#eef1f6; --border:#d5dbe5;
@@ -16,8 +19,8 @@
     --soon-stripe:#d98200;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px}
-  .sep{display:inline-block;width:0.35em}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px;font-feature-settings:"tnum";}
+  body{font-variant-numeric:tabular-nums}
 
   .mockup-notice{background:#fffbe6;border-bottom:2px solid #ffe066;padding:10px 18px;font-size:13px;color:#8a6d00;text-align:center;font-weight:500}
   .mockup-notice b{color:#6b5300}
@@ -53,24 +56,42 @@
   .card.blocked{background:var(--block-bg);border-color:var(--block-border);border-left:4px solid var(--warn)}
   .card.running{background:var(--run-bg);border-color:var(--run-border);border-left:4px solid var(--accent);box-shadow:0 0 0 2px rgba(0,168,122,0.15)}
 
-  .card-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .card-prio{font-size:14px;font-weight:700;color:var(--text3);font-variant-numeric:tabular-nums}
-  .card-nr{font-size:28px;font-weight:800;letter-spacing:0.01em;line-height:1.1}
+  /* Card Header: Prio-Pill + (Jahr gedämpft) + (Nr dominant) */
+  .card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .card-prio{
+    font-size:13px;font-weight:800;color:#fff;background:var(--text2);
+    padding:3px 8px;border-radius:5px;letter-spacing:0.04em;
+    font-variant-numeric:tabular-nums;
+  }
+  .card.prio-high .card-prio{background:var(--danger)}
+  .card.running .card-prio{background:var(--accent)}
+
+  .card-nr-wrap{display:inline-flex;align-items:baseline;gap:0}
+  .card-nr-jahr{font-size:20px;font-weight:500;color:var(--text2);letter-spacing:0;font-variant-numeric:tabular-nums}
+  .card-nr-main{font-size:32px;font-weight:800;color:var(--text);line-height:1;font-variant-numeric:tabular-nums;margin-left:0.28em}
+
   .card-kunde{font-size:16px;color:var(--text2);font-weight:500}
 
+  /* Chips */
   .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
   .badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
   .badge.s0{background:#ece4ff;color:#5a3fa8}
   .badge.s1{background:#e0ecff;color:#0a4fa0}
   .badge.s2{background:#d9f4e6;color:#006b4a}
   .badge.s3{background:#ffe5d0;color:#a04a00}
-  .badge.termin{background:var(--surface2);color:var(--text2)}
-  .badge.termin.warn{background:#fff1d0;color:#8a5a00}
-  .badge.termin.today{background:#e3f5c8;color:#3f6800;font-size:12px;padding:4px 10px}
-  .badge.termin.over{background:#ffd9df;color:#8a1a28;font-size:12px;padding:4px 10px}
   .badge.highprio{background:var(--danger);color:#fff}
 
-  .card-komm{color:var(--komm);font-size:14px;font-weight:600}
+  /* Termin-Chip: NICHT uppercase, konsistentes Format */
+  .badge.termin{
+    background:var(--surface2);color:var(--text2);
+    text-transform:none;letter-spacing:0;font-weight:600;font-size:12px;padding:3px 9px;
+    font-variant-numeric:tabular-nums;
+  }
+  .badge.termin.warn{background:#fff1d0;color:#8a5a00}
+  .badge.termin.today{background:#e3f5c8;color:#2d5400;font-weight:700}
+  .badge.termin.over{background:#ffd9df;color:#8a1a28;font-weight:700}
+
+  .card-komm{color:var(--komm);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
 
   .card-stk{font-size:46px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--text)}
   .card-stk .unit{font-size:18px;font-weight:600;color:var(--text2);margin-left:4px}
@@ -78,31 +99,23 @@
   .card-notiz{padding:10px 12px;background:#fffbe6;border-left:3px solid #ffe066;border-radius:6px;font-size:13px;color:#8a6d00;white-space:pre-wrap;font-weight:500}
   .card-notiz::before{content:"NOTIZ";font-size:10px;font-weight:700;letter-spacing:0.08em;color:#6b5300;display:block;margin-bottom:2px}
 
-  /* Timer-Box: nur Start ↔ Pause Toggle */
+  /* Timer-Box: größer, prominenter */
   .timer-box{background:var(--surface2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
   .timer-box.active{background:#d0f5e6}
   .timer-left{display:flex;flex-direction:column;gap:2px}
   .timer-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700}
   .timer-label.running{color:#006b4a}
-  .timer-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:26px;font-weight:700;color:var(--text)}
+  .timer-val{font-family:'IBM Plex Mono',ui-monospace,'Courier New',monospace;font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
   .timer-val.running{color:var(--accent)}
   .btn-timer{padding:12px 18px;font-size:15px;font-weight:700;border-radius:8px;border:0;cursor:pointer;min-height:48px;min-width:100px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
   .btn-timer.start{background:var(--accent);color:#fff}
   .btn-timer.pause{background:var(--warn);color:#fff}
   .btn-timer:disabled{opacity:0.35;cursor:not-allowed}
 
-  /* Blockierung: nur sichtbar wenn aktiv — sonst kompakter Button */
-  .block-toggle{
-    background:transparent;border:1px dashed var(--border);color:var(--text2);
-    padding:8px 12px;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;
-    text-align:left;display:flex;align-items:center;gap:6px;
-  }
+  .block-toggle{background:transparent;border:1px dashed var(--border);color:var(--text2);padding:8px 12px;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px}
   .block-toggle:hover{border-color:var(--warn);color:var(--warn)}
   .block-toggle .dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
-  .block-active{
-    background:#fff4e0;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;
-    display:flex;flex-direction:column;gap:8px;
-  }
+  .block-active{background:#fff4e0;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
   .block-active-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .block-active-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8a5a00}
   .block-active-clear{background:transparent;border:0;color:#8a5a00;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline}
@@ -110,7 +123,6 @@
 
   .vorgaenger-warn{color:#8a5a00;font-size:13px;padding:8px 10px;background:#fff4e0;border-left:3px solid var(--warn);border-radius:4px;font-weight:500}
 
-  /* Fotodoku: prominent über Fertig-Button, mit pulsierender Grenze bei Bedarf */
   .foto-section{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#e6f0ff;border:1px solid #b8d1f5;border-radius:8px;font-size:14px;color:#0a4fa0;font-weight:600}
   .foto-section.required{border-color:var(--danger);background:#fff0f2;color:#8a1a28}
   .foto-section input{width:22px;height:22px;accent-color:var(--blue);flex-shrink:0}
@@ -124,7 +136,7 @@
 <body>
 
 <div class="mockup-notice">
-  <b>MOCKUP v6</b> &nbsp;—&nbsp; Usability-Fixes: Stop-Button entfernt (nur Start ↔ Pause Toggle) · Blockierung nur bei Aktiv · Termin-Chips kompakter · Emojis entfernt · Fotodoku-Warnung prominenter
+  <b>MOCKUP v7</b> &nbsp;—&nbsp; Typografie-Fixes: Auftragsnr-Hierarchie (Jahr schwach / Nr dominant) · Prio-Pill statt Text · Termin-Chips einheitlich &amp; Mixed Case · Timer 30px · IBM Plex geladen · narrow-no-break-space (kopierbar)
 </div>
 
 <div class="picker-section">
@@ -183,24 +195,24 @@
 
 <main>
 
-  <!-- KARTE 1: HighPrio + Running (Hero, Pause sichtbar) -->
+  <!-- KARTE 1: HighPrio + Running -->
   <div class="card prio-high running">
     <div class="card-head">
       <span class="card-prio">01</span>
-      <span class="card-nr">2023<span class="sep"></span>680</span>
+      <span class="card-nr-wrap"><span class="card-nr-jahr">2023</span><span class="card-nr-main">680</span></span>
     </div>
     <div class="card-kunde">Mustermann GmbH</div>
     <div class="chips">
       <span class="badge s2">S2</span>
-      <span class="badge highprio">HIGH PRIO</span>
-      <span class="badge termin today">HEUTE</span>
+      <span class="badge highprio">High Prio</span>
+      <span class="badge termin today">heute</span>
     </div>
     <div class="card-komm">Kommission: KOM-2023-4812</div>
     <div class="card-stk">24 <span class="unit">Stk</span></div>
     <div class="card-notiz">Sondermaß lt. Zeichnung Rev.C — bitte prüfen!</div>
     <div class="timer-box active">
       <div class="timer-left">
-        <span class="timer-label running">LÄUFT</span>
+        <span class="timer-label running">Läuft</span>
         <span class="timer-val running">01:23:45</span>
       </div>
       <button class="btn-timer pause">Pause</button>
@@ -209,17 +221,17 @@
     <button class="btn-fertig">CNC fertig</button>
   </div>
 
-  <!-- KARTE 2: HighPrio, nicht gestartet (nur Start-Button) -->
+  <!-- KARTE 2: HighPrio, nicht gestartet -->
   <div class="card prio-high">
     <div class="card-head">
       <span class="card-prio">02</span>
-      <span class="card-nr">2024<span class="sep"></span>115</span>
+      <span class="card-nr-wrap"><span class="card-nr-jahr">2024</span><span class="card-nr-main">115</span></span>
     </div>
     <div class="card-kunde">Sanitär Huber KEG</div>
     <div class="chips">
       <span class="badge s1">S1</span>
-      <span class="badge highprio">HIGH PRIO</span>
-      <span class="badge termin warn">in 2d</span>
+      <span class="badge highprio">High Prio</span>
+      <span class="badge termin warn">in 2 Tagen</span>
     </div>
     <div class="card-komm">Kommission: KOM-2024-0088</div>
     <div class="card-stk">8 <span class="unit">Stk</span></div>
@@ -238,12 +250,12 @@
   <div class="card prio-soon">
     <div class="card-head">
       <span class="card-prio">03</span>
-      <span class="card-nr">2024<span class="sep"></span>203</span>
+      <span class="card-nr-wrap"><span class="card-nr-jahr">2024</span><span class="card-nr-main">203</span></span>
     </div>
     <div class="card-kunde">Technik Mayer</div>
     <div class="chips">
       <span class="badge s0">S0</span>
-      <span class="badge termin warn">in 3d</span>
+      <span class="badge termin warn">in 3 Tagen</span>
     </div>
     <div class="card-stk">12 <span class="unit">Stk</span></div>
     <div class="timer-box">
@@ -257,16 +269,16 @@
     <button class="btn-fertig">CNC fertig</button>
   </div>
 
-  <!-- KARTE 4: Blockiert (aktive Blockierung sichtbar) -->
+  <!-- KARTE 4: Blockiert, überfällig -->
   <div class="card blocked">
     <div class="card-head">
       <span class="card-prio">04</span>
-      <span class="card-nr">2023<span class="sep"></span>991</span>
+      <span class="card-nr-wrap"><span class="card-nr-jahr">2023</span><span class="card-nr-main">991</span></span>
     </div>
     <div class="card-kunde">Installationen Wagner</div>
     <div class="chips">
       <span class="badge s3">S3</span>
-      <span class="badge termin over">5d ÜBER</span>
+      <span class="badge termin over">5 Tage über</span>
     </div>
     <div class="card-komm">Kommission: KOM-2023-7744</div>
     <div class="card-stk">4 <span class="unit">Stk</span></div>
@@ -293,22 +305,22 @@
     <button class="btn-fertig" disabled>CNC fertig</button>
   </div>
 
-  <!-- KARTE 5: UP-Armatur 1 + S3 → Fotodoku Pflicht -->
+  <!-- KARTE 5: UP-Armatur + S3 Fotodoku -->
   <div class="card">
     <div class="card-head">
       <span class="card-prio">05</span>
-      <span class="card-nr">2024<span class="sep"></span>310</span>
+      <span class="card-nr-wrap"><span class="card-nr-jahr">2024</span><span class="card-nr-main">310</span></span>
     </div>
     <div class="card-kunde">Wassertechnik Steiner</div>
     <div class="chips">
       <span class="badge s3">S3</span>
-      <span class="badge termin">25.04. · in 10d</span>
+      <span class="badge termin">in 10 Tagen</span>
     </div>
     <div class="card-komm">Kommission: KOM-2024-0312</div>
     <div class="card-stk">2 <span class="unit">Stk</span></div>
     <div class="timer-box">
       <div class="timer-left">
-        <span class="timer-label">Zeit UP-ARMATUR 1</span>
+        <span class="timer-label">Zeit UP-Armatur 1</span>
         <span class="timer-val">00:00:00</span>
       </div>
       <button class="btn-timer start">Start</button>
@@ -318,22 +330,22 @@
       <input type="checkbox" id="foto5">
       <label for="foto5">
         Fotodoku abgeschlossen
-        <span class="hint">Pflicht bei S3 + UP-Armatur — muss vor "Fertig" abgehakt werden</span>
+        <span class="hint">Pflicht bei S3 + UP-Armatur — muss vor „Fertig" abgehakt werden</span>
       </label>
     </div>
     <button class="btn-fertig" disabled>UP-Armatur 1 fertig</button>
   </div>
 
-  <!-- KARTE 6: Vorgänger nicht fertig -->
+  <!-- KARTE 6: Vorgänger nicht fertig, weit in der Zukunft -->
   <div class="card">
     <div class="card-head">
       <span class="card-prio">13</span>
-      <span class="card-nr">2024<span class="sep"></span>455</span>
+      <span class="card-nr-wrap"><span class="card-nr-jahr">2024</span><span class="card-nr-main">455</span></span>
     </div>
     <div class="card-kunde">Klima &amp; Sanitär Oberndorf</div>
     <div class="chips">
       <span class="badge s1">S1</span>
-      <span class="badge termin">28.04. · in 13d</span>
+      <span class="badge termin">in 13 Tagen</span>
     </div>
     <div class="card-stk">16 <span class="unit">Stk</span></div>
     <div class="vorgaenger-warn">⏳ Vorgänger-Station noch nicht fertig</div>
