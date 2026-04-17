@@ -23,6 +23,7 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px}
+  html{scroll-behavior:smooth}
   body{font-variant-numeric:tabular-nums}
   a,button{font-family:inherit}
 
@@ -75,6 +76,15 @@
   .queue-head{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);padding:12px 2px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
   .queue-head .next{color:var(--text2);text-transform:none;letter-spacing:0;font-weight:500;font-size:13px}
   .queue-head .next b{color:var(--text);font-weight:700}
+  .jump-link{
+    text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;
+    color:var(--text2);text-decoration:none;padding:6px 10px;border-radius:6px;
+    background:var(--surface);border:1px solid var(--border);
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .jump-link:hover,.jump-link:active{border-color:var(--accent);color:var(--accent)}
+  .jump-link b{color:var(--text);font-variant-numeric:tabular-nums}
+  .jump-link .arr{font-weight:800}
 
   /* Datum-Gruppen: jeder Liefertag bekommt einen kraeftigen Block-Header */
   .date-group{display:flex;flex-direction:column;gap:12px;margin-top:22px}
@@ -247,22 +257,25 @@
     padding:18px 16px;text-align:center;color:var(--text3);font-size:14px;font-style:italic;
     background:var(--surface);border:1px dashed var(--border);border-radius:10px;
   }
+  /* Feste Spaltenbreiten fuer sauberes Alignment */
   .done-row{
-    display:grid;grid-template-columns:auto auto 1fr auto auto auto;gap:14px;align-items:center;
-    padding:12px 16px;border-bottom:1px solid var(--border);opacity:0.92;
+    display:grid;
+    grid-template-columns:44px 66px minmax(0,1fr) 80px 80px auto;
+    gap:14px;align-items:center;
+    padding:12px 16px;border-bottom:1px solid var(--border);opacity:0.9;
   }
   .done-row:last-child{border-bottom:0}
   .done-row:hover{background:#fafbfd;opacity:1}
-  .done-row .time{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:13px;color:var(--text2);font-weight:600}
+  .done-row .time{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:13px;color:var(--text2);font-weight:600;white-space:nowrap}
   .done-row .time::before{content:"✓ ";color:var(--accent);font-weight:700}
-  .done-row .prio{font-size:12px;font-weight:800;color:#fff;background:var(--text2);padding:2px 7px;border-radius:4px;font-variant-numeric:tabular-nums;letter-spacing:0.04em}
+  .done-row .prio{font-size:12px;font-weight:800;color:#fff;background:var(--text2);padding:2px 7px;border-radius:4px;font-variant-numeric:tabular-nums;letter-spacing:0.04em;text-align:center}
   .done-row .prio.high{background:var(--purple)}
   .done-row .nr-kunde{display:flex;align-items:baseline;gap:10px;min-width:0;overflow:hidden}
   .done-row .nr{font-size:15px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
   .done-row .kunde{font-size:14px;color:var(--text2);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .done-row .stk{font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .done-row .ist{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .done-row .ist-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:-1px}
+  .done-row .stk{font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+  .done-row .ist{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+  .done-row .ist.empty{color:var(--text3);font-weight:500;font-style:italic;font-size:12px}
   .btn-undo{
     background:transparent;border:1px solid var(--border);color:var(--text2);
     padding:7px 12px;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;
@@ -611,6 +624,16 @@ function render() {
   if (running) {
     html += `<section class="section-active"><div class="section-head">Aktuell in Arbeit</div>${renderCard(running, true, avgMs)}</section>`;
   }
+  // Info fuer Sprunglink zur Tagestabelle
+  let doneTotalMs = 0;
+  doneToday.forEach(a => {
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    if (td && td.totalMs) doneTotalMs += td.totalMs;
+  });
+  const jumpToDone = doneToday.length
+    ? `<a class="jump-link" href="#done-today"><span class="arr">↓</span> Heute erledigt: <b>${doneToday.length}</b> · <b>${IMS.formatMs(doneTotalMs)}</b></a>`
+    : `<a class="jump-link" href="#done-today"><span class="arr">↓</span> Heute erledigt: <b>0</b></a>`;
+
   if (queue.length) {
     const next = queue[0];
     const nextHtml = next
@@ -633,8 +656,8 @@ function render() {
         <section class="section-queue">${cards.map(a => renderCard(a, false, avgMs)).join('')}</section>
       </div>`;
     }).join('');
-    html += `<div class="queue-wrap">
-      <div class="queue-head"><span>Warteschlange (${queue.length})</span>${nextHtml}</div>
+    html += `<div class="queue-wrap" id="queue-top">
+      <div class="queue-head"><span>Warteschlange (${queue.length})</span>${nextHtml}${jumpToDone}</div>
       ${groupsHtml}
     </div>`;
   }
@@ -837,10 +860,11 @@ function renderBlockActive(a) {
 function renderDoneToday(list) {
   // Empty-State
   if (!list.length) {
-    return `<div class="done-wrap">
+    return `<div class="done-wrap" id="done-today">
       <div class="done-head">
         <span class="done-head-title">Heute erledigt</span>
         <span class="done-head-count">noch keine Aufträge</span>
+        <a class="jump-link" href="#queue-top"><span class="arr">↑</span> Zur Warteschlange</a>
       </div>
       <div class="done-empty">Sobald du „FERTIG" drückst, erscheinen die Aufträge hier — mit Zeit und Rückgängig-Option.</div>
     </div>`;
@@ -856,7 +880,10 @@ function renderDoneToday(list) {
 
   const rows = list.map(a => {
     const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
-    const istLbl = td && td.totalMs ? IMS.formatMs(td.totalMs) : '—';
+    const hasIst = td && td.totalMs > 0;
+    const istHtml = hasIst
+      ? `<span class="ist" title="Ist-Zeit">${esc(IMS.formatMs(td.totalMs))}</span>`
+      : `<span class="ist empty" title="Kein Timer benutzt">ohne Timer</span>`;
     const zeit = formatUhrzeit(a.stationFertig[AP]);
     const prioCls = a.highPrio ? 'prio high' : 'prio';
     const nrFmt = fmtNrWithSpace(a);
@@ -869,19 +896,18 @@ function renderDoneToday(list) {
         <span class="kunde">${esc(a.kunde || '')}</span>
       </span>
       <span class="stk">${esc(stk)}</span>
-      <span class="ist" title="Ist-Zeit">
-        <span class="ist-lbl">Ist</span>${esc(istLbl)}
-      </span>
+      ${istHtml}
       <button class="btn-undo" onclick="onUndoFertig('${esc(a.id)}')">↶ Rückgängig</button>
     </div>`;
   }).join('');
 
   const countLbl = list.length + ' ' + (list.length === 1 ? 'Auftrag' : 'Aufträge');
-  return `<div class="done-wrap">
+  return `<div class="done-wrap" id="done-today">
     <div class="done-head">
       <span class="done-head-title">Heute erledigt</span>
       <span class="done-head-count">${esc(countLbl)}</span>
       <span class="done-head-total">Gesamt-Zeit: <b>${esc(totalLbl)}</b></span>
+      <a class="jump-link" href="#queue-top"><span class="arr">↑</span> Zur Warteschlange</a>
     </div>
     <div class="done-table">${rows}</div>
   </div>`;
