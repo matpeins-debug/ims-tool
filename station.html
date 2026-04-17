@@ -559,11 +559,11 @@ function relDayText(tage) {
   return `in ${tage} Tagen`;
 }
 function dateGroupClass(tage) {
+  // Farbe nur fuer Ausnahme-Zustaende (today / over). Normale Tage neutral —
+  // der MA kennt den Kalender. Orange/Blau brachten keinen Mehrwert.
   if (tage === null) return '';
   if (tage < 0)   return 'over';
   if (tage === 0) return 'today';
-  if (tage <= 3)  return 'warn';
-  if (tage <= 7)  return 'soon';
   return '';
 }
 
