@@ -904,11 +904,7 @@ function renderCard(a, isHero, avgMs) {
     return `<div class="${cls}">
       <div class="hero-left">${headSection}</div>
       <div class="hero-right">
-        <div class="positionen-placeholder">
-          <div class="icon">📋</div>
-          <div class="head">Auftragspositionen</div>
-          <div class="sub">Einzelpositionen erscheinen hier, sobald die ERP-Anbindung steht.</div>
-        </div>
+        <div class="positionen-placeholder"></div>
       </div>
     </div>`;
   }
@@ -1133,33 +1129,24 @@ async function onStop(id) {
   } catch (e) { toast('Fehler beim Pausieren', true); setSync('err', 'Fehler'); }
 }
 
-// Fertig: Custom-Modal (kein Browser-confirm)
-function onFertig(id) {
+// Fertig: direkte Aktion ohne Confirm (Lean-Fix). Korrektur via Rueckgaengig-Button
+// in der Tages-Tabelle unten. Toast zeigt was passiert ist (inkl. Timer-Stopp).
+async function onFertig(id) {
   const a = IMS.store.getAuftrag(id);
   if (!a) return;
   const td = a.timers && a.timers[IMS.timerKey(id, AP)];
   const running = IMS.istTimerAktiv(td);
-  const timerLabel = running ? IMS.formatElapsed(IMS.calcTotalMs(td)) : null;
-  const nextStation = computeNextStation(a, AP);
-
-  showConfirmModal({
-    title: esc(STATION_NAMEN[AP]) + ' abschließen?',
-    auftrag: `<span class="nr">${fmtNr(a)}</span> · ${esc(a.kunde || '')}`,
-    consequences: [
-      running ? `Der laufende Timer wird gestoppt (aktuell <b>${timerLabel}</b>)` : null,
-      nextStation ? `Auftrag wandert zu <b>${esc(nextStation)}</b>` : `Auftrag wird abgeschlossen`,
-    ].filter(Boolean),
-    confirmLabel: 'Ja, abschließen',
-    onConfirm: async () => {
-      try {
-        setSync('loading', 'Speichere…');
-        await IMS.store.markStationFertig(id, AP);
-        setSync('ok', 'Fertig ✓');
-        render();
-        setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
-      } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
-    },
-  });
+  const nr = fmtNrWithSpace(a);
+  try {
+    setSync('loading', 'Speichere…');
+    await IMS.store.markStationFertig(id, AP);
+    setSync('ok', 'Fertig ✓');
+    toast(running
+      ? `✓ ${nr} abgeschlossen · Timer gestoppt`
+      : `✓ ${nr} abgeschlossen`);
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
 }
 
 // Rueckgaengig: Fertig-Meldung zuruecknehmen, Auftrag kommt zurueck in Queue
