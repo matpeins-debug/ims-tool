@@ -241,6 +241,33 @@
   .positionen-placeholder .head{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.02em}
   .positionen-placeholder .sub{font-size:12px;color:var(--text3);max-width:260px;line-height:1.4}
 
+  /* ── SUCHE ──────────────────────────────────────────── */
+  .search-bar{
+    display:flex;align-items:center;gap:10px;padding:10px 14px;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    transition:border-color 0.15s;
+  }
+  .search-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,168,122,0.12)}
+  .search-bar .icon{font-size:16px;color:var(--text3);flex-shrink:0}
+  .search-bar input{
+    flex:1;border:0;outline:0;background:transparent;
+    font-family:inherit;font-size:15px;color:var(--text);
+    padding:4px 0;min-width:0;
+  }
+  .search-bar input::placeholder{color:var(--text3)}
+  .search-bar .clear{
+    display:none;background:var(--surface2);border:0;color:var(--text2);
+    width:26px;height:26px;border-radius:50%;cursor:pointer;
+    font-size:16px;line-height:1;padding:0;
+  }
+  .search-bar.active .clear{display:inline-flex;align-items:center;justify-content:center}
+  .search-bar .count{
+    display:none;font-size:12px;color:var(--text2);font-weight:600;
+    white-space:nowrap;padding:3px 8px;background:var(--surface2);border-radius:4px;
+  }
+  .search-bar.active .count{display:inline-block}
+  .search-bar .count b{color:var(--text);font-variant-numeric:tabular-nums}
+
   /* ── HEUTE ERLEDIGT (Tages-Tabelle) ──────────────────── */
   .done-wrap{display:flex;flex-direction:column;gap:10px;margin-top:28px}
   .done-head{
@@ -343,6 +370,16 @@
   <button class="logout" onclick="doLogout()">Logout</button>
 </header>
 
+<!-- Suche (wird bei Bedarf oben in main eingeblendet) -->
+<div id="searchWrap" style="display:none;max-width:1400px;margin:0 auto;padding:12px 16px 0">
+  <div class="search-bar" id="searchBar">
+    <span class="icon">🔍</span>
+    <input id="searchInput" type="search" inputmode="search" autocomplete="off" placeholder="Auftrag, Kunde oder Kommission suchen…" oninput="onSearch(this.value)" onkeydown="if(event.key==='Escape') clearSearch()">
+    <span class="count" id="searchCount"></span>
+    <button class="clear" type="button" onclick="clearSearch()" aria-label="Suche leeren">×</button>
+  </div>
+</div>
+
 <!-- Main -->
 <main id="main" class="empty">Lade…</main>
 
@@ -391,6 +428,7 @@ const PICKER_GROUPS = [
 
 let pollTimer = null;
 let liveTickers = {};
+let searchQuery = '';  // aktuelle Such-Eingabe (lowercase, normalisiert)
 
 // ─── BOOT ────────────────────────────────────────────────────────────────────
 async function boot() {
@@ -490,8 +528,49 @@ function doLogout() {
 async function startApp() {
   document.getElementById('header').style.display = 'flex';
   document.getElementById('main').style.display = 'flex';
+  document.getElementById('searchWrap').style.display = 'block';
   await refresh();
   pollTimer = setInterval(refresh, IMS.CONFIG.POLL_MS);
+}
+
+// ─── SUCHE ───────────────────────────────────────────────────────────────────
+function normalizeSearch(s) {
+  return String(s || '').toLowerCase().replace(/[\s\u2009\u202F]+/g, '').trim();
+}
+function matchesSearch(a, q) {
+  if (!q) return true;
+  const nr   = normalizeSearch(a.nr || '');
+  const kun  = String(a.kunde || '').toLowerCase();
+  const kom  = String(a.kommission || '').toLowerCase();
+  const needle = normalizeSearch(q);
+  const needleRaw = String(q || '').toLowerCase().trim();
+  // Nummer und Kommission normalisiert vergleichen (ignoriert Leerzeichen in 2023 680)
+  return nr.includes(needle) || kun.includes(needleRaw) || kom.includes(needleRaw);
+}
+
+function onSearch(val) {
+  searchQuery = String(val || '').trim();
+  const bar = document.getElementById('searchBar');
+  if (searchQuery.length >= 2) bar.classList.add('active');
+  else {
+    bar.classList.remove('active');
+    if (searchQuery.length === 0) {
+      // leeres Feld: kein Filter, normaler Render
+      render();
+      return;
+    }
+  }
+  render();
+}
+
+function clearSearch() {
+  searchQuery = '';
+  const input = document.getElementById('searchInput');
+  const bar = document.getElementById('searchBar');
+  if (input) input.value = '';
+  if (bar) bar.classList.remove('active');
+  render();
+  if (input) input.focus();
 }
 
 // ─── SYNC ────────────────────────────────────────────────────────────────────
@@ -603,13 +682,36 @@ function render() {
   Object.values(liveTickers).forEach(clearInterval);
   liveTickers = {};
 
-  const list = auftraegeFuerStation();
-  const doneToday = auftraegeHeuteFertig();
+  const fullList = auftraegeFuerStation();
+  const fullDone = auftraegeHeuteFertig();
   const main = document.getElementById('main');
 
-  if (!list.length && !doneToday.length) {
+  // Filter anwenden (ab 2 Zeichen)
+  const filterActive = searchQuery && searchQuery.length >= 2;
+  const list      = filterActive ? fullList.filter(a => matchesSearch(a, searchQuery)) : fullList;
+  const doneToday = filterActive ? fullDone.filter(a => matchesSearch(a, searchQuery)) : fullDone;
+
+  // Such-Counter aktualisieren
+  const countEl = document.getElementById('searchCount');
+  if (countEl) {
+    if (filterActive) {
+      const total = fullList.length + fullDone.length;
+      const hits  = list.length + doneToday.length;
+      countEl.innerHTML = `<b>${hits}</b> von <b>${total}</b>`;
+    } else {
+      countEl.textContent = '';
+    }
+  }
+
+  if (!fullList.length && !fullDone.length) {
     main.className = 'empty';
     main.innerHTML = '<div>✓ Keine offenen Aufträge für ' + esc(STATION_NAMEN[AP]) + '</div>';
+    return;
+  }
+
+  if (filterActive && !list.length && !doneToday.length) {
+    main.className = 'empty';
+    main.innerHTML = '<div>🔍 Keine Treffer für „' + esc(searchQuery) + '"<br><br><button class="modal-btn secondary" onclick="clearSearch()" style="min-width:140px">Suche leeren</button></div>';
     return;
   }
 
