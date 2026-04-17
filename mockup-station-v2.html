@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<title>MOCKUP — station.html v2 Redesign</title>
+<title>MOCKUP — station.html v3</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -20,8 +20,9 @@
   --warn:      #d98200;
   --warn-bg:   #fff4e0;
   --danger:    #d63040;
-  --danger-bg: #ffe8eb;
+  --danger-bg: #fff5f5;
   --blue:      #0066cc;
+  --blue-bg:   #edf4ff;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { font-family: 'IBM Plex Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -46,7 +47,7 @@ html, body { font-family: 'IBM Plex Sans', system-ui, sans-serif; background: va
 .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   A) STATION-PICKER (neu — mit Live-Info + Gruppierung)
+   A) STATION-PICKER
    ═══════════════════════════════════════════════════════════════════════ */
 .picker-wrap { max-width: 640px; margin: 0 auto; padding: 24px 20px; }
 .picker-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -91,12 +92,12 @@ html, body { font-family: 'IBM Plex Sans', system-ui, sans-serif; background: va
 .picker-btn-info .chip.run  { background: var(--accent-bg); color: var(--accent2); }
 .picker-btn-info .chip.open { background: var(--surface2); color: var(--text2); }
 .picker-btn-info .chip.blk  { background: var(--warn-bg); color: #8a5a00; }
-.picker-btn-info .chip.empty { background: transparent; color: var(--text3); font-style: italic; }
-.picker-btn-info .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; animation: pulse 1.4s infinite; }
+.picker-btn-info .chip.empty-chip { background: transparent; color: var(--text3); font-style: italic; }
+.picker-btn-info .chip .dot-pulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; animation: pulse 1.4s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   B) STATION-VIEW (Karten) — Auftragsnr DOMINIERT
+   B) STATION CARDS
    ═══════════════════════════════════════════════════════════════════════ */
 header.st {
   display: flex; align-items: center; gap: 14px; padding: 12px 18px;
@@ -105,7 +106,7 @@ header.st {
 }
 header.st .station {
   background: var(--accent); color: #fff; font-weight: 700; font-size: 18px;
-  padding: 8px 16px; border-radius: 8px; letter-spacing: 0.02em;
+  padding: 8px 16px; border-radius: 8px;
 }
 header.st .title { font-size: 14px; color: var(--text2); }
 header.st .sync { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
@@ -113,108 +114,126 @@ header.st .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: v
 
 .grid { padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1400px; margin: 0 auto; }
 
+/* ─── Card base ──────────────────────────────────────────────────────── */
 .card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-  padding: 16px 18px 14px; display: grid; gap: 10px; position: relative; overflow: hidden;
+  padding: 16px 18px 14px; display: grid; gap: 8px; position: relative; overflow: hidden;
 }
 .card::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: transparent;
 }
-.card.prio-high::before     { background: var(--danger); }
-.card.prio-today::before    { background: var(--warn); }
-.card.prio-running::before  { background: var(--accent); }
-.card.prio-overdue::before  { background: var(--danger); }
 
+/* HighPrio: Karten-Wash + roter Stripe (nicht nur Stripe!) */
+.card.prio-high {
+  background: var(--danger-bg); border-color: #e8a0a8;
+}
+.card.prio-high::before { background: var(--danger); }
+
+/* Morgen fällig: gelber Stripe */
+.card.prio-soon::before    { background: var(--warn); }
+
+/* Running: Hero Card — grüner Wash + Stripe */
 .card.running {
-  background: var(--accent-bg);
-  border: 1.5px solid var(--accent);
+  background: var(--accent-bg); border: 1.5px solid var(--accent);
   box-shadow: 0 4px 20px rgba(0,168,122,0.14);
 }
+.card.running::before { background: var(--accent); }
 
-/* ─── HERO: Auftragsnummer ist der visuelle Anker ─────────────────────── */
-.nr-row {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-}
+/* ─── Zeile 1: Auftragsnummer GROSS ──────────────────────────────────── */
 .nr {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 28px; font-weight: 700; letter-spacing: 0.02em; color: var(--text);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
+  font-variant-numeric: tabular-nums; line-height: 1;
 }
-.nr .sep { display: inline-block; width: 0.35em; }  /* harter Abstand zwischen 2023 und 680 */
+.nr .sep { display: inline-block; width: 0.35em; }
 
-/* Chips neben der Nr */
-.chip-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+/* ─── Zeile 2: Chips EIGENE Zeile (S-Klasse, Termin, HighPrio) ──────── */
+.chips {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
 .sklasse { font-size: 10px; padding: 3px 7px; border-radius: 3px; font-weight: 700; letter-spacing: 0.06em; font-family: 'IBM Plex Mono', monospace; }
 .sklasse.s0 { background: #ece4ff; color: #5a3fa8; }
 .sklasse.s1 { background: #e0ecff; color: #0a4fa0; }
 .sklasse.s2 { background: #d9f4e6; color: #006b4a; }
 .sklasse.s3 { background: #ffe5d0; color: #a04a00; }
-
-.termin {
-  font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;
-  font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.02em;
-}
+.termin { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
 .termin.future { background: var(--surface2); color: var(--text2); }
 .termin.soon   { background: #fff1d0; color: #8a5a00; }
 .termin.today  { background: #d9f4e6; color: #006b4a; }
-.termin.over   { background: var(--danger-bg); color: #8a1a28; }
+.termin.over   { background: #ffe8eb; color: #8a1a28; }
+.badge-high { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; letter-spacing: 0.08em; background: var(--danger); color: #fff; }
 
-.badge-high {
-  font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; letter-spacing: 0.08em;
-  background: var(--danger); color: #fff;
+/* ─── Zeile 3: Kunde + Stückzahl ────────────────────────────────────── */
+.kunde-stk-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin-top: 2px;
 }
+.kunde { font-size: 16px; font-weight: 500; color: var(--text); line-height: 1.25; }
+.stk {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 22px; font-weight: 700; color: var(--text);
+  white-space: nowrap; flex-shrink: 0;
+}
+.stk .unit { font-size: 13px; font-weight: 500; color: var(--text2); }
 
-/* ─── Kunde + Meta ──────────────────────────────────────────────────── */
-.kunde { font-size: 16px; font-weight: 500; color: var(--text); margin-top: 2px; line-height: 1.25; }
-.meta { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text3); }
-.meta .stk { color: var(--text2); font-weight: 600; }
+/* Kommission — dezent */
+.kommission { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text3); }
 
 /* Notiz — Warnbox */
 .notiz {
   background: var(--warn-bg); border-left: 3px solid var(--warn);
-  padding: 8px 10px; border-radius: 4px; font-size: 13px; color: #6b3d00; font-weight: 500;
-  display: flex; align-items: flex-start; gap: 6px;
+  padding: 8px 10px; border-radius: 4px; font-size: 13px; color: #6b3d00; font-weight: 600;
 }
-.notiz-icon { font-size: 14px; flex-shrink: 0; }
 
-/* Timer */
+/* ─── Timer ──────────────────────────────────────────────────────────── */
 .timer-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 10px 12px; background: var(--surface2); border-radius: 8px; margin-top: 4px;
+  padding: 10px 12px; background: var(--surface2); border-radius: 8px;
 }
 .timer-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
 .timer-val {
-  font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600;
 }
-.timer-val.zero    { color: var(--text3); opacity: 0.35; font-size: 16px; }
+/* Timer 0: zeige "–" statt 00:00:00, volle Opacity aber ruhig */
+.timer-val.zero    { color: var(--text3); font-size: 16px; }
+/* Timer läuft: leuchtet */
 .timer-val.running { color: var(--accent); font-weight: 700; font-size: 22px; }
 
-/* Buttons — Hierarchie */
+/* ─── Buttons: ALLE MIT LABEL, 3 Stufen ──────────────────────────────── */
 .actions {
-  display: grid; grid-template-columns: 1fr auto auto; gap: 8px; margin-top: 6px;
+  display: grid; grid-template-columns: 1fr auto auto; gap: 8px; margin-top: 4px;
 }
-.actions.running { grid-template-columns: 1fr auto; }
 .btn {
-  padding: 13px 16px; font-size: 14px; font-weight: 600; border-radius: 8px; border: 0; cursor: pointer;
+  padding: 12px 14px; font-size: 14px; font-weight: 600; border-radius: 8px; border: 0; cursor: pointer;
   font-family: inherit; transition: transform 0.06s ease, background 0.15s ease;
   min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 6px;
 }
 .btn:active { transform: scale(0.98); }
+/* Primary: Beginn */
 .btn-primary { background: var(--accent); color: #fff; font-size: 15px; }
 .btn-primary:hover { background: var(--accent2); }
-.btn-stop    { background: var(--danger); color: #fff; font-size: 15px; }
-.btn-ghost   { background: transparent; color: var(--text2); border: 1px solid var(--border2); padding: 13px 12px; }
-.btn-ghost:hover { border-color: var(--text3); color: var(--text); }
-.btn-ghost .ico { font-size: 16px; }
+/* Stop */
+.btn-stop { background: var(--danger); color: #fff; font-size: 15px; }
+/* Secondary: Fertig — Outline, mit Label, gute Sichtbarkeit */
+.btn-secondary {
+  background: transparent; color: var(--blue); border: 1.5px solid var(--blue);
+  padding: 12px 14px; font-size: 13px;
+}
+.btn-secondary:hover { background: var(--blue-bg); }
+/* Tertiary: Blockieren — Outline, dezenter */
+.btn-tertiary {
+  background: transparent; color: var(--text2); border: 1px solid var(--border2);
+  padding: 12px 12px; font-size: 13px;
+}
+.btn-tertiary:hover { border-color: var(--warn); color: var(--warn); }
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 .explainer {
-  max-width: 1400px; margin: 0 auto; padding: 28px 20px; color: var(--text2); font-size: 14px;
+  max-width: 1400px; margin: 0 auto; padding: 28px 20px 48px; color: var(--text2); font-size: 14px;
 }
 .explainer h3 { color: var(--text); font-size: 16px; margin-bottom: 12px; }
 .explainer ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 24px; }
-.explainer li { padding-left: 18px; position: relative; }
+.explainer li { padding-left: 18px; position: relative; line-height: 1.4; }
 .explainer li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
 .explainer li b { color: var(--text); }
 
@@ -231,14 +250,14 @@ header.st .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: v
 
 <div class="mockup-bar">
   <span class="dot"></span><span class="dot y"></span><span class="dot g"></span>
-  <span class="title">station.html  →  Mockup v2 (nicht deployed)</span>
-  <span class="tag">MOCKUP</span>
+  <span class="title">station.html  →  Mockup v3 (Usability-Review + Stückzahl)</span>
+  <span class="tag">MOCKUP v3</span>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════
-     A) STATION-PICKER mit Live-Info + Gruppen
+     A) STATION-PICKER (unverändert gegenüber v2 — war gut)
      ═══════════════════════════════════════════════════════════════════════ -->
-<div class="section-title">A · Station-Picker (mit Live-Info + Gruppierung)</div>
+<div class="section-title">A · Station-Picker (unverändert — war gut)</div>
 
 <div class="picker-wrap">
   <div class="picker-head">
@@ -247,103 +266,81 @@ header.st .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: v
   </div>
   <div class="picker-hint">Öffne diese Seite mit <code>?ap=…</code> als Bookmark pro Tablet.</div>
 
-  <!-- Gruppe: Vorfertigung -->
   <div class="picker-group">
     <div class="picker-group-label">Vorfertigung</div>
-    <a href="?ap=cnc" class="picker-btn running">
+    <a href="#" class="picker-btn running">
       <div class="picker-btn-name">CNC</div>
       <div class="picker-btn-info">
-        <span class="chip run"><span class="dot"></span>1 läuft</span>
+        <span class="chip run"><span class="dot-pulse"></span>1 läuft</span>
         <span class="chip open">6 offen</span>
       </div>
     </a>
-    <a href="?ap=ap1" class="picker-btn busy">
+    <a href="#" class="picker-btn busy">
       <div class="picker-btn-name">AP-Armatur 1</div>
-      <div class="picker-btn-info">
-        <span class="chip open">4 offen</span>
-      </div>
+      <div class="picker-btn-info"><span class="chip open">4 offen</span></div>
     </a>
-    <a href="?ap=ap2" class="picker-btn busy">
+    <a href="#" class="picker-btn busy">
       <div class="picker-btn-name">AP-Armatur 2</div>
       <div class="picker-btn-info">
         <span class="chip open">2 offen</span>
         <span class="chip blk">1 blockiert</span>
       </div>
     </a>
-    <a href="?ap=up1" class="picker-btn empty">
+    <a href="#" class="picker-btn empty">
       <div class="picker-btn-name">UP-Armatur 1</div>
-      <div class="picker-btn-info">
-        <span class="chip empty">leer</span>
-      </div>
+      <div class="picker-btn-info"><span class="chip empty-chip">leer</span></div>
     </a>
-    <a href="?ap=up2" class="picker-btn empty">
+    <a href="#" class="picker-btn empty">
       <div class="picker-btn-name">UP-Armatur 2</div>
-      <div class="picker-btn-info">
-        <span class="chip empty">leer</span>
-      </div>
+      <div class="picker-btn-info"><span class="chip empty-chip">leer</span></div>
     </a>
   </div>
 
-  <!-- Zusammenbau -->
   <div class="picker-group">
     <div class="picker-group-label">Zusammenbau</div>
-    <a href="?ap=zusammenbau" class="picker-btn busy">
+    <a href="#" class="picker-btn busy">
       <div class="picker-btn-name">Zusammenbau</div>
-      <div class="picker-btn-info">
-        <span class="chip open">8 offen</span>
-      </div>
+      <div class="picker-btn-info"><span class="chip open">8 offen</span></div>
     </a>
   </div>
 
-  <!-- Nachbearbeitung -->
   <div class="picker-group">
     <div class="picker-group-label">Nachbearbeitung</div>
-    <a href="?ap=nachbearbeitung" class="picker-btn busy">
+    <a href="#" class="picker-btn busy">
       <div class="picker-btn-name">Nachbearbeitung</div>
-      <div class="picker-btn-info">
-        <span class="chip open">3 offen</span>
-      </div>
+      <div class="picker-btn-info"><span class="chip open">3 offen</span></div>
     </a>
   </div>
 
-  <!-- Heizung -->
   <div class="picker-group">
     <div class="picker-group-label">Heizung</div>
-    <a href="?ap=heizung" class="picker-btn running">
+    <a href="#" class="picker-btn running">
       <div class="picker-btn-name">Heizung</div>
-      <div class="picker-btn-info">
-        <span class="chip run"><span class="dot"></span>1 läuft</span>
-      </div>
+      <div class="picker-btn-info"><span class="chip run"><span class="dot-pulse"></span>1 läuft</span></div>
     </a>
   </div>
 
-  <!-- Einbauelement -->
   <div class="picker-group">
     <div class="picker-group-label">Einbauelement</div>
-    <a href="?ap=einbauelement" class="picker-btn empty">
+    <a href="#" class="picker-btn empty">
       <div class="picker-btn-name">Einbauelement</div>
-      <div class="picker-btn-info">
-        <span class="chip empty">leer</span>
-      </div>
+      <div class="picker-btn-info"><span class="chip empty-chip">leer</span></div>
     </a>
   </div>
 
-  <!-- Versand -->
   <div class="picker-group">
     <div class="picker-group-label">Versand</div>
-    <a href="?ap=versand" class="picker-btn busy">
+    <a href="#" class="picker-btn busy">
       <div class="picker-btn-name">Versand</div>
-      <div class="picker-btn-info">
-        <span class="chip open">12 offen</span>
-      </div>
+      <div class="picker-btn-info"><span class="chip open">12 offen</span></div>
     </a>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════
-     B) KARTEN (Auftragsnr DOMINIERT, Format "2023 680")
+     B) KARTEN — v3 mit allen Usability-Fixes
      ═══════════════════════════════════════════════════════════════════════ -->
-<div class="section-title">B · Station-Ansicht (CNC) — Auftragsnr ist der Kommunikationsanker</div>
+<div class="section-title">B · Station-Ansicht (CNC) — v3 mit Usability-Fixes</div>
 
 <header class="st">
   <div class="station">CNC</div>
@@ -356,158 +353,161 @@ header.st .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: v
 
 <div class="grid">
 
-  <!-- 1) 2023 680 LESSIAK KÄRNTEN — HighPrio -->
+  <!-- 1) 2023 680 — HighPrio → ganzer Karten-Wash rosa -->
   <div class="card prio-high">
-    <div class="nr-row">
-      <span class="nr">2023<span class="sep"></span>680</span>
-      <span class="chip-row">
-        <span class="badge-high">🔥 HIGH</span>
-        <span class="sklasse s3">S3</span>
-        <span class="termin future">Mo, 20.04. · in 5d</span>
-      </span>
+    <div class="nr">2023<span class="sep"></span>680</div>
+    <div class="chips">
+      <span class="badge-high">🔥 HIGH</span>
+      <span class="sklasse s3">S3</span>
+      <span class="termin future">Mo, 20.04. · in 5d</span>
     </div>
-    <div class="kunde">LESSIAK KÄRNTEN</div>
-    <div class="meta"><span class="stk">5 Stk</span> · Komm: Griessstraße</div>
-    <div class="notiz"><span class="notiz-icon">⚡</span><span>SEHR DRINGEND !!!</span></div>
+    <div class="kunde-stk-row">
+      <span class="kunde">LESSIAK KÄRNTEN</span>
+      <span class="stk">5 <span class="unit">Stk</span></span>
+    </div>
+    <div class="kommission">Komm: Griessstraße</div>
+    <div class="notiz">⚡ SEHR DRINGEND !!!</div>
     <div class="timer-row">
       <span class="timer-label">Zeit CNC</span>
-      <span class="timer-val zero">00:00:00</span>
+      <span class="timer-val zero">–</span>
     </div>
     <div class="actions">
       <button class="btn btn-primary">▶ Beginn</button>
-      <button class="btn btn-ghost" title="Blockieren"><span class="ico">⏸</span></button>
-      <button class="btn btn-ghost" title="Fertig"><span class="ico">✓</span></button>
+      <button class="btn btn-tertiary">⏸ Block.</button>
+      <button class="btn btn-secondary">✓ Fertig</button>
     </div>
   </div>
 
-  <!-- 2) 2023 507 HAAS KUMBERG -->
-  <div class="card prio-today">
-    <div class="nr-row">
-      <span class="nr">2023<span class="sep"></span>507</span>
-      <span class="chip-row">
-        <span class="sklasse s2">S2</span>
-        <span class="termin soon">Do, 16.04. · in 1d</span>
-      </span>
+  <!-- 2) 2023 507 — morgen fällig -->
+  <div class="card prio-soon">
+    <div class="nr">2023<span class="sep"></span>507</div>
+    <div class="chips">
+      <span class="sklasse s2">S2</span>
+      <span class="termin soon">Do, 16.04. · in 1d</span>
     </div>
-    <div class="kunde">HAAS KUMBERG</div>
-    <div class="meta"><span class="stk">37 Stk</span> · Komm: LAGER</div>
+    <div class="kunde-stk-row">
+      <span class="kunde">HAAS KUMBERG</span>
+      <span class="stk">37 <span class="unit">Stk</span></span>
+    </div>
+    <div class="kommission">Komm: LAGER</div>
     <div class="timer-row">
       <span class="timer-label">Zeit CNC</span>
-      <span class="timer-val zero">00:00:00</span>
+      <span class="timer-val zero">–</span>
     </div>
     <div class="actions">
       <button class="btn btn-primary">▶ Beginn</button>
-      <button class="btn btn-ghost"><span class="ico">⏸</span></button>
-      <button class="btn btn-ghost"><span class="ico">✓</span></button>
+      <button class="btn btn-tertiary">⏸ Block.</button>
+      <button class="btn btn-secondary">✓ Fertig</button>
     </div>
   </div>
 
-  <!-- 3) 2023 633 FG PURGSTALL — mit Notiz -->
-  <div class="card prio-today">
-    <div class="nr-row">
-      <span class="nr">2023<span class="sep"></span>633</span>
-      <span class="chip-row">
-        <span class="sklasse s2">S2</span>
-        <span class="termin soon">Do, 16.04. · in 1d</span>
-      </span>
+  <!-- 3) 2023 633 — mit Notiz -->
+  <div class="card prio-soon">
+    <div class="nr">2023<span class="sep"></span>633</div>
+    <div class="chips">
+      <span class="sklasse s2">S2</span>
+      <span class="termin soon">Do, 16.04. · in 1d</span>
     </div>
-    <div class="kunde">FG PURGSTALL</div>
-    <div class="meta"><span class="stk">4 Stk</span> · Komm: Lager</div>
-    <div class="notiz"><span class="notiz-icon">⚡</span><span>Unterputzkörper beigestellt</span></div>
+    <div class="kunde-stk-row">
+      <span class="kunde">FG PURGSTALL</span>
+      <span class="stk">4 <span class="unit">Stk</span></span>
+    </div>
+    <div class="kommission">Komm: Lager</div>
+    <div class="notiz">⚡ Unterputzkörper beigestellt</div>
     <div class="timer-row">
       <span class="timer-label">Zeit CNC</span>
-      <span class="timer-val zero">00:00:00</span>
+      <span class="timer-val zero">–</span>
     </div>
     <div class="actions">
       <button class="btn btn-primary">▶ Beginn</button>
-      <button class="btn btn-ghost"><span class="ico">⏸</span></button>
-      <button class="btn btn-ghost"><span class="ico">✓</span></button>
+      <button class="btn btn-tertiary">⏸ Block.</button>
+      <button class="btn btn-secondary">✓ Fertig</button>
     </div>
   </div>
 
-  <!-- 4) 2023 661 LAGERHAUS ZWETT -->
-  <div class="card prio-today">
-    <div class="nr-row">
-      <span class="nr">2023<span class="sep"></span>661</span>
-      <span class="chip-row">
-        <span class="sklasse s2">S2</span>
-        <span class="termin soon">Do, 16.04. · in 1d</span>
-      </span>
+  <!-- 4) 2023 661 -->
+  <div class="card prio-soon">
+    <div class="nr">2023<span class="sep"></span>661</div>
+    <div class="chips">
+      <span class="sklasse s2">S2</span>
+      <span class="termin soon">Do, 16.04. · in 1d</span>
     </div>
-    <div class="kunde">LAGERHAUS ZWETT</div>
-    <div class="meta"><span class="stk">17 Stk</span> · Komm: Lager / 18002601712</div>
+    <div class="kunde-stk-row">
+      <span class="kunde">LAGERHAUS ZWETT</span>
+      <span class="stk">17 <span class="unit">Stk</span></span>
+    </div>
+    <div class="kommission">Komm: Lager / 18002601712</div>
     <div class="timer-row">
       <span class="timer-label">Zeit CNC</span>
-      <span class="timer-val zero">00:00:00</span>
+      <span class="timer-val zero">–</span>
     </div>
     <div class="actions">
       <button class="btn btn-primary">▶ Beginn</button>
-      <button class="btn btn-ghost"><span class="ico">⏸</span></button>
-      <button class="btn btn-ghost"><span class="ico">✓</span></button>
+      <button class="btn btn-tertiary">⏸ Block.</button>
+      <button class="btn btn-secondary">✓ Fertig</button>
     </div>
   </div>
 
-  <!-- 5) 2023 676 RIEDER BADHALL — RUNNING (Hero) -->
-  <div class="card prio-running running">
-    <div class="nr-row">
-      <span class="nr">2023<span class="sep"></span>676</span>
-      <span class="chip-row">
-        <span class="sklasse s2">S2</span>
-        <span class="termin soon">Do, 16.04. · in 1d</span>
-      </span>
+  <!-- 5) 2023 676 — RUNNING (Hero) — jetzt MIT ✓ Fertig-Button -->
+  <div class="card running">
+    <div class="nr">2023<span class="sep"></span>676</div>
+    <div class="chips">
+      <span class="sklasse s2">S2</span>
+      <span class="termin soon">Do, 16.04. · in 1d</span>
     </div>
-    <div class="kunde">RIEDER BADHALL</div>
-    <div class="meta"><span class="stk">12 Stk</span> · Komm: 25-0070 Lager Bad Hall 2025/26 · BE20112</div>
+    <div class="kunde-stk-row">
+      <span class="kunde">RIEDER BADHALL</span>
+      <span class="stk">12 <span class="unit">Stk</span></span>
+    </div>
+    <div class="kommission">Komm: 25-0070 Lager Bad Hall 2025/26 · BE20112</div>
     <div class="timer-row" style="background:#ffffff;border:1px solid #b8e5d2;">
-      <span class="timer-label" style="color:var(--accent);">▶ Läuft</span>
+      <span class="timer-label" style="color:var(--accent);">▶ LÄUFT</span>
       <span class="timer-val running">00:12:34</span>
     </div>
-    <div class="actions running">
-      <button class="btn btn-stop">⏹ Stop &amp; Ende</button>
-      <button class="btn btn-ghost"><span class="ico">⏸</span></button>
+    <div class="actions">
+      <button class="btn btn-stop">⏹ Stop</button>
+      <button class="btn btn-tertiary">⏸ Block.</button>
+      <button class="btn btn-secondary">✓ Fertig</button>
     </div>
   </div>
 
-  <!-- 6) 2023 683 UNISAN HART -->
-  <div class="card prio-today">
-    <div class="nr-row">
-      <span class="nr">2023<span class="sep"></span>683</span>
-      <span class="chip-row">
-        <span class="sklasse s2">S2</span>
-        <span class="termin soon">Do, 16.04. · in 1d</span>
-      </span>
+  <!-- 6) 2023 683 — mit Notiz -->
+  <div class="card prio-soon">
+    <div class="nr">2023<span class="sep"></span>683</div>
+    <div class="chips">
+      <span class="sklasse s2">S2</span>
+      <span class="termin soon">Do, 16.04. · in 1d</span>
     </div>
-    <div class="kunde">UNISAN HART</div>
-    <div class="meta"><span class="stk">7 Stk</span> · Komm: 250135 Willersdorfstraße 46, 8061 / T1</div>
-    <div class="notiz"><span class="notiz-icon">⚡</span><span>Slimline inkl. Baustopfen</span></div>
+    <div class="kunde-stk-row">
+      <span class="kunde">UNISAN HART</span>
+      <span class="stk">7 <span class="unit">Stk</span></span>
+    </div>
+    <div class="kommission">Komm: 250135 Willersdorfstraße 46, 8061 / T1</div>
+    <div class="notiz">⚡ Slimline inkl. Baustopfen</div>
     <div class="timer-row">
       <span class="timer-label">Zeit CNC</span>
-      <span class="timer-val zero">00:00:00</span>
+      <span class="timer-val zero">–</span>
     </div>
     <div class="actions">
       <button class="btn btn-primary">▶ Beginn</button>
-      <button class="btn btn-ghost"><span class="ico">⏸</span></button>
-      <button class="btn btn-ghost"><span class="ico">✓</span></button>
+      <button class="btn btn-tertiary">⏸ Block.</button>
+      <button class="btn btn-secondary">✓ Fertig</button>
     </div>
   </div>
 
 </div>
 
 <div class="explainer">
-  <h3>Was in Mockup v2 geändert wurde (nach deinem Feedback)</h3>
+  <h3>v3 Änderungen (Usability-Review + Stückzahl-Feedback)</h3>
   <ul>
-    <li><b>Picker gruppiert</b> — Vorfertigung (CNC + AP1/2 + UP1/2) als eine Gruppe, dann Zusammenbau / Nachbearbeitung / Heizung / Einbauelement / Versand je eigene Sektion mit Mono-Header &amp; Trennlinie.</li>
-    <li><b>Picker Live-Info rechts</b> — <code>1 läuft · 6 offen</code> mit pulsierendem grünen Punkt, <code>leer</code> kursiv-dezent, <code>1 blockiert</code> als amber Chip. MA sieht vor dem Klick: ist was los?</li>
-    <li><b>Picker Prio-Stripe</b> — grüner Balken links bei Station mit laufendem Timer, blauer bei busy, transparent bei leer.</li>
-    <li><b>Auftragsnr ist Hero</b> — 28 px Mono-Bold, <code>2023 680</code> mit echtem Abstand. Der Anker mit dem ihr kommuniziert.</li>
-    <li><b>Kunde als klare Subline</b> — 16 px, gut lesbar, aber unter der Nummer.</li>
-    <li><b>Prio-Stripe auch auf Karte</b> — rot=HighPrio/überfällig, gelb=morgen, grün=läuft. Karte „gefärbt" ohne Fläche zu verlieren.</li>
-    <li><b>Hero-Treatment für laufenden Timer</b> — RIEDER BADHALL: grüner Wash, fettere Border, sanfter Schatten, Stop-Button statt Beginn.</li>
-    <li><b>Button-Hierarchie</b> — ▶ Beginn dominiert gefüllt-grün, Blockieren + Fertig nur als Outline-Icons. Reduziert Lärm um ~60 %.</li>
-    <li><b>Notiz = gelbe Warnbox</b> — „SEHR DRINGEND" ist sofort als operative Warnung erkennbar.</li>
-    <li><b>Kommission dezent</b> — kleine Mono-Zeile statt eigener Box. Admin-Info bleibt, stört nicht.</li>
-    <li><b>Timer 00:00:00 fast unsichtbar</b> — 35 % Opacity. Aktiver Timer leuchtet groß grün.</li>
-    <li><b>Termin-Urgenz</b> — grau/amber/grün/rot je nach Nähe zum Termin.</li>
+    <li><b>Stückzahl prominent</b> — 22 px Mono-Bold rechts neben dem Kunden. Sofort sichtbar: „37 Stk" vs „4 Stk" gibt dem MA operativen Kontext (wie lang wird das dauern?).</li>
+    <li><b>Alle Buttons mit Label</b> — ▶ Beginn (primary grün), ⏸ Block. (tertiary outline), ✓ Fertig (secondary blau-outline). Auch mit Handschuhen auf dem Tablet sofort lesbar, kein Raten.</li>
+    <li><b>HighPrio = Karten-Wash</b> — LESSIAK hat rosa Hintergrund (#fff5f5), nicht nur 4px Stripe. Auf 50 cm Tablet-Abstand sofort als „Alarm" erkennbar.</li>
+    <li><b>Chips eigene Zeile</b> — S-Klasse + Termin unter der Nr, nicht daneben. Weniger Informationsdichte in Zeile 1, Nr dominiert.</li>
+    <li><b>Timer 0 = „–" statt 00:00:00</b> — volle Opacity, kein visuelles Rauschen. Laufender Timer leuchtet groß grün.</li>
+    <li><b>Fertig-Button auch bei Running</b> — MA kann direkt von Running → Fertig, ohne Stop-Umweg. Workflow-Abkürzung.</li>
+    <li><b>Notiz fett</b> — 600 font-weight statt 500. „SEHR DRINGEND" schreit mehr.</li>
+    <li><b>Picker unverändert</b> — war gut, keine Änderung nötig.</li>
   </ul>
 </div>
 
