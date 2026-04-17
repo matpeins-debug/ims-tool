@@ -70,6 +70,11 @@
   .section-active{display:flex;flex-direction:column;gap:8px}
   .section-active .section-head{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#006b4a;padding:0 2px}
   .section-active .section-head::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite}
+  /* Running-Grid: 1 Auftrag = volle Breite, mehrere = 2 Spalten ab Desktop */
+  .running-grid{display:grid;gap:14px;grid-template-columns:1fr}
+  @media (min-width:1100px){
+    .running-grid.multi{grid-template-columns:repeat(2,1fr)}
+  }
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.55;transform:scale(0.85)}}
 
   .queue-wrap{display:flex;flex-direction:column;gap:8px}
@@ -738,14 +743,20 @@ function render() {
 
   main.className = '';
 
-  // Split: laufender Auftrag (Hero) vs. Rest (Queue)
-  const running = list.find(a => IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]));
-  const queue = running ? list.filter(a => a.id !== running.id) : list;
+  // Split: laufende Auftraege (koennen MEHRERE sein, z.B. 2 CNC-Maschinen parallel)
+  const runningList = list.filter(a => IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]));
+  const queue = list.filter(a => !runningList.includes(a));
   const avgMs = avgMsForAP();
 
   let html = '';
-  if (running) {
-    html += `<section class="section-active"><div class="section-head">Aktuell in Arbeit</div>${renderCard(running, true, avgMs)}</section>`;
+  if (runningList.length) {
+    const isMulti = runningList.length > 1;
+    const headLbl = isMulti ? `Aktuell in Arbeit (${runningList.length})` : 'Aktuell in Arbeit';
+    const cards = runningList.map(a => renderCard(a, !isMulti, avgMs)).join('');
+    html += `<section class="section-active">
+      <div class="section-head">${esc(headLbl)}</div>
+      <div class="running-grid ${isMulti ? 'multi' : 'single'}">${cards}</div>
+    </section>`;
   }
   // Info fuer Sprunglink zur Tagestabelle
   let doneTotalMs = 0;
@@ -790,11 +801,11 @@ function render() {
 
   main.innerHTML = html;
 
-  // Live-Ticker für Hero-Karte
-  if (running) {
-    const td = running.timers[IMS.timerKey(running.id, AP)];
-    startLiveTicker(running.id, td);
-  }
+  // Live-Ticker fuer ALLE laufenden Karten
+  runningList.forEach(a => {
+    const td = a.timers[IMS.timerKey(a.id, AP)];
+    startLiveTicker(a.id, td);
+  });
 }
 
 function renderCard(a, isHero, avgMs) {
