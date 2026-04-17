@@ -4,145 +4,240 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>IMS Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Light Mode ist permanenter Default (Feedback 2026-04-15: "den dunklen Modus verwendet niemand") */
-    --bg:       #f5f7fa;
-    --surface:  #ffffff;
-    --surface2: #eef1f6;
-    --border:   #d5dbe5;
-    --text:     #1a1d27;
-    --text2:    #4b5563;
-    --text3:    #8892a6;
-    --accent:   #00a87a;
-    --warn:     #d98200;
-    --danger:   #d63040;
-    --blue:     #0066cc;
+    /* Light Mode — permanent (Feedback 2026-04-15: "den dunklen Modus verwendet niemand") */
+    --bg:#f5f7fa; --surface:#ffffff; --surface2:#eef1f6; --border:#d5dbe5;
+    --text:#1a1d27; --text2:#4b5563; --text3:#8892a6;
+    --accent:#00a87a; --warn:#d98200; --danger:#d63040; --blue:#0066cc;
+    --komm:#0d8a5e;
+    --high-bg:#fff0f2; --high-border:#d63040;
+    --block-bg:#fff4e0; --block-border:#d98200;
+    --run-bg:#f0fbf6; --run-border:#00a87a;
+    --soon-stripe:#d98200;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; min-height: 100vh; }
-  a, button { font-family: inherit; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px}
+  body{font-variant-numeric:tabular-nums}
+  a,button{font-family:inherit}
 
-  /* ─── LOGIN ───────────────────────────────────────────────────────────── */
-  #login {
-    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: var(--bg); z-index: 100;
-  }
-  #login form {
-    background: var(--surface); padding: 32px; border-radius: 16px; border: 1px solid var(--border);
-    display: flex; flex-direction: column; gap: 12px; min-width: 280px;
-  }
-  #login h2 { margin: 0 0 8px 0; color: var(--accent); }
-  #login input {
-    padding: 14px; font-size: 18px; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--surface2); color: var(--text);
-  }
-  #login button {
-    padding: 14px; font-size: 16px; border-radius: 8px; border: 0;
-    background: var(--accent); color: #ffffff; font-weight: 600; cursor: pointer;
-  }
-  #login .err { color: var(--danger); font-size: 13px; min-height: 16px; }
+  /* ── LOGIN ───────────────────────────────────────────── */
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:100}
+  #login form{background:var(--surface);padding:32px;border-radius:16px;border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;min-width:280px;box-shadow:0 4px 24px rgba(0,0,0,0.06)}
+  #login h2{margin:0 0 8px 0;color:var(--accent)}
+  #login input{padding:14px;font-size:18px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text)}
+  #login button{padding:14px;font-size:16px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+  #login .err{color:var(--danger);font-size:13px;min-height:16px}
 
-  /* ─── HEADER ──────────────────────────────────────────────────────────── */
-  header {
-    display: flex; align-items: center; gap: 14px; padding: 12px 18px;
-    background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+  /* ── HEADER ──────────────────────────────────────────── */
+  header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  header .station{background:var(--accent);color:#fff;font-weight:700;font-size:18px;padding:8px 16px;border-radius:8px;letter-spacing:0.02em}
+  header .title{font-size:14px;color:var(--text2)}
+  header .sync{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+  header .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--text3)}
+  header .sync-dot.ok{background:var(--accent)}
+  header .sync-dot.loading{background:var(--warn);animation:blink 1s infinite}
+  header .sync-dot.err{background:var(--danger)}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+  header .logout{background:transparent;border:1px solid var(--border);color:var(--text2);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+
+  /* ── STATION PICKER ──────────────────────────────────── */
+  .picker-section{max-width:600px;margin:0 auto;padding:24px 18px}
+  .picker-section h2{color:var(--accent);margin:0 0 6px 0;font-size:22px}
+  .picker-section .sub{color:var(--text2);font-size:14px;margin:0 0 20px 0}
+  .picker-group{margin-bottom:18px}
+  .picker-group-label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin:0 0 6px 0;padding:0 2px}
+  .picker-group-sep{border:0;border-top:1px solid var(--border);margin:0 0 10px 0}
+  .picker-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;cursor:pointer;text-decoration:none;color:var(--text);font-size:16px;font-weight:600;transition:box-shadow 0.15s,border-color 0.15s}
+  .picker-btn:hover,.picker-btn:active{box-shadow:0 2px 8px rgba(0,0,0,0.08);border-color:var(--accent)}
+  .picker-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .picker-chip{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:0.02em;white-space:nowrap}
+  .picker-chip.offen{background:#e3f5c8;color:#3f6800}
+  .picker-chip.laeuft{background:#d0f5e6;color:#006b4a}
+  .picker-chip.blockiert{background:#fff1d0;color:#8a5a00}
+  .picker-chip.leer{background:var(--surface2);color:var(--text3)}
+
+  /* ── MAIN LAYOUT ─────────────────────────────────────── */
+  main{padding:16px;max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+  main.empty{display:flex;align-items:center;justify-content:center;min-height:60vh;color:var(--text3);font-size:18px;text-align:center}
+
+  .section-active{display:flex;flex-direction:column;gap:8px}
+  .section-active .section-head{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#006b4a;padding:0 2px}
+  .section-active .section-head::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.55;transform:scale(0.85)}}
+
+  .queue-wrap{display:flex;flex-direction:column;gap:12px}
+  .queue-head{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);padding:12px 2px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .queue-head .next{color:var(--text2);text-transform:none;letter-spacing:0;font-weight:500;font-size:13px}
+  .queue-head .next b{color:var(--text);font-weight:700}
+
+  /* Queue: Multi-Column-Flow (statt Grid — keine Row-Lücken) */
+  .section-queue{column-count:1;column-gap:14px}
+  @media (min-width:720px){.section-queue{column-count:2}}
+  @media (min-width:1100px){.section-queue{column-count:3}}
+  .section-queue > .card{display:inline-block;width:100%;margin-bottom:14px;break-inside:avoid;page-break-inside:avoid;-webkit-column-break-inside:avoid}
+
+  /* ── CARD BASIS ──────────────────────────────────────── */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;border-left:4px solid transparent}
+  .section-active .card{display:grid;gap:10px}
+  .section-queue .card > *{margin:0 0 10px 0}
+  .section-queue .card > *:last-child{margin-bottom:0}
+  .card.prio-high{background:var(--high-bg);border-color:var(--high-border);border-left:4px solid var(--danger)}
+  .card.prio-soon{border-left:4px solid var(--soon-stripe)}
+  .card.blocked{background:var(--block-bg);border-color:var(--block-border);border-left:4px solid var(--warn)}
+  .card.running{background:var(--run-bg);border-color:var(--run-border);border-left:6px solid var(--accent);box-shadow:0 4px 20px rgba(0,168,122,0.18)}
+
+  /* Cockpit-Layout für Hero-Karte */
+  @media (min-width:900px){
+    .card.running.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:0;padding:0;overflow:hidden}
+    .hero-left{padding:22px;display:flex;flex-direction:column;gap:12px;border-right:1px solid rgba(0,168,122,0.25)}
+    .hero-right{padding:22px;display:flex;flex-direction:column;gap:14px;background:rgba(255,255,255,0.55)}
   }
-  header .station {
-    background: var(--accent); color: #ffffff; font-weight: 700; font-size: 18px;
-    padding: 8px 16px; border-radius: 8px; letter-spacing: 0.02em;
+  @media (max-width:899px){
+    .card.running.hero{display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden}
+    .hero-left{padding:18px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid rgba(0,168,122,0.25)}
+    .hero-right{padding:18px;display:flex;flex-direction:column;gap:14px;background:rgba(255,255,255,0.55)}
   }
-  header .title { font-size: 14px; color: var(--text2); }
-  header .sync { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
-  header .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text3); }
-  header .sync-dot.ok { background: var(--accent); }
-  header .sync-dot.loading { background: var(--warn); animation: pulse 1s infinite; }
-  header .sync-dot.err { background: var(--danger); }
-  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }
-  header .logout { background: transparent; border: 1px solid var(--border); color: var(--text2); padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
 
-  /* ─── MAIN ────────────────────────────────────────────────────────────── */
-  main { padding: 16px; display: grid; gap: 12px; max-width: 1400px; margin: 0 auto; }
-  main.empty { display: flex; align-items: center; justify-content: center; min-height: 60vh; color: var(--text3); font-size: 18px; text-align: center; }
+  .card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .card-prio{font-size:13px;font-weight:800;color:#fff;background:var(--text2);padding:3px 8px;border-radius:5px;letter-spacing:0.04em;font-variant-numeric:tabular-nums;min-width:30px;text-align:center}
+  .card.prio-high .card-prio{background:var(--danger)}
+  .card.running .card-prio{background:var(--accent)}
+  .card-nr-wrap{display:inline-flex;align-items:baseline;gap:0}
+  .card-nr-jahr{font-size:20px;font-weight:500;color:var(--text2);font-variant-numeric:tabular-nums}
+  .card-nr-main{font-size:32px;font-weight:800;color:var(--text);line-height:1;font-variant-numeric:tabular-nums;margin-left:0.28em}
+  .card.running.hero .card-nr-jahr{font-size:26px}
+  .card.running.hero .card-nr-main{font-size:44px}
 
-  /* ─── KARTE ──────────────────────────────────────────────────────────── */
-  .card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 16px; display: grid; gap: 10px;
+  .card-kunde{font-size:16px;color:var(--text2);font-weight:500}
+  .card.running.hero .card-kunde{font-size:18px;color:var(--text)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
+  .badge.s0{background:#ece4ff;color:#5a3fa8}
+  .badge.s1{background:#e0ecff;color:#0a4fa0}
+  .badge.s2{background:#d9f4e6;color:#006b4a}
+  .badge.s3{background:#ffe5d0;color:#a04a00}
+  .badge.highprio{background:var(--danger);color:#fff}
+  .badge.termin{background:var(--surface2);color:var(--text2);text-transform:none;letter-spacing:0;font-weight:600;font-size:12px;padding:3px 9px;font-variant-numeric:tabular-nums}
+  .badge.termin.warn{background:#fff1d0;color:#8a5a00}
+  .badge.termin.today{background:#e3f5c8;color:#2d5400;font-weight:700}
+  .badge.termin.over{background:#ffd9df;color:#8a1a28;font-weight:700}
+
+  .card-komm{color:var(--komm);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+
+  .stk-plan-row{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+  .card-stk{font-size:46px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--text)}
+  .card-stk .unit{font-size:18px;font-weight:600;color:var(--text2);margin-left:4px}
+  .card.running.hero .card-stk{font-size:52px}
+
+  .card-notiz{padding:10px 12px;background:#fffbe6;border-left:3px solid #ffe066;border-radius:6px;font-size:13px;color:#8a6d00;white-space:pre-wrap;font-weight:500}
+  .card-notiz::before{content:"NOTIZ";font-size:10px;font-weight:700;letter-spacing:0.08em;color:#6b5300;display:block;margin-bottom:2px}
+
+  /* Timer-Box: abgesetzt, mit ∅-Zeit und Pause daneben */
+  .timer-box{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+  .timer-box.active{border-left:4px solid var(--accent);padding-left:10px}
+  .timer-left{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+  .timer-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700}
+  .timer-label.running{color:#006b4a}
+  .timer-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+  .timer-val.running{color:var(--accent)}
+  .card.running.hero .timer-val{font-size:36px}
+  .timer-ref{font-size:12px;color:var(--text3);font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+  .timer-ref b{color:var(--text2);font-weight:700}
+  .timer-spacer{flex:1}
+  .btn-timer{padding:12px 18px;font-size:15px;font-weight:700;border-radius:8px;border:0;cursor:pointer;min-height:48px;min-width:100px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0}
+  .btn-timer.start{background:var(--accent);color:#fff}
+  .btn-timer.pause{background:var(--warn);color:#fff}
+  .btn-timer:disabled{opacity:0.35;cursor:not-allowed}
+
+  /* Progress-Bar gegen ∅-Zeit */
+  .progress{display:flex;flex-direction:column;gap:4px}
+  .progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;background:var(--accent);transition:width 0.3s}
+  .progress-fill.warn{background:var(--warn)}
+  .progress-fill.over{background:var(--danger)}
+  .progress-info{font-size:13px;color:var(--text2);display:flex;justify-content:space-between;font-weight:500}
+  .progress-info b{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* Blockierung */
+  .block-toggle{background:transparent;border:1px dashed var(--border);color:var(--text2);padding:8px 12px;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;width:100%}
+  .block-toggle:hover,.block-toggle:active{border-color:var(--warn);color:var(--warn)}
+  .block-toggle .dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+  .block-active{background:#fff4e0;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+  .block-active-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .block-active-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8a5a00}
+  .block-active-clear{background:transparent;border:0;color:#8a5a00;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline}
+  .block-select{padding:10px 12px;font-size:14px;border-radius:6px;border:1px solid var(--warn);background:#fff;color:#8a5a00;font-weight:600;cursor:pointer;width:100%}
+
+  .vorgaenger-warn{color:#8a5a00;font-size:13px;padding:8px 10px;background:#fff4e0;border-left:3px solid var(--warn);border-radius:4px;font-weight:500}
+
+  /* Fotodoku */
+  .foto-section{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#e6f0ff;border:1px solid #b8d1f5;border-radius:8px;font-size:14px;color:#0a4fa0;font-weight:600}
+  .foto-section.required{border-color:var(--danger);background:#fff0f2;color:#8a1a28}
+  .foto-section input{width:22px;height:22px;accent-color:var(--blue);flex-shrink:0}
+  .foto-section .hint{font-size:11px;font-weight:500;display:block;margin-top:2px}
+
+  .fertig-divider{height:1px;background:var(--border);margin:6px 0}
+
+  /* FERTIG-Button: groß, prominent, mit dynamischer Subline */
+  .btn-fertig{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    width:100%;padding:16px;border-radius:10px;border:0;cursor:pointer;text-align:center;
+    background:var(--blue);color:#fff;min-height:64px;transition:transform 0.06s ease;
   }
-  .card.blocked { border-color: var(--warn); background: #fff4e0; }
-  .card.running { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,168,122,0.18); background: #f0fbf6; }
-  .card.overdue { border-color: var(--danger); background: #fff0f2; }
+  .btn-fertig .fertig-main{font-size:24px;font-weight:800;letter-spacing:0.04em}
+  .btn-fertig .fertig-main::before{content:"✓ ";font-weight:700}
+  .btn-fertig .fertig-sub{font-size:12px;font-weight:500;opacity:0.85;letter-spacing:0.02em}
+  .btn-fertig:active{transform:scale(0.98)}
+  .btn-fertig:disabled{opacity:0.35;cursor:not-allowed}
+  .card.running.hero .btn-fertig{min-height:76px;padding:18px}
+  .card.running.hero .btn-fertig .fertig-main{font-size:30px}
+  .card.running.hero .btn-fertig .fertig-sub{font-size:13px}
 
-  .card-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .card-nr { font-size: 22px; font-weight: 700; letter-spacing: 0.01em; }
-  .card-kunde { font-size: 16px; color: var(--text); font-weight: 500; }
-  .card-stk { font-size: 14px; color: var(--text2); font-variant-numeric: tabular-nums; }
-  .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.03em; }
-  .badge.s0 { background: #ece4ff; color: #5a3fa8; }
-  .badge.s1 { background: #e0ecff; color: #0a4fa0; }
-  .badge.s2 { background: #d9f4e6; color: #006b4a; }
-  .badge.s3 { background: #ffe5d0; color: #a04a00; }
-  .badge.termin { background: var(--surface2); color: var(--text2); }
-  .badge.termin.warn   { background: #fff1d0; color: #8a5a00; }
-  .badge.termin.today  { background: #e3f5c8; color: #3f6800; }
-  .badge.termin.over   { background: #ffd9df; color: #8a1a28; }
-  .badge.highprio { background: var(--danger); color: #fff; }
-
-  .card-meta { display: flex; flex-wrap: wrap; gap: 14px; color: var(--text2); font-size: 13px; }
-  .card-notiz { padding: 8px 10px; background: var(--surface2); border-radius: 6px; font-size: 13px; color: var(--text2); white-space: pre-wrap; }
-
-  .timer-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; }
-  .timer-label { font-size: 12px; color: var(--text3); }
-  .timer-val { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 600; }
-  .timer-val.running { color: var(--accent); }
-
-  .vorgaenger-warn { color: #8a5a00; font-size: 13px; padding: 8px 10px; background: #fff4e0; border-left: 3px solid var(--warn); border-radius: 4px; }
-  .blocked-warn { color: #8a5a00; font-size: 13px; font-weight: 600; padding: 8px 10px; background: #fff4e0; border-left: 3px solid var(--warn); border-radius: 4px; }
-
-  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .actions.three { grid-template-columns: 1fr 1fr 1fr; }
-  .btn {
-    padding: 16px 14px; font-size: 16px; font-weight: 600; border-radius: 10px; border: 0; cursor: pointer;
-    color: #ffffff; background: var(--accent); transition: transform 0.06s ease, opacity 0.2s ease;
-    min-height: 56px;
+  /* Positionen-Platzhalter (rechte Hero-Spalte) */
+  .positionen-placeholder{
+    border:2px dashed var(--border);border-radius:10px;padding:24px 16px;
+    display:flex;flex-direction:column;gap:8px;flex:1;min-height:180px;
+    align-items:center;justify-content:center;text-align:center;
+    background:rgba(255,255,255,0.35);
   }
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn.stop   { background: var(--danger); color: #fff; }
-  .btn.ghost  { background: #ffffff; color: var(--text); border: 1px solid var(--border); }
-  .btn.warn   { background: var(--warn); color: #ffffff; }
-  .btn.fertig { background: var(--blue); color: #ffffff; }
+  .positionen-placeholder .icon{font-size:28px;opacity:0.35}
+  .positionen-placeholder .head{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.02em}
+  .positionen-placeholder .sub{font-size:12px;color:var(--text3);max-width:260px;line-height:1.4}
 
-  /* ─── MODAL ───────────────────────────────────────────────────────────── */
-  .modal-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50;
-    display: flex; align-items: center; justify-content: center; padding: 16px;
-  }
-  .modal {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 20px; min-width: 280px; max-width: 420px; width: 100%;
-    display: grid; gap: 12px;
-  }
-  .modal h3 { margin: 0; font-size: 18px; }
-  .modal .opt { padding: 14px; background: var(--surface2); border-radius: 8px; cursor: pointer; text-align: left; border: 0; color: var(--text); font-size: 15px; }
-  .modal .opt:hover { background: #dfe5ee; }
-  .modal .cancel { background: transparent; border: 1px solid var(--border); color: var(--text2); padding: 10px; border-radius: 8px; cursor: pointer; }
+  /* ── CUSTOM CONFIRM MODAL ─────────────────────────────── */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(10,15,25,0.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.15s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--surface);border-radius:14px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);overflow:hidden;animation:slideUp 0.2s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .modal-head{padding:20px 22px 14px;border-bottom:1px solid var(--border)}
+  .modal-head h3{margin:0 0 6px 0;font-size:19px;font-weight:700;color:var(--text)}
+  .modal-auftrag{display:flex;align-items:baseline;gap:8px;color:var(--text2);font-size:14px}
+  .modal-auftrag .nr{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+  .modal-body{padding:16px 22px;display:flex;flex-direction:column;gap:10px}
+  .modal-conseq{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text)}
+  .modal-conseq .mark{color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px}
+  .modal-conseq b{font-weight:700;font-variant-numeric:tabular-nums}
+  .modal-actions{padding:14px 22px 20px;display:flex;gap:10px;justify-content:flex-end}
+  .modal-btn{padding:12px 20px;font-size:15px;font-weight:700;border-radius:8px;border:0;cursor:pointer;min-height:48px;min-width:110px}
+  .modal-btn.secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+  .modal-btn.primary{background:var(--blue);color:#fff}
+  .modal-btn.primary.danger{background:var(--danger)}
+  .modal-btn:active{transform:scale(0.98)}
 
-  /* ─── TOAST ───────────────────────────────────────────────────────────── */
-  .toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--surface); border: 1px solid var(--accent); padding: 12px 20px;
-    border-radius: 10px; font-size: 14px; z-index: 60; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    animation: slideUp 0.25s ease;
-  }
-  .toast.err { border-color: var(--danger); }
-  @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  /* Blockierung-Modal (leicht anders als Fertig-Modal) */
+  .modal .opt{display:block;width:100%;padding:14px;background:var(--surface2);border-radius:8px;cursor:pointer;text-align:left;border:0;color:var(--text);font-size:15px;margin-bottom:6px;font-weight:500}
+  .modal .opt:hover,.modal .opt:active{background:#dfe5ee}
+  .modal .opt.clear{color:var(--accent);font-weight:700}
 
-  /* ─── RESPONSIVE ──────────────────────────────────────────────────────── */
-  @media (min-width: 900px) {
-    main { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
-  }
+  /* ── TOAST ────────────────────────────────────────────── */
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--accent);padding:12px 20px;border-radius:10px;font-size:14px;z-index:60;box-shadow:0 8px 32px rgba(0,0,0,0.18);animation:slideUpToast 0.25s ease;color:var(--text)}
+  .toast.err{border-color:var(--danger)}
+  @keyframes slideUpToast{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
 </style>
 </head>
 <body>
@@ -168,41 +263,59 @@
 <!-- Main -->
 <main id="main" class="empty">Lade…</main>
 
-<!-- Station-Picker (wenn kein ?ap= in URL) -->
-<div id="picker" style="display:none; padding:24px; max-width:500px; margin:40px auto;">
-  <h2 style="color:var(--accent); margin-top:0;">🔧 IMS Station wählen</h2>
-  <p style="color:var(--text2); font-size:14px;">Öffne diese Seite mit <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">?ap=…</code> als Bookmark pro Tablet.</p>
-  <div id="pickerList" style="display:grid; gap:8px; margin-top:20px;"></div>
+<!-- Station-Picker -->
+<div id="picker" style="display:none" class="picker-section">
+  <h2>🔧 Station wählen</h2>
+  <p class="sub">Bookmark pro Tablet: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">station.html?ap=cnc</code></p>
+  <div id="pickerList"></div>
 </div>
 
 <script src="shared.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
-// station.html — Tablet-Ansicht pro Arbeitsplatz
-// URL: station.html?ap=cnc  (ap1, ap2, up1, up2, heizung, zusammenbau, nachbearbeitung, einbauelement, versand)
+// station.html — Tablet-Ansicht pro Arbeitsplatz (v2 Cockpit-Layout)
+// URL: station.html?ap=cnc
 // ─────────────────────────────────────────────────────────────────────────────
 'use strict';
 
-const AP = IMS.resolveAP(IMS.route.ap);          // 'CNC' | 'AP-Armatur 1' | ...
+const AP = IMS.resolveAP(IMS.route.ap);
 const STATION_NAMEN = {
   'CNC': 'CNC',
-  'AP-Armatur 1': 'AP-ARMATUR 1',
-  'AP-Armatur 2': 'AP-ARMATUR 2',
-  'UP-Armatur 1': 'UP-ARMATUR 1',
-  'UP-Armatur 2': 'UP-ARMATUR 2',
-  'Heizung': 'HEIZUNG',
-  'Zusammenbau': 'ZUSAMMENBAU',
-  'Nachbearbeitung': 'NACHBEARBEITUNG',
-  'Einbauelement': 'EINBAUELEMENT',
-  'Versand': 'VERSAND',
+  'AP-Armatur 1': 'AP-Armatur 1',
+  'AP-Armatur 2': 'AP-Armatur 2',
+  'UP-Armatur 1': 'UP-Armatur 1',
+  'UP-Armatur 2': 'UP-Armatur 2',
+  'Heizung': 'Heizung',
+  'Zusammenbau': 'Zusammenbau',
+  'Nachbearbeitung': 'Nachbearbeitung',
+  'Einbauelement': 'Einbauelement',
+  'Versand': 'Versand',
 };
+const PICKER_GROUPS = [
+  { label: 'Vorfertigung',    stations: [
+    { key:'cnc', name:'CNC' },
+    { key:'ap1', name:'AP-Armatur 1' },
+    { key:'ap2', name:'AP-Armatur 2' },
+    { key:'up1', name:'UP-Armatur 1' },
+    { key:'up2', name:'UP-Armatur 2' },
+  ] },
+  { label: 'Zusammenbau',     stations: [{ key:'zusammenbau', name:'Zusammenbau' }] },
+  { label: 'Nachbearbeitung', stations: [{ key:'nachbearbeitung', name:'Nachbearbeitung' }] },
+  { label: 'Heizung',         stations: [{ key:'heizung', name:'Heizung' }] },
+  { label: 'Einbauelement',   stations: [{ key:'einbauelement', name:'Einbauelement' }] },
+  { label: 'Versand',         stations: [{ key:'versand', name:'Versand' }] },
+];
 
 let pollTimer = null;
 let liveTickers = {};
 
 // ─── BOOT ────────────────────────────────────────────────────────────────────
-function boot() {
+async function boot() {
   if (!AP || !STATION_NAMEN[AP]) {
+    // Kein AP-Parameter → Picker mit Live-Info zeigen (falls authed)
+    if (IMS.isAuthed()) {
+      try { await IMS.store.load(); } catch (e) { console.warn('[station] load for picker failed', e); }
+    }
     showPicker();
     return;
   }
@@ -224,22 +337,49 @@ function showPicker() {
   const picker = document.getElementById('picker');
   picker.style.display = 'block';
 
-  const stationen = [
-    { key: 'cnc',             label: 'CNC' },
-    { key: 'ap1',             label: 'AP-Armatur 1' },
-    { key: 'ap2',             label: 'AP-Armatur 2' },
-    { key: 'up1',             label: 'UP-Armatur 1' },
-    { key: 'up2',             label: 'UP-Armatur 2' },
-    { key: 'heizung',         label: 'Heizung' },
-    { key: 'zusammenbau',     label: 'Zusammenbau' },
-    { key: 'nachbearbeitung', label: 'Nachbearbeitung' },
-    { key: 'einbauelement',   label: 'Einbauelement' },
-    { key: 'versand',         label: 'Versand' },
-  ];
+  const liveInfo = IMS.store.auftraege.length ? computeLiveInfo() : null;
 
-  document.getElementById('pickerList').innerHTML = stationen.map(s =>
-    `<a href="?ap=${s.key}" class="btn" style="display:block; text-align:center; text-decoration:none;">${s.label}</a>`
-  ).join('');
+  const html = PICKER_GROUPS.map(g => {
+    const items = g.stations.map(s => {
+      const apFull = IMS.resolveAP(s.key);
+      const info = liveInfo && liveInfo[apFull];
+      let chips = '';
+      if (info) {
+        if (info.running)   chips += `<span class="picker-chip laeuft">${info.running} läuft</span>`;
+        if (info.blocked)   chips += `<span class="picker-chip blockiert">${info.blocked} blockiert</span>`;
+        if (info.offen)     chips += `<span class="picker-chip offen">${info.offen} offen</span>`;
+        if (!info.offen && !info.running && !info.blocked) chips = `<span class="picker-chip leer">leer</span>`;
+      }
+      return `<a class="picker-btn" href="?ap=${s.key}">${esc(s.name)}<span class="picker-chips">${chips}</span></a>`;
+    }).join('');
+    return `
+      <div class="picker-group">
+        <div class="picker-group-label">${esc(g.label)}</div>
+        <hr class="picker-group-sep">
+        ${items}
+      </div>`;
+  }).join('');
+
+  document.getElementById('pickerList').innerHTML = html;
+}
+
+function computeLiveInfo() {
+  // Für jeden AP: offen, running, blocked zählen
+  const info = {};
+  IMS.ARBEITSPLAETZE.concat(['Versand']).forEach(ap => { info[ap] = { offen:0, running:0, blocked:0 }; });
+  IMS.store.auftraege.forEach(a => {
+    if (a.fertig) return;
+    const aps = IMS.getAuftragAPs(a);
+    aps.forEach(ap => {
+      if (!info[ap]) info[ap] = { offen:0, running:0, blocked:0 };
+      if (a.stationFertig && a.stationFertig[ap]) return; // Station fertig → nicht offen
+      info[ap].offen++;
+      if (IMS.hatBlockierung(a, ap)) info[ap].blocked++;
+      const td = a.timers && a.timers[IMS.timerKey(a.id, ap)];
+      if (IMS.istTimerAktiv(td)) info[ap].running++;
+    });
+  });
+  return info;
 }
 
 function doLogin(e) {
@@ -247,7 +387,12 @@ function doLogin(e) {
   const pw = document.getElementById('loginPw').value;
   if (IMS.authCheck(pw)) {
     document.getElementById('login').style.display = 'none';
-    startApp();
+    if (!AP || !STATION_NAMEN[AP]) {
+      // Nach Login zum Picker (mit Daten laden)
+      IMS.store.load().then(() => showPicker()).catch(() => showPicker());
+    } else {
+      startApp();
+    }
   } else {
     document.getElementById('loginErr').textContent = 'Falsches Passwort';
   }
@@ -261,7 +406,7 @@ function doLogout() {
 
 async function startApp() {
   document.getElementById('header').style.display = 'flex';
-  document.getElementById('main').style.display = 'grid';
+  document.getElementById('main').style.display = 'flex';
   await refresh();
   pollTimer = setInterval(refresh, IMS.CONFIG.POLL_MS);
 }
@@ -286,39 +431,44 @@ async function refresh() {
   }
 }
 
-// ─── FILTER ──────────────────────────────────────────────────────────────────
-// Aufträge für diese Station:
-//   - hat diesen AP laut Gruppen
-//   - AP ist noch nicht station-fertig
-//   - Auftrag selbst ist noch nicht "fertig"
+// ─── AUFTRÄGE FILTERN + SORTIEREN ────────────────────────────────────────────
 function auftraegeFuerStation() {
-  return IMS.store.auftraege
-    .filter(a => !a.fertig)
-    .filter(a => IMS.isAPOffen(a, AP))
-    .sort(sortFn);
+  return IMS.store.auftraege.filter(a => !a.fertig).filter(a => IMS.isAPOffen(a, AP)).sort(sortFn);
 }
 
 function sortFn(a, b) {
-  // 1) laufender Timer für diese Station → ganz oben
-  const aLauf = IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]);
-  const bLauf = IMS.istTimerAktiv(b.timers && b.timers[IMS.timerKey(b.id, AP)]);
-  if (aLauf !== bLauf) return aLauf ? -1 : 1;
-
+  // 1) laufender Timer zuerst
+  const aL = IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]);
+  const bL = IMS.istTimerAktiv(b.timers && b.timers[IMS.timerKey(b.id, AP)]);
+  if (aL !== bL) return aL ? -1 : 1;
   // 2) HighPrio
   if (!!a.highPrio !== !!b.highPrio) return a.highPrio ? -1 : 1;
-
-  // 3) Termin (nächster zuerst)
+  // 3) Termin
   const aT = a.datum || '9999-12-31';
   const bT = b.datum || '9999-12-31';
   if (aT !== bT) return aT < bT ? -1 : 1;
-
-  // 4) Auftragsnummer
+  // 4) Prio-Feld
+  if ((a.prio || 999) !== (b.prio || 999)) return (a.prio || 999) - (b.prio || 999);
+  // 5) Auftragsnummer
   return (a.nr || '').localeCompare(b.nr || '');
+}
+
+// ∅-Zeit der letzten 10 abgeschlossenen Aufträge für diese Station
+function avgMsForAP() {
+  const values = [];
+  IMS.store.auftraege.forEach(a => {
+    if (!a.stationFertig || !a.stationFertig[AP]) return;
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    if (td && td.totalMs > 0) values.push(td.totalMs);
+  });
+  // letzte 10
+  const last = values.slice(-10);
+  if (!last.length) return null;
+  return last.reduce((s,v) => s+v, 0) / last.length;
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 function render() {
-  // Live-Ticker stoppen (werden neu aufgebaut)
   Object.values(liveTickers).forEach(clearInterval);
   liveTickers = {};
 
@@ -327,21 +477,42 @@ function render() {
 
   if (!list.length) {
     main.className = 'empty';
-    main.innerHTML = '<div>✓ Keine offenen Aufträge für ' + STATION_NAMEN[AP] + '</div>';
+    main.innerHTML = '<div>✓ Keine offenen Aufträge für ' + esc(STATION_NAMEN[AP]) + '</div>';
     return;
   }
 
   main.className = '';
-  main.innerHTML = list.map(renderCard).join('');
 
-  // Live-Ticker für laufende Timer starten
-  list.forEach(a => {
-    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
-    if (IMS.istTimerAktiv(td)) startLiveTicker(a.id, td);
-  });
+  // Split: laufender Auftrag (Hero) vs. Rest (Queue)
+  const running = list.find(a => IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]));
+  const queue = running ? list.filter(a => a.id !== running.id) : list;
+  const avgMs = avgMsForAP();
+
+  let html = '';
+  if (running) {
+    html += `<section class="section-active"><div class="section-head">Aktuell in Arbeit</div>${renderCard(running, true, avgMs)}</section>`;
+  }
+  if (queue.length) {
+    const next = queue[0];
+    const nextHtml = next
+      ? `<span class="next">Als Nächstes: <b>${fmtPrio(next)} · ${fmtNr(next)}</b> ${esc(next.kunde || '')}</span>`
+      : '';
+    html += `<div class="queue-wrap">
+      <div class="queue-head"><span>Warteschlange (${queue.length})</span>${nextHtml}</div>
+      <section class="section-queue">${queue.map(a => renderCard(a, false, avgMs)).join('')}</section>
+    </div>`;
+  }
+
+  main.innerHTML = html;
+
+  // Live-Ticker für Hero-Karte
+  if (running) {
+    const td = running.timers[IMS.timerKey(running.id, AP)];
+    startLiveTicker(running.id, td);
+  }
 }
 
-function renderCard(a) {
+function renderCard(a, isHero, avgMs) {
   const key = IMS.timerKey(a.id, AP);
   const td = a.timers && a.timers[key];
   const running = IMS.istTimerAktiv(td);
@@ -349,69 +520,163 @@ function renderCard(a) {
   const vorgaenger = IMS.sindVorgaengerFertig(a, AP);
   const tage = IMS.tageBis(a.datum);
   const overdue = tage !== null && tage < 0;
-  const cls = ['card', running && 'running', blocked && 'blocked', overdue && 'overdue'].filter(Boolean).join(' ');
+  const soon = tage !== null && tage > 0 && tage <= 3;
+
+  const cls = ['card',
+    isHero && running ? 'running hero' : (running ? 'running' : ''),
+    a.highPrio ? 'prio-high' : '',
+    blocked ? 'blocked' : '',
+    !a.highPrio && !blocked && soon ? 'prio-soon' : '',
+  ].filter(Boolean).join(' ');
+
+  const prioPill = `<span class="card-prio">${fmtPrioNum(a)}</span>`;
+  const nrHtml = renderNr(a);
 
   const sklasse = String(a.sklasse || '').toLowerCase().replace(/\s/g, '');
-  const sBadge = a.sklasse ? `<span class="badge ${sklasse}">${a.sklasse.toUpperCase()}</span>` : '';
-  const hpBadge = a.highPrio ? '<span class="badge highprio">HIGH</span>' : '';
+  const sBadge = a.sklasse ? `<span class="badge ${sklasse}">${esc(a.sklasse)}</span>` : '';
+  const hpBadge = a.highPrio ? '<span class="badge highprio">High Prio</span>' : '';
+  const terminBadge = renderTerminBadge(a, tage);
 
-  let terminBadge = '';
-  if (a.datum) {
-    let tCls = 'termin';
-    if (tage !== null) {
-      if (tage < 0)       tCls += ' over';
-      else if (tage === 0) tCls += ' today';
-      else if (tage <= 3)  tCls += ' warn';
-    }
-    const tLabel = IMS.formatDatum(a.datum) + (tage !== null ? (tage === 0 ? ' (heute)' : tage < 0 ? ` (${Math.abs(tage)}d über)` : ` (in ${tage}d)`) : '');
-    terminBadge = `<span class="badge ${tCls}">${tLabel}</span>`;
-  }
-
-  const stk = a.stk ? `${a.stk} Stk` : '';
-  const kommission = a.kommission ? `<div class="card-meta"><span>Kommission: ${esc(a.kommission)}</span></div>` : '';
+  const stk = a.stk ? `<div class="card-stk">${esc(a.stk)} <span class="unit">Stk</span></div>` : '';
+  const kommission = a.kommission ? `<div class="card-komm">Kommission: ${esc(a.kommission)}</div>` : '';
   const notiz = a.notiz ? `<div class="card-notiz">${esc(a.notiz)}</div>` : '';
 
+  // Timer-Box
   const timerVal = IMS.formatElapsed(IMS.calcTotalMs(td));
-  const timerRow = `<div class="timer-row">
-    <span class="timer-label">Zeit ${STATION_NAMEN[AP]}</span>
-    <span class="timer-val ${running ? 'running' : ''}" id="timer-${a.id}">${timerVal}</span>
+  const avgTxt = avgMs ? `<span class="timer-ref">∅ bisher <b>${IMS.formatMs(avgMs)}</b></span>` : '';
+  const timerBtn = running
+    ? `<button class="btn-timer pause" onclick="onStop('${a.id}')">⏸ Pause</button>`
+    : `<button class="btn-timer start" onclick="onStart('${a.id}')" ${blocked || !vorgaenger ? 'disabled' : ''}>▶ Start</button>`;
+  const timerBox = `<div class="timer-box ${running ? 'active' : ''}">
+    <div class="timer-left">
+      <span class="timer-label ${running ? 'running' : ''}">${running ? 'Läuft' : 'Zeit ' + esc(STATION_NAMEN[AP])}</span>
+      <span class="timer-val ${running ? 'running' : ''}" id="timer-${esc(a.id)}">${timerVal}</span>
+      ${avgTxt}
+    </div>
+    <div class="timer-spacer"></div>
+    ${timerBtn}
   </div>`;
 
+  // Progress (nur wenn running + avg verfügbar)
+  let progress = '';
+  if (isHero && running && avgMs) {
+    const ist = IMS.calcTotalMs(td);
+    const pct = Math.min(Math.round(ist / avgMs * 100), 150);
+    const cls2 = pct > 100 ? 'over' : pct > 80 ? 'warn' : '';
+    const rest = Math.max(avgMs - ist, 0);
+    const restLabel = rest > 0 ? `noch ca. <b>${IMS.formatMs(rest)}</b>` : `<b>${IMS.formatMs(ist - avgMs)} über ∅</b>`;
+    progress = `<div class="progress">
+      <div class="progress-bar"><div class="progress-fill ${cls2}" style="width:${Math.min(pct,100)}%"></div></div>
+      <div class="progress-info"><span>${restLabel}</span><span><b>${IMS.formatMs(ist)}</b> / ∅ ${IMS.formatMs(avgMs)}</span></div>
+    </div>`;
+  }
+
+  // Warnings
   let warnRow = '';
   if (blocked) {
-    warnRow = `<div class="blocked-warn">⚠ BLOCKIERT: ${esc(a.blockierungen[AP])}</div>`;
+    warnRow = renderBlockActive(a);
   } else if (!vorgaenger) {
-    warnRow = `<div class="vorgaenger-warn">⏳ Vorgänger-Station noch nicht fertig</div>`;
+    warnRow = '<div class="vorgaenger-warn">⏳ Vorgänger-Station noch nicht fertig</div>';
   }
 
-  // Action-Buttons
-  let actions = '';
-  if (running) {
-    actions = `<div class="actions">
-      <button class="btn stop" onclick="onStop('${a.id}')">■ Stopp</button>
-      <button class="btn fertig" onclick="onFertig('${a.id}')">✓ Fertig</button>
-    </div>`;
-  } else {
-    const startDisabled = blocked || !vorgaenger ? 'disabled' : '';
-    actions = `<div class="actions three">
-      <button class="btn" onclick="onStart('${a.id}')" ${startDisabled}>▶ Beginn</button>
-      <button class="btn warn" onclick="onBlock('${a.id}')">⏸ Blockieren</button>
-      <button class="btn fertig" onclick="onFertig('${a.id}')">✓ Fertig</button>
-    </div>`;
-  }
+  // Blockierung-Toggle-Button (nur wenn NICHT blockiert)
+  const blockToggle = blocked ? '' : `<button class="block-toggle" onclick="onBlock('${a.id}')"><span class="dot"></span> Blockierung setzen</button>`;
 
-  return `<div class="${cls}">
-    <div class="card-head">
-      <span class="card-nr">${esc(a.nr || '?')}</span>
-      ${sBadge}${hpBadge}${terminBadge}
-    </div>
-    <div class="card-kunde">${esc(a.kunde || '')}</div>
-    <div class="card-meta">${stk ? `<span>${stk}</span>` : ''}</div>
+  // Fotodoku (Pflicht bei UP + S3)
+  const isFotoPflicht = IMS.AP_FOTO_REQUIRED.includes(AP) && a.sklasse === 'S3';
+  const fotoHtml = isFotoPflicht ? `<div class="foto-section required">
+    <input type="checkbox" id="foto-${esc(a.id)}" onchange="document.getElementById('fertig-${esc(a.id)}').disabled = !this.checked">
+    <label for="foto-${esc(a.id)}">Fotodoku abgeschlossen
+      <span class="hint">Pflicht bei S3 + UP-Armatur — muss vor „Fertig" abgehakt werden</span>
+    </label>
+  </div>` : '';
+
+  // Fertig-Button (groß, dynamische Subline)
+  const fertigDisabled = blocked || (isFotoPflicht);
+  const fertigSub = running
+    ? 'Timer stoppt automatisch · Auftrag → nächste Station'
+    : 'Auftrag → nächste Station';
+  const fertigBtn = `<button class="btn-fertig" id="fertig-${esc(a.id)}" onclick="onFertig('${a.id}')" ${fertigDisabled ? 'disabled' : ''}>
+    <span class="fertig-main">FERTIG</span>
+    <span class="fertig-sub">${esc(fertigSub)}</span>
+  </button>`;
+
+  // Content
+  const headSection = `
+    <div class="card-head">${prioPill}${nrHtml}</div>
+    ${a.kunde ? `<div class="card-kunde">${esc(a.kunde)}</div>` : ''}
+    <div class="chips">${sBadge}${hpBadge}${terminBadge}</div>
     ${kommission}
+    ${stk}
     ${notiz}
+    ${timerBox}
+    ${progress}
     ${warnRow}
-    ${timerRow}
-    ${actions}
+    ${blockToggle}
+    ${fotoHtml}
+    <div class="fertig-divider"></div>
+    ${fertigBtn}
+  `;
+
+  if (isHero && running) {
+    // Cockpit-Layout: Links Action, Rechts Positionen-Platzhalter
+    return `<div class="${cls}">
+      <div class="hero-left">${headSection}</div>
+      <div class="hero-right">
+        <div class="positionen-placeholder">
+          <div class="icon">📋</div>
+          <div class="head">Auftragspositionen</div>
+          <div class="sub">Einzelpositionen erscheinen hier, sobald die ERP-Anbindung steht.</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="${cls}">${headSection}</div>`;
+}
+
+function renderNr(a) {
+  const nr = String(a.nr || '');
+  // Nr-Format: "2023 680" → Jahr (4 Ziffern) + Nr
+  const m = nr.match(/^(\d{4})[\s\u2009\u202F]*(.+)$/);
+  if (m) {
+    return `<span class="card-nr-wrap"><span class="card-nr-jahr">${esc(m[1])}</span><span class="card-nr-main">${esc(m[2])}</span></span>`;
+  }
+  return `<span class="card-nr-wrap"><span class="card-nr-main">${esc(nr || '?')}</span></span>`;
+}
+
+function renderTerminBadge(a, tage) {
+  if (!a.datum) return '';
+  let cls = 'termin';
+  let label;
+  if (tage === null)      label = IMS.formatDatum(a.datum);
+  else if (tage < 0)      { cls += ' over';  label = `${Math.abs(tage)} ${Math.abs(tage)===1?'Tag':'Tage'} über`; }
+  else if (tage === 0)    { cls += ' today'; label = 'heute'; }
+  else if (tage === 1)    { cls += ' warn';  label = 'morgen'; }
+  else if (tage <= 3)     { cls += ' warn';  label = `in ${tage} Tagen`; }
+  else                    { label = `in ${tage} Tagen`; }
+  return `<span class="badge ${cls}">${esc(label)}</span>`;
+}
+
+function fmtPrioNum(a) {
+  const p = a.prio;
+  if (p && p > 0) return String(p).padStart(2, '0');
+  return '—';
+}
+function fmtPrio(a) { return fmtPrioNum(a); }
+function fmtNr(a) { return String(a.nr || '?'); }
+
+function renderBlockActive(a) {
+  const current = a.blockierungen[AP];
+  const optionen = IMS.BLOCKIERUNG_GRUENDE.map(g =>
+    `<option ${g === current ? 'selected' : ''}>${esc(g)}</option>`
+  ).join('');
+  return `<div class="block-active">
+    <div class="block-active-head">
+      <span class="block-active-label">⚠ Blockiert</span>
+      <button class="block-active-clear" onclick="onBlockClear('${a.id}')">Aufheben</button>
+    </div>
+    <select class="block-select" onchange="onBlockChange('${a.id}', this.value)">${optionen}</select>
   </div>`;
 }
 
@@ -432,56 +697,75 @@ async function onStart(id) {
     setSync('ok', 'Gestartet ✓');
     render();
     setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
-  } catch (e) {
-    toast('Fehler beim Starten', true);
-    setSync('err', 'Fehler');
-  }
+  } catch (e) { toast('Fehler beim Starten', true); setSync('err', 'Fehler'); }
 }
 
 async function onStop(id) {
   try {
-    setSync('loading', 'Stoppe…');
+    setSync('loading', 'Pausiere…');
     await IMS.store.timerStop(id, AP);
-    setSync('ok', 'Gestoppt ✓');
+    setSync('ok', 'Pausiert ✓');
     render();
     setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
-  } catch (e) {
-    toast('Fehler beim Stoppen', true);
-    setSync('err', 'Fehler');
-  }
+  } catch (e) { toast('Fehler beim Pausieren', true); setSync('err', 'Fehler'); }
 }
 
-async function onFertig(id) {
-  if (!confirm('Station "' + STATION_NAMEN[AP] + '" als fertig markieren?')) return;
-  try {
-    setSync('loading', 'Speichere…');
-    await IMS.store.markStationFertig(id, AP);
-    setSync('ok', 'Fertig ✓');
-    render();
-    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
-  } catch (e) {
-    toast('Fehler', true);
-    setSync('err', 'Fehler');
-  }
+// Fertig: Custom-Modal (kein Browser-confirm)
+function onFertig(id) {
+  const a = IMS.store.getAuftrag(id);
+  if (!a) return;
+  const td = a.timers && a.timers[IMS.timerKey(id, AP)];
+  const running = IMS.istTimerAktiv(td);
+  const timerLabel = running ? IMS.formatElapsed(IMS.calcTotalMs(td)) : null;
+  const nextStation = computeNextStation(a, AP);
+
+  showConfirmModal({
+    title: esc(STATION_NAMEN[AP]) + ' abschließen?',
+    auftrag: `<span class="nr">${fmtNr(a)}</span> · ${esc(a.kunde || '')}`,
+    consequences: [
+      running ? `Der laufende Timer wird gestoppt (aktuell <b>${timerLabel}</b>)` : null,
+      nextStation ? `Auftrag wandert zu <b>${esc(nextStation)}</b>` : `Auftrag wird abgeschlossen`,
+    ].filter(Boolean),
+    confirmLabel: 'Ja, abschließen',
+    onConfirm: async () => {
+      try {
+        setSync('loading', 'Speichere…');
+        await IMS.store.markStationFertig(id, AP);
+        setSync('ok', 'Fertig ✓');
+        render();
+        setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+      } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+    },
+  });
 }
 
+function computeNextStation(a, currentAP) {
+  const aps = IMS.getAuftragAPs(a);
+  const idx = aps.indexOf(currentAP);
+  if (idx < 0) return null;
+  for (let i = idx + 1; i < aps.length; i++) {
+    if (!(a.stationFertig && a.stationFertig[aps[i]])) return aps[i];
+  }
+  // aps enthält kein Versand als Standard — falls Auftrag auch Versand braucht
+  return 'Versand';
+}
+
+// Blockierung setzen (aus Toggle-Button)
 function onBlock(id) {
   const a = IMS.store.getAuftrag(id);
   if (!a) return;
-  const current = (a.blockierungen && a.blockierungen[AP]) || null;
 
   const bd = document.createElement('div');
   bd.className = 'modal-backdrop';
   const optionen = IMS.BLOCKIERUNG_GRUENDE.map(g =>
     `<button class="opt" data-grund="${esc(g)}">${esc(g)}</button>`
   ).join('');
-  const aufheben = current ? `<button class="opt" style="color:#00a87a" data-grund="__clear">✓ Blockierung aufheben</button>` : '';
 
   bd.innerHTML = `<div class="modal">
-    <h3>Blockierung ${current ? 'ändern' : 'setzen'}</h3>
-    ${optionen}
-    ${aufheben}
-    <button class="cancel">Abbrechen</button>
+    <div class="modal-head"><h3>Blockierung setzen</h3>
+      <div class="modal-auftrag">Auftrag <span class="nr">${fmtNr(a)}</span></div></div>
+    <div class="modal-body">${optionen}</div>
+    <div class="modal-actions"><button class="modal-btn secondary cancel">Abbrechen</button></div>
   </div>`;
   document.body.appendChild(bd);
 
@@ -491,18 +775,62 @@ function onBlock(id) {
       if (e.target === bd || e.target.classList.contains('cancel')) bd.remove();
       return;
     }
-    const grund = btn.dataset.grund === '__clear' ? null : btn.dataset.grund;
+    const grund = btn.dataset.grund;
     bd.remove();
     try {
       setSync('loading', 'Speichere…');
       await IMS.store.setBlockierung(id, AP, grund);
-      setSync('ok', 'Gespeichert ✓');
+      setSync('ok', 'Blockiert ✓');
       render();
       setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
-    } catch (err) {
-      toast('Fehler', true);
-      setSync('err', 'Fehler');
-    }
+    } catch (err) { toast('Fehler', true); setSync('err', 'Fehler'); }
+  });
+}
+
+async function onBlockChange(id, grund) {
+  try {
+    setSync('loading', 'Speichere…');
+    await IMS.store.setBlockierung(id, AP, grund);
+    setSync('ok', 'Gespeichert ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+}
+
+async function onBlockClear(id) {
+  try {
+    setSync('loading', 'Hebe auf…');
+    await IMS.store.setBlockierung(id, AP, null);
+    setSync('ok', 'Aufgehoben ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+}
+
+// ─── CONFIRM MODAL ──────────────────────────────────────────────────────────
+function showConfirmModal({ title, auftrag, consequences, confirmLabel, onConfirm, danger }) {
+  const bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  const conseqHtml = (consequences || []).map(c =>
+    `<div class="modal-conseq"><span class="mark">✓</span><span>${c}</span></div>`
+  ).join('');
+  bd.innerHTML = `<div class="modal">
+    <div class="modal-head">
+      <h3>${title}</h3>
+      ${auftrag ? `<div class="modal-auftrag">${auftrag}</div>` : ''}
+    </div>
+    <div class="modal-body">${conseqHtml}</div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary cancel">Abbrechen</button>
+      <button class="modal-btn primary ${danger ? 'danger' : ''} confirm">${esc(confirmLabel || 'Ja')}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bd);
+
+  const close = () => bd.remove();
+  bd.addEventListener('click', (e) => {
+    if (e.target === bd || e.target.classList.contains('cancel')) close();
+    if (e.target.classList.contains('confirm')) { close(); onConfirm && onConfirm(); }
   });
 }
 
@@ -511,7 +839,6 @@ function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-
 function toast(msg, isErr) {
   const t = document.createElement('div');
   t.className = 'toast' + (isErr ? ' err' : '');
