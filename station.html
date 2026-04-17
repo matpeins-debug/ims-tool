@@ -79,14 +79,14 @@
   /* Datum-Gruppen: jeder Liefertag bekommt einen kraeftigen Block-Header */
   .date-group{display:flex;flex-direction:column;gap:12px;margin-top:22px}
   .date-group:first-child{margin-top:8px}
+  /* Default: warmes Amber (Sektions-Signal, NICHT Alarm).
+     today = gruen kraeftig (Action), over = rot (Alarm). */
   .date-group-head{
     display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
-    padding:14px 18px;border-radius:10px;background:#e4e9f1;
-    border-left:6px solid #6b7a94;
+    padding:14px 18px;border-radius:10px;background:#fdf1d8;
+    border-left:6px solid #e0a458;
   }
-  .date-group-head.today{background:#d9f4c8;border-left-color:var(--accent)}
-  .date-group-head.warn {background:#ffe9b8;border-left-color:var(--warn)}
-  .date-group-head.soon {background:#dbeafe;border-left-color:#2563eb}
+  .date-group-head.today{background:#cdecb4;border-left-color:var(--accent)}
   .date-group-head.over {background:#ffd0d8;border-left-color:var(--danger)}
   .date-group-datum{font-size:20px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
   .date-group-rel{font-size:14px;font-weight:600;color:var(--text2)}
