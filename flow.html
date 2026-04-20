@@ -52,22 +52,22 @@ body{
   height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;
   position:relative;
   background:
-    radial-gradient(ellipse 900px 700px at 8% -5%,  rgba(52,211,153,0.18) 0%, transparent 55%),
-    radial-gradient(ellipse 700px 600px at 105% 35%, rgba(99,102,241,0.20) 0%, transparent 55%),
-    radial-gradient(ellipse 600px 500px at 50% 110%, rgba(234,179,8,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 900px 700px at 8% -5%,   rgba(52,211,153,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 600px at 105% 35%, rgba(99,102,241,0.38) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 50% 110%, rgba(234,179,8,0.25)  0%, transparent 60%),
     var(--bg);
   background-attachment:fixed;
 }
 body.light{
   background:
-    radial-gradient(ellipse 900px 700px at 8% -5%,  rgba(0,168,122,0.14) 0%, transparent 55%),
-    radial-gradient(ellipse 700px 600px at 105% 35%, rgba(67,56,202,0.12) 0%, transparent 55%),
-    radial-gradient(ellipse 600px 500px at 50% 110%, rgba(176,88,0,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 900px 700px at 8% -5%,   rgba(0,168,122,0.28) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 600px at 105% 35%, rgba(67,56,202,0.25) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 50% 110%, rgba(176,88,0,0.18)  0%, transparent 60%),
     var(--bg);
   background-attachment:fixed;
 }
 
-/* Riesiger IMS-Watermark zentriert im Hintergrund — dezent */
+/* Riesiger IMS-Watermark zentriert im Hintergrund */
 body::before{
   content:"IMS";
   position:fixed;inset:0;
@@ -77,13 +77,12 @@ body::before{
   font-weight:800;
   letter-spacing:0.05em;
   color:var(--accent);
-  opacity:0.045;
+  opacity:0.10;
   z-index:0;
   pointer-events:none;
   user-select:none;
-  mix-blend-mode:multiply;
 }
-body:not(.light)::before{opacity:0.07;mix-blend-mode:screen;}
+body:not(.light)::before{opacity:0.14;}
 
 /* Main-Content liegt über dem Watermark */
 body > *{position:relative;z-index:1;}
