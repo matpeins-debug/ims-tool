@@ -60,9 +60,9 @@ body{
 }
 body.light{
   background:
-    radial-gradient(ellipse 900px 700px at 8% -5%,   rgba(0,168,122,0.28) 0%, transparent 60%),
-    radial-gradient(ellipse 700px 600px at 105% 35%, rgba(67,56,202,0.25) 0%, transparent 60%),
-    radial-gradient(ellipse 600px 500px at 50% 110%, rgba(176,88,0,0.18)  0%, transparent 60%),
+    radial-gradient(ellipse 1100px 850px at 5% -8%,   rgba(0,168,122,0.65) 0%, transparent 65%),
+    radial-gradient(ellipse 900px 750px at 108% 30%, rgba(67,56,202,0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 800px 650px at 50% 115%, rgba(234,140,20,0.50) 0%, transparent 65%),
     var(--bg);
   background-attachment:fixed;
 }
@@ -146,7 +146,7 @@ body.light .k-status.aktiv{color:#047857;}
 .zone-title.z-vs{color:var(--z-vs);}
 .zone-count{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;white-space:nowrap;flex-shrink:0;}
 .zone-body{flex:1;background:rgba(21,24,32,0.45);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border:1.5px solid var(--border);border-radius:0 0 12px 12px;overflow-y:auto;padding:5px;display:flex;flex-direction:column;gap:5px;}
-body.light .zone-body{background:rgba(255,255,255,0.55);}
+body.light .zone-body{background:rgba(255,255,255,0.28);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);}
 .zone-body.zb-az{border-color:var(--z-az-mid);}
 .zone-body.zb-sl{border-color:var(--z-sl-mid);}
 .zone-body.zb-nb{border-color:var(--z-nb-mid);}
@@ -167,10 +167,12 @@ body.light .zone-body{background:rgba(255,255,255,0.55);}
   box-shadow:0 2px 8px rgba(0,0,0,0.15);
 }
 body.light .kachel{
-  background:rgba(255,255,255,0.7);
-  border:1px solid rgba(0,0,0,0.06);
+  background:rgba(255,255,255,0.45);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.55);
   border-left:3px solid var(--border);
-  box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
 }
 .kachel.gruen  {border-left-color:var(--z-az);}
 .kachel.orange {border-left-color:var(--z-sl);}
@@ -212,7 +214,7 @@ body.light .kachel.blockiert{background:#ffe5e9!important;}
 
 /* ── VF KOMPAKT ────────────────────────────────────── */
 .vf-row{display:flex;align-items:center;gap:6px;background:rgba(28,32,48,0.55);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 10px;transition:all .2s;position:relative;box-shadow:0 1px 4px rgba(0,0,0,0.12);}
-body.light .vf-row{background:rgba(255,255,255,0.7);border:1px solid rgba(0,0,0,0.06);box-shadow:0 1px 4px rgba(0,0,0,0.03);}
+body.light .vf-row{background:rgba(255,255,255,0.45);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,0.55);box-shadow:0 2px 12px rgba(0,0,0,0.06);}
 .vf-row.blockiert{border-color:var(--danger)!important;border-width:2px;background:rgba(239,68,68,0.12)!important;}
 body.light .vf-row.blockiert{background:#fde0e0!important;}
 .vf-row.aktiv{border-color:var(--z-az);background:var(--z-az-dim);}
