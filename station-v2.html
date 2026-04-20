@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IMS Station v2 (Canary)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Light Mode — permanent (Feedback 2026-04-15: "den dunklen Modus verwendet niemand") */
+    --bg:#f5f7fa; --surface:#ffffff; --surface2:#eef1f6; --border:#d5dbe5;
+    --text:#1a1d27; --text2:#4b5563; --text3:#8892a6;
+    --accent:#00a87a; --warn:#d98200; --danger:#d63040; --blue:#0066cc;
+    --purple:#7c3aed; --purple-dark:#5b21b6;
+    --teal:#0e7490; --teal-dark:#164e63;
+    --komm:#0d8a5e;
+    --high-bg:#f3eefc; --high-border:#7c3aed;
+    --block-bg:#fff4e0; --block-border:#d98200;
+    --run-bg:#f0fbf6; --run-border:#00a87a;
+    --soon-stripe:#d98200;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px}
+  html{scroll-behavior:smooth}
+  body{font-variant-numeric:tabular-nums}
+  a,button{font-family:inherit}
+
+  /* ── LOGIN ───────────────────────────────────────────── */
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:100}
+  #login form{background:var(--surface);padding:32px;border-radius:16px;border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;min-width:280px;box-shadow:0 4px 24px rgba(0,0,0,0.06)}
+  #login h2{margin:0 0 8px 0;color:var(--accent)}
+  #login input{padding:14px;font-size:18px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text)}
+  #login button{padding:14px;font-size:16px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+  #login .err{color:var(--danger);font-size:13px;min-height:16px}
+
+  /* ── HEADER ──────────────────────────────────────────── */
+  header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  header .station{background:var(--accent);color:#fff;font-weight:700;font-size:18px;padding:8px 16px;border-radius:8px;letter-spacing:0.02em}
+  header .title{font-size:14px;color:var(--text2)}
+  header .sync{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+  header .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--text3)}
+  header .sync-dot.ok{background:var(--accent)}
+  header .sync-dot.loading{background:var(--warn);animation:blink 1s infinite}
+  header .sync-dot.err{background:var(--danger)}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+  header .logout{background:transparent;border:1px solid var(--border);color:var(--text2);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+
+  /* ── STATION PICKER ──────────────────────────────────── */
+  .picker-section{max-width:600px;margin:0 auto;padding:24px 18px}
+  .picker-section h2{color:var(--accent);margin:0 0 6px 0;font-size:22px}
+  .picker-section .sub{color:var(--text2);font-size:14px;margin:0 0 20px 0}
+  .picker-group{margin-bottom:18px}
+  .picker-group-label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin:0 0 6px 0;padding:0 2px}
+  .picker-group-sep{border:0;border-top:1px solid var(--border);margin:0 0 10px 0}
+  .picker-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;cursor:pointer;text-decoration:none;color:var(--text);font-size:16px;font-weight:600;transition:box-shadow 0.15s,border-color 0.15s}
+  .picker-btn:hover,.picker-btn:active{box-shadow:0 2px 8px rgba(0,0,0,0.08);border-color:var(--accent)}
+  .picker-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .picker-chip{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:0.02em;white-space:nowrap}
+  .picker-chip.offen{background:#e3f5c8;color:#3f6800}
+  .picker-chip.laeuft{background:#d0f5e6;color:#006b4a}
+  .picker-chip.blockiert{background:#fff1d0;color:#8a5a00}
+  .picker-chip.leer{background:var(--surface2);color:var(--text3)}
+
+  /* ── MAIN LAYOUT ─────────────────────────────────────── */
+  main{padding:16px;max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+  main.empty{display:flex;align-items:center;justify-content:center;min-height:60vh;color:var(--text3);font-size:18px;text-align:center}
+
+  .section-active{display:flex;flex-direction:column;gap:8px}
+  .section-active .section-head{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#006b4a;padding:0 2px}
+  .section-active .section-head::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite}
+  /* Running-Grid: 1 Auftrag = volle Breite, mehrere = 2 Spalten ab Desktop */
+  .running-grid{display:grid;gap:14px;grid-template-columns:1fr}
+  @media (min-width:1100px){
+    .running-grid.multi{grid-template-columns:repeat(2,1fr)}
+  }
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.55;transform:scale(0.85)}}
+
+  .queue-wrap{display:flex;flex-direction:column;gap:8px}
+  .queue-head{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);padding:12px 2px 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .queue-head .next{color:var(--text2);text-transform:none;letter-spacing:0;font-weight:500;font-size:13px}
+  .queue-head .next b{color:var(--text);font-weight:700}
+  .jump-link{
+    text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;
+    color:var(--text2);text-decoration:none;padding:6px 10px;border-radius:6px;
+    background:var(--surface);border:1px solid var(--border);
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .jump-link:hover,.jump-link:active{border-color:var(--accent);color:var(--accent)}
+  .jump-link b{color:var(--text);font-variant-numeric:tabular-nums}
+  .jump-link .arr{font-weight:800}
+
+  /* Datum-Gruppen: jeder Liefertag bekommt einen kraeftigen Block-Header */
+  .date-group{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+  .date-group:first-child{margin-top:8px}
+  /* Default: warmes Amber (Sektions-Signal, NICHT Alarm).
+     today = gruen kraeftig (Action), over = rot (Alarm). */
+  .date-group-head{
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    padding:14px 18px;border-radius:10px;background:#fdf1d8;
+    border-left:6px solid #e0a458;
+  }
+  .date-group-head.today{background:#cdecb4;border-left-color:var(--accent)}
+  .date-group-head.over {background:#ffd0d8;border-left-color:var(--danger)}
+  .date-group-datum{font-size:20px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
+  .date-group-rel{font-size:14px;font-weight:600;color:var(--text2)}
+  .date-group-count{font-size:13px;font-weight:600;color:var(--text2);margin-left:auto}
+
+  /* Queue als echtes Grid: Karten in sauberen Reihen, gleich hoch */
+  .section-queue{display:grid;gap:14px;grid-template-columns:1fr;align-items:stretch}
+  @media (min-width:720px){.section-queue{grid-template-columns:repeat(auto-fit,minmax(380px,1fr));grid-auto-rows:1fr}}
+  /* Karte als flex-col, Fertig-Block sitzt am Boden */
+  .section-queue > .card{display:flex;flex-direction:column;gap:10px;height:100%}
+  .section-queue > .card .fertig-divider{margin-top:auto}
+
+  /* ── CARD BASIS ──────────────────────────────────────── */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;border-left:4px solid transparent}
+  .section-active .card{display:grid;gap:10px}
+  .card.prio-high{background:var(--high-bg);border-color:var(--high-border);border-left:4px solid var(--purple)}
+  .card.prio-soon{border-left:4px solid var(--soon-stripe)}
+  .card.blocked{background:var(--block-bg);border-color:var(--block-border);border-left:4px solid var(--warn)}
+  .card.running{background:var(--run-bg);border-color:var(--run-border);border-left:6px solid var(--accent);box-shadow:0 4px 20px rgba(0,168,122,0.18)}
+
+  /* Cockpit-Layout für Hero-Karte */
+  @media (min-width:900px){
+    .card.running.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:0;padding:0;overflow:hidden}
+    .hero-left{padding:22px;display:flex;flex-direction:column;gap:12px;border-right:1px solid rgba(0,168,122,0.25)}
+    .hero-right{padding:22px;display:flex;flex-direction:column;gap:14px;background:rgba(255,255,255,0.55)}
+  }
+  @media (max-width:899px){
+    .card.running.hero{display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden}
+    .hero-left{padding:18px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid rgba(0,168,122,0.25)}
+    .hero-right{padding:18px;display:flex;flex-direction:column;gap:14px;background:rgba(255,255,255,0.55)}
+  }
+
+  .card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .card-prio{font-size:13px;font-weight:800;color:#fff;background:var(--text2);padding:3px 8px;border-radius:5px;letter-spacing:0.04em;font-variant-numeric:tabular-nums;min-width:30px;text-align:center}
+  .card.prio-high .card-prio{background:var(--purple)}
+  .card.running .card-prio{background:var(--accent)}
+  .card-nr-wrap{display:inline-flex;align-items:baseline;gap:0}
+  .card-nr-jahr{font-size:20px;font-weight:500;color:var(--text2);font-variant-numeric:tabular-nums}
+  .card-nr-main{font-size:32px;font-weight:800;color:var(--text);line-height:1;font-variant-numeric:tabular-nums;margin-left:0.28em}
+  .card.running.hero .card-nr-jahr{font-size:26px}
+  .card.running.hero .card-nr-main{font-size:44px}
+
+  .card-kunde{font-size:16px;color:var(--text2);font-weight:500}
+  .card.running.hero .card-kunde{font-size:18px;color:var(--text)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
+  .badge.s0{background:#ece4ff;color:#5a3fa8}
+  .badge.s1{background:#e0ecff;color:#0a4fa0}
+  .badge.s2{background:#d9f4e6;color:#006b4a}
+  .badge.s3{background:#ffe5d0;color:#a04a00}
+  .badge.highprio{background:var(--purple);color:#fff}
+  .badge.effort-l{background:#cffafe;color:var(--teal-dark)}
+  .badge.effort-xl{background:var(--teal-dark);color:#fff}
+  .badge.termin{background:var(--surface2);color:var(--text2);text-transform:none;letter-spacing:0;font-weight:600;font-size:12px;padding:3px 9px;font-variant-numeric:tabular-nums}
+  .badge.termin.warn{background:#fff1d0;color:#8a5a00}
+  .badge.termin.today{background:#e3f5c8;color:#2d5400;font-weight:700}
+  .badge.termin.over{background:#ffd9df;color:#8a1a28;font-weight:700}
+
+  .card-komm{color:var(--komm);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+
+  .stk-plan-row{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+  .card-stk{font-size:46px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--text)}
+  .card-stk .unit{font-size:18px;font-weight:600;color:var(--text2);margin-left:4px}
+  /* Stk-Aufwand-Kodierung (>=30 = gross, >=75 = mega) */
+  .card-stk.stk-l{color:var(--teal)}
+  .card-stk.stk-xl{color:var(--teal-dark)}
+  .card.running.hero .card-stk{font-size:52px}
+
+  .card-notiz{padding:10px 12px;background:#fffbe6;border-left:3px solid #ffe066;border-radius:6px;font-size:13px;color:#8a6d00;white-space:pre-wrap;font-weight:500}
+  .card-notiz::before{content:"NOTIZ";font-size:10px;font-weight:700;letter-spacing:0.08em;color:#6b5300;display:block;margin-bottom:2px}
+
+  /* Timer-Box: abgesetzt, mit ∅-Zeit und Pause daneben */
+  .timer-box{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+  .timer-box.active{border-left:4px solid var(--accent);padding-left:10px}
+  .timer-left{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+  .timer-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700}
+  .timer-label.running{color:#006b4a}
+  .timer-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+  .timer-val.running{color:var(--accent)}
+  .card.running.hero .timer-val{font-size:36px}
+  .timer-ref{font-size:12px;color:var(--text3);font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+  .timer-ref b{color:var(--text2);font-weight:700}
+  .timer-spacer{flex:1}
+  .btn-timer{padding:12px 18px;font-size:15px;font-weight:700;border-radius:8px;border:0;cursor:pointer;min-height:48px;min-width:100px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0}
+  .btn-timer.start{background:var(--accent);color:#fff}
+  .btn-timer.pause{background:var(--warn);color:#fff}
+  .btn-timer:disabled{opacity:0.35;cursor:not-allowed}
+
+  /* Progress-Bar gegen ∅-Zeit */
+  .progress{display:flex;flex-direction:column;gap:4px}
+  .progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;background:var(--accent);transition:width 0.3s}
+  .progress-fill.warn{background:var(--warn)}
+  .progress-fill.over{background:var(--danger)}
+  .progress-info{font-size:13px;color:var(--text2);display:flex;justify-content:space-between;font-weight:500}
+  .progress-info b{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* Blockierung */
+  .block-toggle{background:transparent;border:1px dashed var(--border);color:var(--text2);padding:8px 12px;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;width:100%}
+  .block-toggle:hover,.block-toggle:active{border-color:var(--warn);color:var(--warn)}
+  .block-toggle .dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+  .block-active{background:#fff4e0;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+  .block-active-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .block-active-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8a5a00}
+  .block-active-clear{background:transparent;border:0;color:#8a5a00;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline}
+  .block-select{padding:10px 12px;font-size:14px;border-radius:6px;border:1px solid var(--warn);background:#fff;color:#8a5a00;font-weight:600;cursor:pointer;width:100%}
+
+  .vorgaenger-warn{color:#8a5a00;font-size:13px;padding:8px 10px;background:#fff4e0;border-left:3px solid var(--warn);border-radius:4px;font-weight:500}
+
+  /* Fotodoku */
+  .foto-section{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#e6f0ff;border:1px solid #b8d1f5;border-radius:8px;font-size:14px;color:#0a4fa0;font-weight:600}
+  .foto-section.required{border-color:var(--danger);background:#fff0f2;color:#8a1a28}
+  .foto-section input{width:22px;height:22px;accent-color:var(--blue);flex-shrink:0}
+  .foto-section .hint{font-size:11px;font-weight:500;display:block;margin-top:2px}
+
+  .fertig-divider{height:1px;background:var(--border);margin:6px 0}
+
+  /* FERTIG-Button: groß, prominent, mit dynamischer Subline */
+  .btn-fertig{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    width:100%;padding:16px;border-radius:10px;border:0;cursor:pointer;text-align:center;
+    background:var(--blue);color:#fff;min-height:64px;transition:transform 0.06s ease;
+  }
+  .btn-fertig .fertig-main{font-size:24px;font-weight:800;letter-spacing:0.04em}
+  .btn-fertig .fertig-main::before{content:"✓ ";font-weight:700}
+  .btn-fertig .fertig-sub{font-size:12px;font-weight:500;opacity:0.85;letter-spacing:0.02em}
+  .btn-fertig:active{transform:scale(0.98)}
+  .btn-fertig:disabled{opacity:0.35;cursor:not-allowed}
+  .card.running.hero .btn-fertig{min-height:76px;padding:18px}
+  .card.running.hero .btn-fertig .fertig-main{font-size:30px}
+  .card.running.hero .btn-fertig .fertig-sub{font-size:13px}
+
+  /* Positionen-Platzhalter (rechte Hero-Spalte) */
+  .positionen-placeholder{
+    border:2px dashed var(--border);border-radius:10px;padding:24px 16px;
+    display:flex;flex-direction:column;gap:8px;flex:1;min-height:180px;
+    align-items:center;justify-content:center;text-align:center;
+    background:rgba(255,255,255,0.35);
+  }
+  .positionen-placeholder .icon{font-size:28px;opacity:0.35}
+  .positionen-placeholder .head{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.02em}
+  .positionen-placeholder .sub{font-size:12px;color:var(--text3);max-width:260px;line-height:1.4}
+
+  /* ── SUCHE ──────────────────────────────────────────── */
+  .search-bar{
+    display:flex;align-items:center;gap:10px;padding:10px 14px;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    transition:border-color 0.15s;
+  }
+  .search-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,168,122,0.12)}
+  .search-bar .icon{font-size:16px;color:var(--text3);flex-shrink:0}
+  .search-bar input{
+    flex:1;border:0;outline:0;background:transparent;
+    font-family:inherit;font-size:15px;color:var(--text);
+    padding:4px 0;min-width:0;
+  }
+  .search-bar input::placeholder{color:var(--text3)}
+  .search-bar .clear{
+    display:none;background:var(--surface2);border:0;color:var(--text2);
+    width:26px;height:26px;border-radius:50%;cursor:pointer;
+    font-size:16px;line-height:1;padding:0;
+  }
+  .search-bar.active .clear{display:inline-flex;align-items:center;justify-content:center}
+  .search-bar .count{
+    display:none;font-size:12px;color:var(--text2);font-weight:600;
+    white-space:nowrap;padding:3px 8px;background:var(--surface2);border-radius:4px;
+  }
+  .search-bar.active .count{display:inline-block}
+  .search-bar .count b{color:var(--text);font-variant-numeric:tabular-nums}
+
+  /* ── HEUTE ERLEDIGT (Tages-Tabelle) ──────────────────── */
+  .done-wrap{display:flex;flex-direction:column;gap:10px;margin-top:28px}
+  .done-head{
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    padding:14px 18px;border-radius:10px;background:#d9f4c8;border-left:6px solid var(--accent);
+  }
+  .done-head-title{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .done-head-title::before{content:"✓ ";color:var(--accent)}
+  .done-head-count{font-size:14px;font-weight:600;color:var(--text2)}
+  .done-head-total{font-size:13px;font-weight:600;color:var(--text2);margin-left:auto}
+  .done-head-total b{color:var(--text);font-variant-numeric:tabular-nums}
+  .done-table{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden}
+  .done-empty{
+    padding:18px 16px;text-align:center;color:var(--text3);font-size:14px;font-style:italic;
+    background:var(--surface);border:1px dashed var(--border);border-radius:10px;
+  }
+  /* Spalten: Prio · Zeit · Nr · Kunde · Kommission · Stk · IST · Rueckgaengig
+     Alle Spalten fix ODER fr-mit-min — letzte Spalte FEST, sonst driften
+     Header und Zeilen auseinander (Header hat leer, Zeilen haben Button). */
+  .done-row,
+  .done-header-row{
+    display:grid;
+    grid-template-columns:44px 74px 96px minmax(0,1fr) minmax(0,1.3fr) 74px 74px 124px;
+    gap:14px;align-items:center;
+  }
+  .done-row .btn-undo{width:100%;justify-content:center}
+  .done-header-row{
+    padding:10px 16px;background:#f0f3f8;border-bottom:1px solid var(--border);
+    font-size:11px;font-weight:700;color:var(--text3);
+    text-transform:uppercase;letter-spacing:0.06em;
+  }
+  .done-header-row .sortable{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:4px;padding:2px 4px;border-radius:4px}
+  .done-header-row .sortable:hover,.done-header-row .sortable:active{background:#e4e9f1;color:var(--text2)}
+  .done-header-row .sortable.active{color:var(--text);background:#dbe4f1}
+  .done-header-row .sortable .arr{font-size:10px;opacity:0.7}
+  .done-row{
+    padding:12px 16px;border-bottom:1px solid var(--border);opacity:0.9;
+  }
+  .done-row:last-child{border-bottom:0}
+  .done-row:hover{background:#fafbfd;opacity:1}
+  .done-row .time{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:13px;color:var(--text2);font-weight:600;white-space:nowrap}
+  .done-row .time::before{content:"✓ ";color:var(--accent);font-weight:700}
+  .done-row .prio{font-size:12px;font-weight:800;color:#fff;background:var(--text2);padding:2px 7px;border-radius:4px;font-variant-numeric:tabular-nums;letter-spacing:0.04em;text-align:center}
+  .done-row .prio.high{background:var(--purple)}
+  .done-row .nr{font-size:15px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .done-row .kunde{font-size:14px;color:var(--komm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .done-row .kommission{font-size:13px;color:var(--text2);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .done-row .kommission.empty{color:var(--text3);font-weight:500;font-style:italic}
+  .done-row .stk{font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:left}
+  .done-row .ist{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:left}
+  .done-row .ist.empty{color:var(--text3);font-weight:500;font-style:italic;font-size:12px}
+  .btn-undo{
+    background:transparent;border:1px solid var(--border);color:var(--text2);
+    padding:7px 12px;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:4px;min-height:34px;
+  }
+  .btn-undo:hover,.btn-undo:active{background:var(--surface2);border-color:var(--text2);color:var(--text)}
+  @media (max-width:820px){
+    .done-header-row{display:none}
+    .done-row{grid-template-columns:auto 1fr auto;row-gap:4px;padding:10px 12px}
+    .done-row .prio{grid-row:1;grid-column:1}
+    .done-row .time{grid-row:1;grid-column:2;justify-self:start}
+    .done-row .btn-undo{grid-row:1;grid-column:3}
+    .done-row .nr{grid-row:2;grid-column:1 / 2;white-space:nowrap}
+    .done-row .kunde{grid-row:2;grid-column:2 / 3;text-align:left}
+    .done-row .stk{grid-row:2;grid-column:3;justify-self:end}
+    .done-row .kommission{grid-row:3;grid-column:1 / 4}
+    .done-row .ist{grid-row:4;grid-column:1 / 4;text-align:left}
+  }
+
+  /* ── CUSTOM CONFIRM MODAL ─────────────────────────────── */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(10,15,25,0.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.15s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--surface);border-radius:14px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);overflow:hidden;animation:slideUp 0.2s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .modal-head{padding:20px 22px 14px;border-bottom:1px solid var(--border)}
+  .modal-head h3{margin:0 0 6px 0;font-size:19px;font-weight:700;color:var(--text)}
+  .modal-auftrag{display:flex;align-items:baseline;gap:8px;color:var(--text2);font-size:14px}
+  .modal-auftrag .nr{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+  .modal-body{padding:16px 22px;display:flex;flex-direction:column;gap:10px}
+  .modal-conseq{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text)}
+  .modal-conseq .mark{color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px}
+  .modal-conseq b{font-weight:700;font-variant-numeric:tabular-nums}
+  .modal-actions{padding:14px 22px 20px;display:flex;gap:10px;justify-content:flex-end}
+  .modal-btn{padding:12px 20px;font-size:15px;font-weight:700;border-radius:8px;border:0;cursor:pointer;min-height:48px;min-width:110px}
+  .modal-btn.secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+  .modal-btn.primary{background:var(--blue);color:#fff}
+  .modal-btn.primary.danger{background:var(--danger)}
+  .modal-btn:active{transform:scale(0.98)}
+
+  /* Blockierung-Modal (leicht anders als Fertig-Modal) */
+  .modal .opt{display:block;width:100%;padding:14px;background:var(--surface2);border-radius:8px;cursor:pointer;text-align:left;border:0;color:var(--text);font-size:15px;margin-bottom:6px;font-weight:500}
+  .modal .opt:hover,.modal .opt:active{background:#dfe5ee}
+  .modal .opt.clear{color:var(--accent);font-weight:700}
+
+  /* ── TOAST ────────────────────────────────────────────── */
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--accent);padding:12px 20px;border-radius:10px;font-size:14px;z-index:60;box-shadow:0 8px 32px rgba(0,0,0,0.18);animation:slideUpToast 0.25s ease;color:var(--text)}
+  .toast.err{border-color:var(--danger)}
+  @keyframes slideUpToast{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+
+  /* ── UNDO-TOAST (nach FERTIG, 8 s) ────────────────────── */
+  .undo-toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--surface);border:1.5px solid var(--accent);
+    border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.25);
+    z-index:9999;max-width:440px;width:calc(100% - 48px);
+    overflow:hidden;animation:slideUpToast 0.25s ease;
+  }
+  .undo-toast .ut-content{display:flex;align-items:center;gap:12px;padding:12px 14px}
+  .undo-toast .ut-icon{color:var(--accent);font-size:20px;font-weight:700;flex-shrink:0}
+  .undo-toast .ut-text{flex:1;min-width:0}
+  .undo-toast .ut-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
+  .undo-toast .ut-sub{font-size:12px;color:var(--text2);margin-top:2px}
+  .undo-toast .ut-undo{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    padding:8px 14px;font-size:13px;font-weight:700;border-radius:6px;cursor:pointer;
+    flex-shrink:0;min-height:36px;
+  }
+  .undo-toast .ut-undo:hover,.undo-toast .ut-undo:active{border-color:var(--accent);color:var(--accent)}
+  .undo-toast .ut-close{
+    background:transparent;border:0;color:var(--text3);
+    font-size:16px;cursor:pointer;padding:4px 8px;flex-shrink:0;
+  }
+  .undo-toast .ut-close:hover{color:var(--text)}
+  .undo-toast .ut-progress{
+    height:3px;background:var(--accent);transform-origin:left;
+    animation:utProgress 8000ms linear forwards;
+  }
+  @keyframes utProgress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+  /* Sync-Badge Queue-Counter (klein, neben Dot) */
+  .sync-queue{
+    display:inline-block;margin-left:4px;padding:1px 6px;font-size:10px;
+    font-weight:700;background:var(--warn);color:#fff;border-radius:8px;
+    min-width:16px;text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="login" style="display:none">
+  <form onsubmit="return doLogin(event)">
+    <h2>🔧 IMS Station</h2>
+    <input id="loginPw" type="password" placeholder="Passwort" autocomplete="off">
+    <button type="submit">Einloggen</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- Header -->
+<header id="header" style="display:none">
+  <div class="station" id="stationLabel">—</div>
+  <div class="title">IMS Produktion</div>
+  <div class="sync"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">—</span></div>
+  <button class="logout" onclick="doLogout()">Logout</button>
+</header>
+
+<!-- Suche (wird bei Bedarf oben in main eingeblendet) -->
+<div id="searchWrap" style="display:none;max-width:1400px;margin:0 auto;padding:12px 16px 0">
+  <div class="search-bar" id="searchBar">
+    <span class="icon">🔍</span>
+    <input id="searchInput" type="search" inputmode="search" autocomplete="off" placeholder="Auftrag, Kunde oder Kommission suchen…" oninput="onSearch(this.value)" onkeydown="if(event.key==='Escape') clearSearch()">
+    <span class="count" id="searchCount"></span>
+    <button class="clear" type="button" onclick="clearSearch()" aria-label="Suche leeren">×</button>
+  </div>
+</div>
+
+<!-- Main -->
+<main id="main" class="empty">Lade…</main>
+
+<!-- Station-Picker -->
+<div id="picker" style="display:none" class="picker-section">
+  <h2>🔧 Station wählen</h2>
+  <p class="sub">Bookmark pro Tablet: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">station.html?ap=cnc</code></p>
+  <div id="pickerList"></div>
+</div>
+
+<script src="shared-v2.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// station.html — Tablet-Ansicht pro Arbeitsplatz (v2 Cockpit-Layout)
+// URL: station.html?ap=cnc
+// ─────────────────────────────────────────────────────────────────────────────
+'use strict';
+
+const AP = IMS.resolveAP(IMS.route.ap);
+const STATION_NAMEN = {
+  'CNC': 'CNC',
+  'AP-Armatur 1': 'AP-Armatur 1',
+  'AP-Armatur 2': 'AP-Armatur 2',
+  'UP-Armatur 1': 'UP-Armatur 1',
+  'UP-Armatur 2': 'UP-Armatur 2',
+  'Heizung': 'Heizung',
+  'Zusammenbau': 'Zusammenbau',
+  'Nachbearbeitung': 'Nachbearbeitung',
+  'Einbauelement': 'Einbauelement',
+  'Versand': 'Versand',
+};
+const PICKER_GROUPS = [
+  { label: 'Vorfertigung',    stations: [
+    { key:'cnc', name:'CNC' },
+    { key:'ap1', name:'AP-Armatur 1' },
+    { key:'ap2', name:'AP-Armatur 2' },
+    { key:'up1', name:'UP-Armatur 1' },
+    { key:'up2', name:'UP-Armatur 2' },
+  ] },
+  { label: 'Zusammenbau',     stations: [{ key:'zusammenbau', name:'Zusammenbau' }] },
+  { label: 'Nachbearbeitung', stations: [{ key:'nachbearbeitung', name:'Nachbearbeitung' }] },
+  { label: 'Heizung',         stations: [{ key:'heizung', name:'Heizung' }] },
+  { label: 'Einbauelement',   stations: [{ key:'einbauelement', name:'Einbauelement' }] },
+  { label: 'Versand',         stations: [{ key:'versand', name:'Versand' }] },
+];
+
+let pollTimer = null;
+let liveTickers = {};
+let searchQuery = '';  // aktuelle Such-Eingabe
+let doneSortKey = 'time';  // 'time'|'nr'|'kunde'|'kommission'|'stk'|'ist'
+let doneSortDir = 'desc';  // 'asc'|'desc'
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+async function boot() {
+  if (!AP || !STATION_NAMEN[AP]) {
+    // Kein AP-Parameter → Picker mit Live-Info zeigen (falls authed)
+    if (IMS.isAuthed()) {
+      try { await IMS.store.load(); } catch (e) { console.warn('[station] load for picker failed', e); }
+    }
+    showPicker();
+    return;
+  }
+
+  document.getElementById('stationLabel').textContent = '🔧 ' + STATION_NAMEN[AP];
+  document.title = 'Station ' + STATION_NAMEN[AP];
+
+  if (!IMS.isAuthed()) {
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('login').style.display = 'flex';
+    document.getElementById('loginPw').focus();
+  } else {
+    startApp();
+  }
+}
+
+function showPicker() {
+  document.getElementById('main').style.display = 'none';
+  const picker = document.getElementById('picker');
+  picker.style.display = 'block';
+
+  const liveInfo = IMS.store.auftraege.length ? computeLiveInfo() : null;
+
+  const html = PICKER_GROUPS.map(g => {
+    const items = g.stations.map(s => {
+      const apFull = IMS.resolveAP(s.key);
+      const info = liveInfo && liveInfo[apFull];
+      let chips = '';
+      if (info) {
+        if (info.running)   chips += `<span class="picker-chip laeuft">${info.running} läuft</span>`;
+        if (info.blocked)   chips += `<span class="picker-chip blockiert">${info.blocked} blockiert</span>`;
+        if (info.offen)     chips += `<span class="picker-chip offen">${info.offen} offen</span>`;
+        if (!info.offen && !info.running && !info.blocked) chips = `<span class="picker-chip leer">leer</span>`;
+      }
+      return `<a class="picker-btn" href="?ap=${s.key}">${esc(s.name)}<span class="picker-chips">${chips}</span></a>`;
+    }).join('');
+    return `
+      <div class="picker-group">
+        <div class="picker-group-label">${esc(g.label)}</div>
+        <hr class="picker-group-sep">
+        ${items}
+      </div>`;
+  }).join('');
+
+  document.getElementById('pickerList').innerHTML = html;
+}
+
+function computeLiveInfo() {
+  // Für jeden AP: offen, running, blocked zählen
+  const info = {};
+  IMS.ARBEITSPLAETZE.concat(['Versand']).forEach(ap => { info[ap] = { offen:0, running:0, blocked:0 }; });
+  IMS.store.auftraege.forEach(a => {
+    if (a.fertig) return;
+    const aps = IMS.getAuftragAPs(a);
+    aps.forEach(ap => {
+      if (!info[ap]) info[ap] = { offen:0, running:0, blocked:0 };
+      if (a.stationFertig && a.stationFertig[ap]) return; // Station fertig → nicht offen
+      info[ap].offen++;
+      if (IMS.hatBlockierung(a, ap)) info[ap].blocked++;
+      const td = a.timers && a.timers[IMS.timerKey(a.id, ap)];
+      if (IMS.istTimerAktiv(td)) info[ap].running++;
+    });
+  });
+  return info;
+}
+
+function doLogin(e) {
+  e.preventDefault();
+  const pw = document.getElementById('loginPw').value;
+  if (IMS.authCheck(pw)) {
+    document.getElementById('login').style.display = 'none';
+    if (!AP || !STATION_NAMEN[AP]) {
+      // Nach Login zum Picker (mit Daten laden)
+      IMS.store.load().then(() => showPicker()).catch(() => showPicker());
+    } else {
+      startApp();
+    }
+  } else {
+    document.getElementById('loginErr').textContent = 'Falsches Passwort';
+  }
+  return false;
+}
+
+function doLogout() {
+  IMS.logout();
+  location.reload();
+}
+
+async function startApp() {
+  document.getElementById('header').style.display = 'flex';
+  document.getElementById('main').style.display = 'flex';
+  document.getElementById('searchWrap').style.display = 'block';
+  // Sync-State-Callback registrieren (fuer Queue-Counter in Badge)
+  if (IMS.onSync) IMS.onSync((state, msg, queueLen) => setSync(state, msg, queueLen));
+  await refresh();
+  pollTimer = setInterval(refresh, IMS.CONFIG.POLL_MS);
+}
+
+// ─── SUCHE ───────────────────────────────────────────────────────────────────
+function normalizeSearch(s) {
+  return String(s || '').toLowerCase().replace(/[\s\u2009\u202F]+/g, '').trim();
+}
+function matchesSearch(a, q) {
+  if (!q) return true;
+  const nr   = normalizeSearch(a.nr || '');
+  const kun  = String(a.kunde || '').toLowerCase();
+  const kom  = String(a.kommission || '').toLowerCase();
+  const needle = normalizeSearch(q);
+  const needleRaw = String(q || '').toLowerCase().trim();
+  // Nummer und Kommission normalisiert vergleichen (ignoriert Leerzeichen in 2023 680)
+  return nr.includes(needle) || kun.includes(needleRaw) || kom.includes(needleRaw);
+}
+
+function onSearch(val) {
+  searchQuery = String(val || '').trim();
+  const bar = document.getElementById('searchBar');
+  if (searchQuery.length >= 2) bar.classList.add('active');
+  else {
+    bar.classList.remove('active');
+    if (searchQuery.length === 0) {
+      // leeres Feld: kein Filter, normaler Render
+      render();
+      return;
+    }
+  }
+  render();
+}
+
+function clearSearch() {
+  searchQuery = '';
+  const input = document.getElementById('searchInput');
+  const bar = document.getElementById('searchBar');
+  if (input) input.value = '';
+  if (bar) bar.classList.remove('active');
+  render();
+  if (input) input.focus();
+}
+
+// ─── SYNC ────────────────────────────────────────────────────────────────────
+function setSync(state, label, queueLen) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'loading' ? 'loading' : state === 'err' ? 'err' : '');
+  // Queue-Counter: kleine Badge neben dem Label wenn Pending-Ops vorhanden
+  const qLen = queueLen != null ? queueLen : (IMS.opQueue ? IMS.opQueue.size() : 0);
+  if (qLen > 0) {
+    lbl.innerHTML = esc(label) + '<span class="sync-queue" title="Pending Operationen">' + qLen + '</span>';
+    lbl.style.cursor = 'pointer';
+    lbl.onclick = function () { if (IMS.store.syncNow) IMS.store.syncNow(); };
+  } else {
+    lbl.textContent = label;
+    lbl.style.cursor = '';
+    lbl.onclick = null;
+  }
+}
+
+async function refresh() {
+  try {
+    setSync('loading', 'Lade…');
+    await IMS.store.load();
+    setSync('ok', 'Synchronisiert');
+    render();
+  } catch (e) {
+    console.error('[station] refresh error', e);
+    setSync('err', 'Fehler');
+  }
+}
+
+// ─── AUFTRÄGE FILTERN + SORTIEREN ────────────────────────────────────────────
+function auftraegeFuerStation() {
+  return IMS.store.auftraege.filter(a => !a.fertig).filter(a => IMS.isAPOffen(a, AP)).sort(sortFn);
+}
+
+// Heute (seit 00:00) an dieser Station fertig gemeldet — fuer Tages-Tabelle
+function auftraegeHeuteFertig() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const startIso = startOfDay.toISOString();
+  return IMS.store.auftraege
+    .filter(a => a.stationFertig && a.stationFertig[AP] && a.stationFertig[AP] >= startIso)
+    .sort((a, b) => (a.stationFertig[AP] > b.stationFertig[AP] ? -1 : 1)); // neueste zuerst
+}
+
+function sortFn(a, b) {
+  // 1) laufender Timer zuerst (wird später in Hero-Sektion gezeigt)
+  const aL = IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]);
+  const bL = IMS.istTimerAktiv(b.timers && b.timers[IMS.timerKey(b.id, AP)]);
+  if (aL !== bL) return aL ? -1 : 1;
+  // 2) PRIMAER: Lieferdatum (so sortiert IMS intern alles)
+  const aT = a.datum || '9999-12-31';
+  const bT = b.datum || '9999-12-31';
+  if (aT !== bT) return aT < bT ? -1 : 1;
+  // 3) HighPrio innerhalb des Liefertags
+  if (!!a.highPrio !== !!b.highPrio) return a.highPrio ? -1 : 1;
+  // 4) Tagesoptimierung (a.prio = Position innerhalb des Liefertags)
+  if ((a.prio || 999) !== (b.prio || 999)) return (a.prio || 999) - (b.prio || 999);
+  // 5) Auftragsnummer als letzter Tiebreaker
+  return (a.nr || '').localeCompare(b.nr || '');
+}
+
+// Queue-Gruppierung nach Lieferdatum
+function groupByDatum(list) {
+  const groups = new Map();
+  list.forEach(a => {
+    const key = a.datum || '__nodate__';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(a);
+  });
+  // Bereits durch sortFn in richtiger Reihenfolge → iteration preserves insertion
+  return [...groups.entries()];
+}
+
+// Langes Datum: "Donnerstag, 17.04.2026"
+const _WT_LANG = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+function formatDatumLang(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return `${_WT_LANG[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+}
+
+// Relativer Tageshinweis als Text
+function relDayText(tage) {
+  if (tage === null) return '';
+  if (tage < 0)  return `${Math.abs(tage)} ${Math.abs(tage)===1?'Tag':'Tage'} über`;
+  if (tage === 0) return 'heute';
+  if (tage === 1) return 'morgen';
+  return `in ${tage} Tagen`;
+}
+function dateGroupClass(tage) {
+  // Farbe nur fuer Ausnahme-Zustaende (today / over). Normale Tage neutral —
+  // der MA kennt den Kalender. Orange/Blau brachten keinen Mehrwert.
+  if (tage === null) return '';
+  if (tage < 0)   return 'over';
+  if (tage === 0) return 'today';
+  return '';
+}
+
+// ∅-Zeit der letzten 10 abgeschlossenen Aufträge für diese Station
+function avgMsForAP() {
+  const values = [];
+  IMS.store.auftraege.forEach(a => {
+    if (!a.stationFertig || !a.stationFertig[AP]) return;
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    if (td && td.totalMs > 0) values.push(td.totalMs);
+  });
+  // letzte 10
+  const last = values.slice(-10);
+  if (!last.length) return null;
+  return last.reduce((s,v) => s+v, 0) / last.length;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  Object.values(liveTickers).forEach(clearInterval);
+  liveTickers = {};
+
+  const fullList = auftraegeFuerStation();
+  const fullDone = auftraegeHeuteFertig();
+  const main = document.getElementById('main');
+
+  // Filter anwenden (ab 2 Zeichen)
+  const filterActive = searchQuery && searchQuery.length >= 2;
+  const list      = filterActive ? fullList.filter(a => matchesSearch(a, searchQuery)) : fullList;
+  const doneToday = filterActive ? fullDone.filter(a => matchesSearch(a, searchQuery)) : fullDone;
+
+  // Such-Counter aktualisieren
+  const countEl = document.getElementById('searchCount');
+  if (countEl) {
+    if (filterActive) {
+      const total = fullList.length + fullDone.length;
+      const hits  = list.length + doneToday.length;
+      countEl.innerHTML = `<b>${hits}</b> von <b>${total}</b>`;
+    } else {
+      countEl.textContent = '';
+    }
+  }
+
+  if (!fullList.length && !fullDone.length) {
+    main.className = 'empty';
+    main.innerHTML = '<div>✓ Keine offenen Aufträge für ' + esc(STATION_NAMEN[AP]) + '</div>';
+    return;
+  }
+
+  if (filterActive && !list.length && !doneToday.length) {
+    main.className = 'empty';
+    main.innerHTML = '<div>🔍 Keine Treffer für „' + esc(searchQuery) + '"<br><br><button class="modal-btn secondary" onclick="clearSearch()" style="min-width:140px">Suche leeren</button></div>';
+    return;
+  }
+
+  main.className = '';
+
+  // Split: laufende Auftraege (koennen MEHRERE sein, z.B. 2 CNC-Maschinen parallel)
+  const runningList = list.filter(a => IMS.istTimerAktiv(a.timers && a.timers[IMS.timerKey(a.id, AP)]));
+  const queue = list.filter(a => !runningList.includes(a));
+  const avgMs = avgMsForAP();
+
+  let html = '';
+  if (runningList.length) {
+    const isMulti = runningList.length > 1;
+    const headLbl = isMulti ? `Aktuell in Arbeit (${runningList.length})` : 'Aktuell in Arbeit';
+    const cards = runningList.map(a => renderCard(a, !isMulti, avgMs)).join('');
+    html += `<section class="section-active">
+      <div class="section-head">${esc(headLbl)}</div>
+      <div class="running-grid ${isMulti ? 'multi' : 'single'}">${cards}</div>
+    </section>`;
+  }
+  // Info fuer Sprunglink zur Tagestabelle
+  let doneTotalMs = 0;
+  doneToday.forEach(a => {
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    if (td && td.totalMs) doneTotalMs += td.totalMs;
+  });
+  const jumpToDone = doneToday.length
+    ? `<a class="jump-link" href="#done-today"><span class="arr">↓</span> Heute erledigt: <b>${doneToday.length}</b> · <b>${IMS.formatMs(doneTotalMs)}</b></a>`
+    : `<a class="jump-link" href="#done-today"><span class="arr">↓</span> Heute erledigt: <b>0</b></a>`;
+
+  if (queue.length) {
+    const next = queue[0];
+    const nextHtml = next
+      ? `<span class="next">Als Nächstes: <b>${esc(fmtPrio(next))} · ${esc(fmtNrWithSpace(next))}</b> ${esc(next.kunde || '')}</span>`
+      : '';
+    // Queue nach Lieferdatum gruppieren
+    const groups = groupByDatum(queue);
+    const groupsHtml = groups.map(([datum, cards]) => {
+      const tage = (datum === '__nodate__') ? null : IMS.tageBis(datum);
+      const datumLabel = (datum === '__nodate__') ? 'Ohne Liefertermin' : formatDatumLang(datum);
+      const relLabel = relDayText(tage);
+      const cls = dateGroupClass(tage);
+      const countTxt = cards.length + ' ' + (cards.length === 1 ? 'Auftrag' : 'Aufträge');
+      return `<div class="date-group">
+        <div class="date-group-head ${cls}">
+          <span class="date-group-datum">${esc(datumLabel)}</span>
+          ${relLabel ? `<span class="date-group-rel">· ${esc(relLabel)}</span>` : ''}
+          <span class="date-group-count">${esc(countTxt)}</span>
+        </div>
+        <section class="section-queue">${cards.map(a => renderCard(a, false, avgMs)).join('')}</section>
+      </div>`;
+    }).join('');
+    html += `<div class="queue-wrap" id="queue-top">
+      <div class="queue-head"><span>Warteschlange (${queue.length})</span>${nextHtml}${jumpToDone}</div>
+      ${groupsHtml}
+    </div>`;
+  }
+
+  // Tages-Tabelle: Heute erledigt (auch mit Empty-State)
+  html += renderDoneToday(doneToday);
+
+  main.innerHTML = html;
+
+  // Live-Ticker fuer ALLE laufenden Karten
+  runningList.forEach(a => {
+    const td = a.timers[IMS.timerKey(a.id, AP)];
+    startLiveTicker(a.id, td);
+  });
+}
+
+function renderCard(a, isHero, avgMs) {
+  const key = IMS.timerKey(a.id, AP);
+  const td = a.timers && a.timers[key];
+  const running = IMS.istTimerAktiv(td);
+  const blocked = IMS.hatBlockierung(a, AP);
+  const vorgaenger = IMS.sindVorgaengerFertig(a, AP);
+  const tage = IMS.tageBis(a.datum);
+  const overdue = tage !== null && tage < 0;
+  const soon = tage !== null && tage > 0 && tage <= 3;
+
+  const cls = ['card',
+    isHero && running ? 'running hero' : (running ? 'running' : ''),
+    a.highPrio ? 'prio-high' : '',
+    blocked ? 'blocked' : '',
+    !a.highPrio && !blocked && soon ? 'prio-soon' : '',
+  ].filter(Boolean).join(' ');
+
+  const prioPill = `<span class="card-prio">${fmtPrioNum(a)}</span>`;
+  const nrHtml = renderNr(a);
+
+  const sklasse = String(a.sklasse || '').toLowerCase().replace(/\s/g, '');
+  const sBadge = a.sklasse ? `<span class="badge ${sklasse}">${esc(a.sklasse)}</span>` : '';
+  const hpBadge = a.highPrio ? '<span class="badge highprio">High Prio</span>' : '';
+  // Termin-Chip nur im Hero (Queue hat Gruppen-Header mit Datum)
+  const terminBadge = isHero ? renderTerminBadge(a, tage) : '';
+
+  const sCls = stkClass(a.stk);
+  const stk = a.stk ? `<div class="card-stk ${sCls}">${esc(a.stk)} <span class="unit">Stk</span></div>` : '';
+  // Effort-Badge bei grossen Auftraegen in Chip-Zeile
+  const effortBadge = sCls === 'stk-xl' ? `<span class="badge effort-xl">Grossauftrag</span>`
+                    : sCls === 'stk-l'  ? `<span class="badge effort-l">Umfangreich</span>`
+                    : '';
+  const kommission = a.kommission ? `<div class="card-komm">Kommission: ${esc(a.kommission)}</div>` : '';
+  const notiz = a.notiz ? `<div class="card-notiz">${esc(a.notiz)}</div>` : '';
+
+  // Timer-Box
+  const timerVal = IMS.formatElapsed(IMS.calcTotalMs(td));
+  // ∅-Zeit-Anzeige vorerst deaktiviert — muss erst auf Validitaet geprueft werden
+  // (siehe avgMsForAP: kein Stueckzahl-Bezug, kein Auftragstyp-Filter).
+  // Wird reaktiviert mit Positions-Integration / Plan-Zeiten aus ERP.
+  const avgTxt = '';
+  const timerBtn = running
+    ? `<button class="btn-timer pause" onclick="onStop('${a.id}')">⏸ Pause</button>`
+    : `<button class="btn-timer start" onclick="onStart('${a.id}')" ${blocked || !vorgaenger ? 'disabled' : ''}>▶ Start</button>`;
+  const timerBox = `<div class="timer-box ${running ? 'active' : ''}">
+    <div class="timer-left">
+      <span class="timer-label ${running ? 'running' : ''}">${running ? 'Läuft' : 'Zeit ' + esc(STATION_NAMEN[AP])}</span>
+      <span class="timer-val ${running ? 'running' : ''}" id="timer-${esc(a.id)}">${timerVal}</span>
+      ${avgTxt}
+    </div>
+    <div class="timer-spacer"></div>
+    ${timerBtn}
+  </div>`;
+
+  // Progress-Bar vorerst deaktiviert (benoetigt validen Plan-/Schnitt-Wert)
+  const progress = '';
+
+  // Warnings
+  let warnRow = '';
+  if (blocked) {
+    warnRow = renderBlockActive(a);
+  } else if (!vorgaenger) {
+    warnRow = '<div class="vorgaenger-warn">⏳ Vorgänger-Station noch nicht fertig</div>';
+  }
+
+  // Blockierung-Toggle-Button (nur wenn NICHT blockiert)
+  const blockToggle = blocked ? '' : `<button class="block-toggle" onclick="onBlock('${a.id}')"><span class="dot"></span> Blockierung setzen</button>`;
+
+  // Fotodoku (Pflicht bei UP + S3)
+  const isFotoPflicht = IMS.AP_FOTO_REQUIRED.includes(AP) && a.sklasse === 'S3';
+  const fotoHtml = isFotoPflicht ? `<div class="foto-section required">
+    <input type="checkbox" id="foto-${esc(a.id)}" onchange="document.getElementById('fertig-${esc(a.id)}').disabled = !this.checked">
+    <label for="foto-${esc(a.id)}">Fotodoku abgeschlossen
+      <span class="hint">Pflicht bei S3 + UP-Armatur — muss vor „Fertig" abgehakt werden</span>
+    </label>
+  </div>` : '';
+
+  // Fertig-Button: gross, Subline nur wenn Timer laeuft (dann ist der auto-Stopp
+  // die einzige nicht-offensichtliche Info; 'naechste Station' stimmt ohnehin
+  // nicht immer und ist fuer trainierte MA redundant)
+  const fertigDisabled = blocked || (isFotoPflicht);
+  const fertigSubHtml = running ? `<span class="fertig-sub">Timer stoppt automatisch</span>` : '';
+  const fertigBtn = `<button class="btn-fertig" id="fertig-${esc(a.id)}" onclick="onFertig('${a.id}')" ${fertigDisabled ? 'disabled' : ''}>
+    <span class="fertig-main">FERTIG</span>
+    ${fertigSubHtml}
+  </button>`;
+
+  // Content
+  const headSection = `
+    <div class="card-head">${prioPill}${nrHtml}</div>
+    ${a.kunde ? `<div class="card-kunde">${esc(a.kunde)}</div>` : ''}
+    <div class="chips">${sBadge}${hpBadge}${effortBadge}${terminBadge}</div>
+    ${kommission}
+    ${stk}
+    ${notiz}
+    ${timerBox}
+    ${progress}
+    ${warnRow}
+    ${blockToggle}
+    ${fotoHtml}
+    <div class="fertig-divider"></div>
+    ${fertigBtn}
+  `;
+
+  if (isHero && running) {
+    // Cockpit-Layout: Links Action, Rechts Positionen-Platzhalter
+    return `<div class="${cls}">
+      <div class="hero-left">${headSection}</div>
+      <div class="hero-right">
+        <div class="positionen-placeholder"></div>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="${cls}">${headSection}</div>`;
+}
+
+function renderNr(a) {
+  const nr = String(a.nr || '');
+  // Nr-Format: "2023 680" → Jahr (4 Ziffern) + Nr
+  const m = nr.match(/^(\d{4})[\s\u2009\u202F]*(.+)$/);
+  if (m) {
+    return `<span class="card-nr-wrap"><span class="card-nr-jahr">${esc(m[1])}</span><span class="card-nr-main">${esc(m[2])}</span></span>`;
+  }
+  return `<span class="card-nr-wrap"><span class="card-nr-main">${esc(nr || '?')}</span></span>`;
+}
+
+function renderTerminBadge(a, tage) {
+  if (!a.datum) return '';
+  let cls = 'termin';
+  if (tage !== null) {
+    if (tage < 0)       cls += ' over';
+    else if (tage === 0) cls += ' today';
+    else if (tage <= 3)  cls += ' warn';
+  }
+  // Hero: volles Datum + Relativ ("Fr, 22.04. · in 5 Tagen")
+  const datumKurz = IMS.formatDatum(a.datum);
+  const rel = relDayText(tage);
+  const label = rel ? `${datumKurz} · ${rel}` : datumKurz;
+  return `<span class="badge ${cls}">${esc(label)}</span>`;
+}
+
+// Aufwand-Klassifikation nach Stueckzahl
+function stkClass(n) {
+  const v = Number(n) || 0;
+  if (v >= 75) return 'stk-xl';
+  if (v >= 30) return 'stk-l';
+  return '';
+}
+
+function fmtPrioNum(a) {
+  const p = a.prio;
+  if (p && p > 0) return String(p).padStart(2, '0');
+  return '—';
+}
+function fmtPrio(a) { return fmtPrioNum(a); }
+function fmtNr(a) { return String(a.nr || '?'); }
+// "2023680" → "2023 680" (mit Leerzeichen wenn Jahr-Präfix erkennbar)
+function fmtNrWithSpace(a) {
+  const nr = String(a.nr || '?');
+  const m = nr.match(/^(\d{4})[\s\u2009\u202F]*(.+)$/);
+  return m ? `${m[1]} ${m[2]}` : nr;
+}
+
+function renderBlockActive(a) {
+  const current = a.blockierungen[AP];
+  const optionen = IMS.BLOCKIERUNG_GRUENDE.map(g =>
+    `<option ${g === current ? 'selected' : ''}>${esc(g)}</option>`
+  ).join('');
+  return `<div class="block-active">
+    <div class="block-active-head">
+      <span class="block-active-label">⚠ Blockiert</span>
+      <button class="block-active-clear" onclick="onBlockClear('${a.id}')">Aufheben</button>
+    </div>
+    <select class="block-select" onchange="onBlockChange('${a.id}', this.value)">${optionen}</select>
+  </div>`;
+}
+
+// ─── TAGES-TABELLE: Heute erledigt ───────────────────────────────────────────
+function sortDoneList(list) {
+  const dir = doneSortDir === 'asc' ? 1 : -1;
+  const key = doneSortKey;
+  const get = (a) => {
+    switch (key) {
+      case 'time':       return a.stationFertig ? a.stationFertig[AP] : '';
+      case 'nr':         return String(a.nr || '');
+      case 'kunde':      return String(a.kunde || '').toLowerCase();
+      case 'kommission': return String(a.kommission || '').toLowerCase();
+      case 'stk':        return Number(a.stk) || 0;
+      case 'ist':
+        const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+        return (td && td.totalMs) || 0;
+    }
+    return '';
+  };
+  return [...list].sort((a,b) => {
+    const va = get(a), vb = get(b);
+    if (va < vb) return -1 * dir;
+    if (va > vb) return  1 * dir;
+    return 0;
+  });
+}
+
+function toggleDoneSort(key) {
+  if (doneSortKey === key) {
+    doneSortDir = doneSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    doneSortKey = key;
+    // Numerische und Zeit-Werte: Default desc (neueste/groesste oben)
+    doneSortDir = (key === 'time' || key === 'ist' || key === 'stk') ? 'desc' : 'asc';
+  }
+  render();
+}
+
+function sortArrow(key) {
+  if (doneSortKey !== key) return '<span class="arr">↕</span>';
+  return doneSortDir === 'asc' ? '<span class="arr">↑</span>' : '<span class="arr">↓</span>';
+}
+function sortCls(key) { return doneSortKey === key ? 'sortable active' : 'sortable'; }
+
+function renderDoneHeaderRow() {
+  return `<div class="done-header-row">
+    <span class="col-prio">Prio</span>
+    <span class="col-time ${sortCls('time')}" onclick="toggleDoneSort('time')">Zeit ${sortArrow('time')}</span>
+    <span class="col-nr ${sortCls('nr')}" onclick="toggleDoneSort('nr')">Auftragsnr ${sortArrow('nr')}</span>
+    <span class="col-kunde ${sortCls('kunde')}" onclick="toggleDoneSort('kunde')">Kunde ${sortArrow('kunde')}</span>
+    <span class="col-kommission ${sortCls('kommission')}" onclick="toggleDoneSort('kommission')">Kommission ${sortArrow('kommission')}</span>
+    <span class="col-stk ${sortCls('stk')}" onclick="toggleDoneSort('stk')">Stk ${sortArrow('stk')}</span>
+    <span class="col-ist ${sortCls('ist')}" onclick="toggleDoneSort('ist')">Ist ${sortArrow('ist')}</span>
+    <span></span>
+  </div>`;
+}
+
+function renderDoneToday(list) {
+  // Empty-State
+  if (!list.length) {
+    return `<div class="done-wrap" id="done-today">
+      <div class="done-head">
+        <span class="done-head-title">Heute erledigt</span>
+        <span class="done-head-count">noch keine Aufträge</span>
+        <a class="jump-link" href="#queue-top"><span class="arr">↑</span> Zur Warteschlange</a>
+      </div>
+      <div class="done-empty">Sobald du „FERTIG" drückst, erscheinen die Aufträge hier — mit Zeit und Rückgängig-Option.</div>
+    </div>`;
+  }
+
+  // Sort nach aktuellem Sort-Kriterium
+  list = sortDoneList(list);
+
+  // Summe der IST-Zeiten heute
+  let totalMs = 0;
+  list.forEach(a => {
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    if (td && td.totalMs) totalMs += td.totalMs;
+  });
+  const totalLbl = totalMs > 0 ? IMS.formatMs(totalMs) : '—';
+
+  const rows = list.map(a => {
+    const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
+    const hasIst = td && td.totalMs > 0;
+    const istHtml = hasIst
+      ? `<span class="ist" title="Ist-Zeit">${esc(IMS.formatMs(td.totalMs))}</span>`
+      : `<span class="ist empty" title="Kein Timer benutzt">ohne Timer</span>`;
+    const kommHtml = a.kommission
+      ? `<span class="kommission" title="${esc(a.kommission)}">${esc(a.kommission)}</span>`
+      : `<span class="kommission empty">—</span>`;
+    const zeit = formatUhrzeit(a.stationFertig[AP]);
+    const prioCls = a.highPrio ? 'prio high' : 'prio';
+    const nrFmt = fmtNrWithSpace(a);
+    const stk = a.stk ? `${esc(a.stk)} Stk` : '';
+    return `<div class="done-row">
+      <span class="${prioCls}">${esc(fmtPrioNum(a))}</span>
+      <span class="time">${esc(zeit)}</span>
+      <span class="nr">${esc(nrFmt)}</span>
+      <span class="kunde" title="${esc(a.kunde || '')}">${esc(a.kunde || '')}</span>
+      ${kommHtml}
+      <span class="stk">${esc(stk)}</span>
+      ${istHtml}
+      <button class="btn-undo" onclick="onUndoFertig('${esc(a.id)}')">↶ Rückgängig</button>
+    </div>`;
+  }).join('');
+
+  const countLbl = list.length + ' ' + (list.length === 1 ? 'Auftrag' : 'Aufträge');
+  return `<div class="done-wrap" id="done-today">
+    <div class="done-head">
+      <span class="done-head-title">Heute erledigt</span>
+      <span class="done-head-count">${esc(countLbl)}</span>
+      <span class="done-head-total">Gesamt-Zeit: <b>${esc(totalLbl)}</b></span>
+      <a class="jump-link" href="#queue-top"><span class="arr">↑</span> Zur Warteschlange</a>
+    </div>
+    <div class="done-table">
+      ${renderDoneHeaderRow()}
+      ${rows}
+    </div>
+  </div>`;
+}
+
+function formatUhrzeit(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function startLiveTicker(auftragId, td) {
+  if (liveTickers[auftragId]) clearInterval(liveTickers[auftragId]);
+  liveTickers[auftragId] = setInterval(() => {
+    const el = document.getElementById('timer-' + auftragId);
+    if (!el) { clearInterval(liveTickers[auftragId]); return; }
+    el.textContent = IMS.formatElapsed(IMS.calcTotalMs(td));
+  }, 1000);
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+async function onStart(id) {
+  try {
+    setSync('loading', 'Starte…');
+    await IMS.store.timerStart(id, AP);
+    setSync('ok', 'Gestartet ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) { toast('Fehler beim Starten', true); setSync('err', 'Fehler'); }
+}
+
+async function onStop(id) {
+  try {
+    setSync('loading', 'Pausiere…');
+    await IMS.store.timerStop(id, AP);
+    setSync('ok', 'Pausiert ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) { toast('Fehler beim Pausieren', true); setSync('err', 'Fehler'); }
+}
+
+// Fertig: direkte Aktion ohne Confirm (Lean-Fix). Korrektur via Undo-Toast (8 s).
+// Nachher weiterhin in Tages-Tabelle rueckgaengig machbar.
+async function onFertig(id) {
+  const a = IMS.store.getAuftrag(id);
+  if (!a) return;
+  const td = a.timers && a.timers[IMS.timerKey(id, AP)];
+  const running = IMS.istTimerAktiv(td);
+  const nr = fmtNrWithSpace(a);
+  try {
+    setSync('loading', 'Speichere…');
+    await IMS.store.markStationFertig(id, AP);
+    showUndoToast(nr, id, AP, running);
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+}
+
+// ─── UNDO-TOAST ─────────────────────────────────────────────────────────────
+// 8 Sekunden lang mit Progress-Stripe. Rueckgaengig-Button + Close.
+// Nur ein Toast gleichzeitig sichtbar (neuer ersetzt alten).
+let _undoToastTimer = null;
+function showUndoToast(nr, auftragId, station, wasRunning) {
+  // Alten Toast entfernen falls vorhanden
+  const existing = document.querySelector('.undo-toast');
+  if (existing) existing.remove();
+  if (_undoToastTimer) { clearTimeout(_undoToastTimer); _undoToastTimer = null; }
+
+  const toastEl = document.createElement('div');
+  toastEl.className = 'undo-toast';
+  toastEl.innerHTML = `
+    <div class="ut-content">
+      <span class="ut-icon">✓</span>
+      <div class="ut-text">
+        <div class="ut-title">${esc(nr)} abgeschlossen</div>
+        ${wasRunning ? '<div class="ut-sub">Timer gestoppt</div>' : ''}
+      </div>
+      <button class="ut-undo" data-role="undo">↶ Rückgängig</button>
+      <button class="ut-close" data-role="close" aria-label="Schließen">✕</button>
+    </div>
+    <div class="ut-progress"></div>
+  `;
+  document.body.appendChild(toastEl);
+
+  // Auto-Close nach 8 s
+  _undoToastTimer = setTimeout(() => { toastEl.remove(); _undoToastTimer = null; }, 8000);
+
+  // Event-Handler
+  toastEl.addEventListener('click', async (e) => {
+    const role = e.target.dataset && e.target.dataset.role;
+    if (role === 'close') {
+      toastEl.remove();
+      if (_undoToastTimer) { clearTimeout(_undoToastTimer); _undoToastTimer = null; }
+    } else if (role === 'undo') {
+      toastEl.remove();
+      if (_undoToastTimer) { clearTimeout(_undoToastTimer); _undoToastTimer = null; }
+      try {
+        setSync('loading', 'Nehme zurück…');
+        await IMS.store.undoStationFertig(auftragId, station);
+        toast(`${esc(nr)} wiederhergestellt`);
+        render();
+        setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+      } catch (err) {
+        toast('Fehler beim Rückgängig', true);
+        setSync('err', 'Fehler');
+      }
+    }
+  });
+}
+
+// Rueckgaengig: Fertig-Meldung zuruecknehmen, Auftrag kommt zurueck in Queue
+function onUndoFertig(id) {
+  const a = IMS.store.getAuftrag(id);
+  if (!a) return;
+  showConfirmModal({
+    title: 'Fertig-Meldung zurücknehmen?',
+    auftrag: `<span class="nr">${esc(fmtNrWithSpace(a))}</span> · ${esc(a.kunde || '')}`,
+    consequences: [
+      `Der Auftrag erscheint wieder in der Warteschlange von <b>${esc(STATION_NAMEN[AP])}</b>`,
+      `Der Timer bleibt wie er ist (gestoppte Zeit wird nicht gelöscht)`,
+    ],
+    confirmLabel: 'Ja, zurücknehmen',
+    onConfirm: async () => {
+      try {
+        setSync('loading', 'Nehme zurück…');
+        await IMS.store.undoStationFertig(id, AP);
+        setSync('ok', 'Zurückgenommen ✓');
+        render();
+        setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+      } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+    },
+  });
+}
+
+function computeNextStation(a, currentAP) {
+  const aps = IMS.getAuftragAPs(a);
+  const idx = aps.indexOf(currentAP);
+  if (idx < 0) return null;
+  for (let i = idx + 1; i < aps.length; i++) {
+    if (!(a.stationFertig && a.stationFertig[aps[i]])) return aps[i];
+  }
+  // aps enthält kein Versand als Standard — falls Auftrag auch Versand braucht
+  return 'Versand';
+}
+
+// Blockierung setzen (aus Toggle-Button)
+function onBlock(id) {
+  const a = IMS.store.getAuftrag(id);
+  if (!a) return;
+
+  const bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  const optionen = IMS.BLOCKIERUNG_GRUENDE.map(g =>
+    `<button class="opt" data-grund="${esc(g)}">${esc(g)}</button>`
+  ).join('');
+
+  bd.innerHTML = `<div class="modal">
+    <div class="modal-head"><h3>Blockierung setzen</h3>
+      <div class="modal-auftrag">Auftrag <span class="nr">${fmtNr(a)}</span></div></div>
+    <div class="modal-body">${optionen}</div>
+    <div class="modal-actions"><button class="modal-btn secondary cancel">Abbrechen</button></div>
+  </div>`;
+  document.body.appendChild(bd);
+
+  bd.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.opt');
+    if (!btn) {
+      if (e.target === bd || e.target.classList.contains('cancel')) bd.remove();
+      return;
+    }
+    const grund = btn.dataset.grund;
+    bd.remove();
+    try {
+      setSync('loading', 'Speichere…');
+      await IMS.store.setBlockierung(id, AP, grund);
+      setSync('ok', 'Blockiert ✓');
+      render();
+      setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+    } catch (err) { toast('Fehler', true); setSync('err', 'Fehler'); }
+  });
+}
+
+async function onBlockChange(id, grund) {
+  try {
+    setSync('loading', 'Speichere…');
+    await IMS.store.setBlockierung(id, AP, grund);
+    setSync('ok', 'Gespeichert ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+}
+
+async function onBlockClear(id) {
+  try {
+    setSync('loading', 'Hebe auf…');
+    await IMS.store.setBlockierung(id, AP, null);
+    setSync('ok', 'Aufgehoben ✓');
+    render();
+    setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+  } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+}
+
+// ─── CONFIRM MODAL ──────────────────────────────────────────────────────────
+function showConfirmModal({ title, auftrag, consequences, confirmLabel, onConfirm, danger }) {
+  const bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  const conseqHtml = (consequences || []).map(c =>
+    `<div class="modal-conseq"><span class="mark">✓</span><span>${c}</span></div>`
+  ).join('');
+  bd.innerHTML = `<div class="modal">
+    <div class="modal-head">
+      <h3>${title}</h3>
+      ${auftrag ? `<div class="modal-auftrag">${auftrag}</div>` : ''}
+    </div>
+    <div class="modal-body">${conseqHtml}</div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary cancel">Abbrechen</button>
+      <button class="modal-btn primary ${danger ? 'danger' : ''} confirm">${esc(confirmLabel || 'Ja')}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bd);
+
+  const close = () => bd.remove();
+  bd.addEventListener('click', (e) => {
+    if (e.target === bd || e.target.classList.contains('cancel')) close();
+    if (e.target.classList.contains('confirm')) { close(); onConfirm && onConfirm(); }
+  });
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function toast(msg, isErr) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── GO ──────────────────────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>

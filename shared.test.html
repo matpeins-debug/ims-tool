@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>shared.js v2 — Unit Tests</title>
+<style>
+  body{font-family:system-ui,sans-serif;padding:24px;max-width:1000px;margin:0 auto;background:#f5f7fa}
+  h1{color:#00a87a}
+  .test{padding:10px 14px;border-radius:6px;margin:6px 0;font-family:ui-monospace,monospace;font-size:13px}
+  .pass{background:#d9f4c8;color:#2d5400}
+  .fail{background:#ffd0d8;color:#8a1a28;white-space:pre-wrap}
+  .skip{background:#fff1d0;color:#8a5a00}
+  .summary{padding:14px;border-radius:8px;font-weight:700;font-size:15px;margin-top:14px}
+  .summary.ok{background:#00a87a;color:#fff}
+  .summary.bad{background:#d63040;color:#fff}
+  button{padding:10px 20px;font-size:14px;background:#0066cc;color:#fff;border:0;border-radius:6px;cursor:pointer}
+  code{background:#eef1f6;padding:2px 4px;border-radius:3px}
+</style>
+</head>
+<body>
+
+<h1>shared.js v2 — Unit Tests (Ops-Framework)</h1>
+<p>Tests gegen <code>applyOp</code>, <code>applyOpsToState</code>, <code>logConflict</code>, <code>makeOp</code>.
+   Keine Supabase-Calls, rein logische Tests.</p>
+<p><strong>Achtung:</strong> Tests schreiben in <code>localStorage.ims_v2_conflict_log</code> — wird vor jedem Test-Run geleert.</p>
+
+<button onclick="runAll()">Alle Tests ausführen</button>
+
+<div id="results"></div>
+<div id="summary"></div>
+
+<script src="shared-v2.js"></script>
+<script>
+'use strict';
+
+const $results = document.getElementById('results');
+const $summary = document.getElementById('summary');
+
+let passed = 0, failed = 0;
+
+function log(status, name, msg) {
+  const div = document.createElement('div');
+  div.className = 'test ' + status;
+  div.textContent = (status === 'pass' ? '✓ ' : status === 'fail' ? '✗ ' : '○ ') + name + (msg ? '\n  ' + msg : '');
+  $results.appendChild(div);
+  if (status === 'pass') passed++;
+  else if (status === 'fail') failed++;
+}
+
+function assertEq(actual, expected, label) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error((label || 'assertEq') + '\n    expected: ' + JSON.stringify(expected) + '\n    actual:   ' + JSON.stringify(actual));
+  }
+}
+function assertTrue(v, label) { if (!v) throw new Error((label || 'assertTrue') + ' → got ' + v); }
+function assertFalse(v, label) { if (v) throw new Error((label || 'assertFalse') + ' → got ' + v); }
+
+function test(name, fn) {
+  try {
+    fn();
+    log('pass', name);
+  } catch (e) {
+    log('fail', name, e.message);
+  }
+}
+
+function resetConflictLog() {
+  localStorage.removeItem('ims_v2_conflict_log');
+}
+
+function getConflicts() {
+  return JSON.parse(localStorage.getItem('ims_v2_conflict_log') || '[]');
+}
+
+function baseAuftrag() {
+  return {
+    id: 'auftrag-1',
+    nr: '2023 680',
+    kunde: 'Test GmbH',
+    stk: 5,
+    timers: {},
+    stationFertig: {},
+    blockierungen: {},
+  };
+}
+
+function runAll() {
+  $results.innerHTML = '';
+  $summary.innerHTML = '';
+  passed = 0; failed = 0;
+  resetConflictLog();
+
+  // ═══════════ makeOp ═══════════
+  test('makeOp: erzeugt Objekt mit allen Pflichtfeldern', function () {
+    const op = IMS.makeOp('timer_start', 'auftrag-1', 'CNC', {});
+    assertTrue(op.op_id && op.op_id.length > 10, 'op_id present');
+    assertTrue(op.client_id && op.client_id.startsWith('station-'), 'client_id prefix');
+    assertTrue(op.ts && op.ts.match(/^\d{4}-\d{2}-\d{2}T/), 'ts ISO');
+    assertEq(op.type, 'timer_start');
+    assertEq(op.auftrag_id, 'auftrag-1');
+    assertEq(op.station, 'CNC');
+  });
+
+  test('makeOp: op_id ist eindeutig (10 Ops)', function () {
+    const ids = new Set();
+    for (let i = 0; i < 10; i++) ids.add(IMS.makeOp('timer_start', 'a', 'CNC').op_id);
+    assertEq(ids.size, 10, 'alle IDs unique');
+  });
+
+  // ═══════════ timer_start ═══════════
+  test('timer_start: setzt start wenn kein Timer vorhanden', function () {
+    const state = [baseAuftrag()];
+    const op = IMS.makeOp('timer_start', 'auftrag-1', 'CNC');
+    const newState = IMS.applyOp(state, op);
+    const t = newState[0].timers['auftrag-1_CNC'];
+    assertEq(t.start, op.ts);
+    assertEq(t.end, null);
+    assertEq(t.totalMs, 0);
+  });
+
+  test('timer_start: ist idempotent (laufender Timer → kein Überschreiben)', function () {
+    resetConflictLog();
+    const a = baseAuftrag();
+    a.timers['auftrag-1_CNC'] = { start: '2026-04-20T10:00:00Z', end: null, totalMs: 0 };
+    const state = [a];
+    const op = IMS.makeOp('timer_start', 'auftrag-1', 'CNC');
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState[0].timers['auftrag-1_CNC'].start, '2026-04-20T10:00:00Z', 'start unverändert');
+    assertTrue(getConflicts().some(c => c.reason === 'timer_already_running'), 'conflict logged');
+  });
+
+  test('timer_start: startet neu wenn Timer bereits gestoppt', function () {
+    const a = baseAuftrag();
+    a.timers['auftrag-1_CNC'] = { start: '2026-04-20T10:00:00Z', end: '2026-04-20T10:05:00Z', totalMs: 300000 };
+    const state = [a];
+    const op = IMS.makeOp('timer_start', 'auftrag-1', 'CNC');
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState[0].timers['auftrag-1_CNC'].start, op.ts, 'neuer start');
+    assertEq(newState[0].timers['auftrag-1_CNC'].end, null, 'end zurückgesetzt');
+    assertEq(newState[0].timers['auftrag-1_CNC'].totalMs, 300000, 'totalMs bleibt erhalten');
+  });
+
+  // ═══════════ timer_stop ═══════════
+  test('timer_stop: setzt end + akkumuliert totalMs', function () {
+    const a = baseAuftrag();
+    a.timers['auftrag-1_CNC'] = { start: '2026-04-20T10:00:00Z', end: null, totalMs: 60000 };
+    const state = [a];
+    const op = IMS.makeOp('timer_stop', 'auftrag-1', 'CNC');
+    op.ts = '2026-04-20T10:05:00Z';  // 5 Minuten nach start
+    const newState = IMS.applyOp(state, op);
+    const t = newState[0].timers['auftrag-1_CNC'];
+    assertEq(t.end, '2026-04-20T10:05:00Z');
+    assertEq(t.totalMs, 60000 + 5 * 60 * 1000, 'totalMs akkumuliert');
+  });
+
+  test('timer_stop: bei nicht-laufendem Timer → Konflikt, kein State-Change', function () {
+    resetConflictLog();
+    const state = [baseAuftrag()];
+    const op = IMS.makeOp('timer_stop', 'auftrag-1', 'CNC');
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState, state, 'state unverändert (reference equal)');
+    assertTrue(getConflicts().some(c => c.reason === 'no_running_timer'), 'conflict logged');
+  });
+
+  // ═══════════ station_fertig ═══════════
+  test('station_fertig: setzt Timestamp + stoppt laufenden Timer', function () {
+    const a = baseAuftrag();
+    a.timers['auftrag-1_CNC'] = { start: '2026-04-20T10:00:00Z', end: null, totalMs: 0 };
+    const state = [a];
+    const op = IMS.makeOp('station_fertig', 'auftrag-1', 'CNC');
+    op.ts = '2026-04-20T10:30:00Z';
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState[0].stationFertig['CNC'], op.ts);
+    assertEq(newState[0].timers['auftrag-1_CNC'].end, op.ts, 'Timer implizit gestoppt');
+    assertEq(newState[0].timers['auftrag-1_CNC'].totalMs, 30 * 60 * 1000, 'totalMs = 30 min');
+  });
+
+  test('station_fertig: first-write-wins bei doppelter Meldung', function () {
+    resetConflictLog();
+    const a = baseAuftrag();
+    a.stationFertig['CNC'] = '2026-04-20T10:00:00Z';
+    const state = [a];
+    const op = IMS.makeOp('station_fertig', 'auftrag-1', 'CNC');
+    op.ts = '2026-04-20T10:05:00Z';  // später
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState[0].stationFertig['CNC'], '2026-04-20T10:00:00Z', 'früherer Wert bleibt');
+    const conflicts = getConflicts();
+    assertTrue(conflicts.some(c => c.reason === 'already_fertig'), 'conflict logged');
+  });
+
+  // ═══════════ station_undo ═══════════
+  test('station_undo: löscht stationFertig, Timer bleibt', function () {
+    const a = baseAuftrag();
+    a.stationFertig['CNC'] = '2026-04-20T10:00:00Z';
+    a.timers['auftrag-1_CNC'] = { start: '2026-04-20T09:30:00Z', end: '2026-04-20T10:00:00Z', totalMs: 1800000 };
+    const state = [a];
+    const op = IMS.makeOp('station_undo', 'auftrag-1', 'CNC');
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState[0].stationFertig['CNC'], undefined, 'stationFertig entfernt');
+    assertEq(newState[0].timers['auftrag-1_CNC'].totalMs, 1800000, 'Timer bleibt erhalten');
+  });
+
+  test('station_undo: ohne vorherige Fertigmeldung → Konflikt', function () {
+    resetConflictLog();
+    const state = [baseAuftrag()];
+    const op = IMS.makeOp('station_undo', 'auftrag-1', 'CNC');
+    IMS.applyOp(state, op);
+    assertTrue(getConflicts().some(c => c.reason === 'undo_without_fertig'), 'conflict logged');
+  });
+
+  // ═══════════ blockierung_set/clear ═══════════
+  test('blockierung_set: setzt Grund + Legacy-Feld', function () {
+    const state = [baseAuftrag()];
+    const op = IMS.makeOp('blockierung_set', 'auftrag-1', 'CNC', { grund: 'Material fehlt' });
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState[0].blockierungen['CNC'], 'Material fehlt');
+    assertEq(newState[0].blockierung, 'Material fehlt', 'Legacy-Feld synchronisiert');
+  });
+
+  test('blockierung_clear: löscht + setzt Legacy auf null wenn leer', function () {
+    const a = baseAuftrag();
+    a.blockierungen['CNC'] = 'Material fehlt';
+    a.blockierung = 'Material fehlt';
+    const state = [a];
+    const op = IMS.makeOp('blockierung_clear', 'auftrag-1', 'CNC');
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState[0].blockierungen['CNC'], undefined);
+    assertEq(newState[0].blockierung, null);
+  });
+
+  // ═══════════ notiz_set ═══════════
+  test('notiz_set: last-write-wins', function () {
+    const a = baseAuftrag();
+    a.notiz = 'Alt';
+    const state = [a];
+    const op = IMS.makeOp('notiz_set', 'auftrag-1', null, { text: 'Neu' });
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState[0].notiz, 'Neu');
+  });
+
+  // ═══════════ Unbekannter Op-Type ═══════════
+  test('unknown op type: loggt und skippt (forward-compatible)', function () {
+    resetConflictLog();
+    const state = [baseAuftrag()];
+    const op = IMS.makeOp('future_op_type_xyz', 'auftrag-1', 'CNC');
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState, state, 'state unverändert');
+    assertTrue(getConflicts().some(c => c.reason === 'unknown_op_type'), 'conflict logged');
+  });
+
+  test('auftrag_not_found: logging, state unverändert', function () {
+    resetConflictLog();
+    const state = [baseAuftrag()];
+    const op = IMS.makeOp('timer_start', 'nonexistent-id', 'CNC');
+    const newState = IMS.applyOp(state, op);
+    assertEq(newState, state);
+    assertTrue(getConflicts().some(c => c.reason === 'auftrag_not_found'), 'conflict logged');
+  });
+
+  // ═══════════ applyOpsToState ═══════════
+  test('applyOpsToState: 3 Ops sequenziell', function () {
+    const state = [baseAuftrag()];
+    const ops = [
+      IMS.makeOp('timer_start', 'auftrag-1', 'CNC'),
+      IMS.makeOp('timer_stop',  'auftrag-1', 'CNC'),
+      IMS.makeOp('station_fertig', 'auftrag-1', 'CNC'),
+    ];
+    // Zeitstempel manuell setzen für deterministischen Test
+    ops[0].ts = '2026-04-20T10:00:00Z';
+    ops[1].ts = '2026-04-20T10:10:00Z';
+    ops[2].ts = '2026-04-20T10:11:00Z';
+    const newState = IMS.applyOpsToState(state, ops);
+    assertEq(newState[0].timers['auftrag-1_CNC'].totalMs, 10 * 60 * 1000, '10 min erfasst');
+    assertEq(newState[0].stationFertig['CNC'], '2026-04-20T10:11:00Z', 'fertig gesetzt');
+  });
+
+  test('applyOpsToState: leere Ops-Liste → State unverändert', function () {
+    const state = [baseAuftrag()];
+    assertEq(IMS.applyOpsToState(state, []), state);
+    assertEq(IMS.applyOpsToState(state, null), state);
+  });
+
+  // ═══════════ Konflikt-Log FIFO ═══════════
+  test('Konflikt-Log: FIFO-Limit 100 respektiert', function () {
+    resetConflictLog();
+    const state = [baseAuftrag()];
+    // 105 unbekannte Ops erzeugen
+    for (let i = 0; i < 105; i++) {
+      IMS.applyOp(state, IMS.makeOp('unknown_' + i, 'auftrag-1', 'CNC'));
+    }
+    const log = getConflicts();
+    assertTrue(log.length === 100, 'log exactly 100 entries (got ' + log.length + ')');
+    // Erste Einträge sind die "jüngsten 100" — ältesten wurden rausgeshiftet
+    assertTrue(log[0].type === 'unknown_5', 'oldest kept is index 5 (0-4 rausgeshiftet)');
+    assertTrue(log[99].type === 'unknown_104', 'newest is index 104');
+  });
+
+  // ═══════════ Summary ═══════════
+  const total = passed + failed;
+  $summary.className = 'summary ' + (failed === 0 ? 'ok' : 'bad');
+  $summary.textContent = `${passed}/${total} tests pass` + (failed > 0 ? ` · ${failed} FAILED` : ' ✓');
+}
+
+// Auto-run bei URL-Parameter ?run=1
+if ((new URLSearchParams(location.search)).get('run') === '1') {
+  runAll();
+}
+</script>
+</body>
+</html>
