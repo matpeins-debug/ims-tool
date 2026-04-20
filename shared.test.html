@@ -22,14 +22,14 @@
 <h1>shared.js v2 — Unit Tests (Ops-Framework)</h1>
 <p>Tests gegen <code>applyOp</code>, <code>applyOpsToState</code>, <code>logConflict</code>, <code>makeOp</code>.
    Keine Supabase-Calls, rein logische Tests.</p>
-<p><strong>Achtung:</strong> Tests schreiben in <code>localStorage.ims_conflict_log</code> — wird vor jedem Test-Run geleert.</p>
+<p><strong>Achtung:</strong> Tests schreiben in <code>localStorage.ims_v2_conflict_log</code> — wird vor jedem Test-Run geleert.</p>
 
 <button onclick="runAll()">Alle Tests ausführen</button>
 
 <div id="results"></div>
 <div id="summary"></div>
 
-<script src="shared.js"></script>
+<script src="shared-v2.js"></script>
 <script>
 'use strict';
 
@@ -65,11 +65,11 @@ function test(name, fn) {
 }
 
 function resetConflictLog() {
-  localStorage.removeItem('ims_conflict_log');
+  localStorage.removeItem('ims_v2_conflict_log');
 }
 
 function getConflicts() {
-  return JSON.parse(localStorage.getItem('ims_conflict_log') || '[]');
+  return JSON.parse(localStorage.getItem('ims_v2_conflict_log') || '[]');
 }
 
 function baseAuftrag() {
