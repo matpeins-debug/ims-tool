@@ -55,14 +55,16 @@
     overflow:hidden;
   }
   .zone.alarm{
-    background:#fff5f5;
-    border-color:var(--rot);
-    border-width:4px;
+    background:var(--surface);
+    border-color:var(--ink);
+    border-width:3px;
+  }
+  .zone.alarm .z-head{
     animation:pulse 2s ease-in-out infinite;
   }
   @keyframes pulse{
-    0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.5);}
-    50%{box-shadow:0 0 0 14px rgba(220,38,38,0);}
+    0%,100%{box-shadow:inset 0 0 0 0 rgba(255,255,255,0);}
+    50%{box-shadow:inset 0 0 0 3px rgba(255,255,255,0.5);}
   }
 
   /* Zone Head */
