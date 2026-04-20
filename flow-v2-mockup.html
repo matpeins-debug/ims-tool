@@ -96,8 +96,8 @@
     background:var(--surface);
     border:2px solid var(--ink);
     border-radius:6px;
-    padding:12px 14px;
-    display:flex;flex-direction:column;gap:2px;
+    display:flex;flex-direction:column;
+    overflow:hidden;
   }
   .zone.alarm .order{
     border-color:var(--rot-dark);
@@ -105,26 +105,43 @@
   }
   .o-nr{
     font-family:'IBM Plex Mono',monospace;
-    font-size:28px;font-weight:800;
-    color:var(--ink);
+    font-size:30px;font-weight:800;
+    background:var(--ink);
+    color:#fff;
     line-height:1;
     letter-spacing:-1px;
+    padding:10px 12px;
   }
-  .o-nr .jahr{font-size:14px;font-weight:700;color:var(--muted);margin-right:6px;}
-  .o-line{
-    display:flex;justify-content:space-between;align-items:baseline;
-    margin-top:6px;
+  .o-nr .jahr{font-size:13px;font-weight:700;color:#a0a0a0;margin-right:6px;}
+  .o-body{
+    padding:10px 12px 0;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
   }
   .o-kunde{
-    font-size:14px;font-weight:700;color:var(--ink);
+    font-size:12px;font-weight:600;color:var(--muted);
     text-transform:uppercase;letter-spacing:0.5px;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    flex:1;
   }
   .o-stk{
     font-family:'IBM Plex Mono',monospace;
-    font-size:18px;font-weight:800;color:var(--ink);
+    font-size:40px;font-weight:800;color:var(--ink);
+    line-height:1;
+    letter-spacing:-1.5px;
   }
-  .o-stk .u{font-size:11px;color:var(--muted);font-weight:700;}
+  .o-stk .u{font-size:11px;color:var(--muted);font-weight:700;margin-left:2px;}
+  .o-status{
+    margin-top:10px;
+    padding:6px 12px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;font-weight:800;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:#fff;
+    text-align:center;
+  }
+  .o-status.gruen{background:var(--gruen-dark);}
+  .o-status.orange{background:var(--orange);}
 
   /* Leere Zone */
   .empty{
@@ -154,14 +171,14 @@
       <div class="z-count">15</div>
     </div>
     <div class="orders">
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>376</div><div class="o-line"><div class="o-kunde">Neubauer</div><div class="o-stk">27<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>468</div><div class="o-line"><div class="o-kunde">Rieder Wels</div><div class="o-stk">185<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>539</div><div class="o-line"><div class="o-kunde">Gurmann</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>622</div><div class="o-line"><div class="o-kunde">Neubauer</div><div class="o-stk">72<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>646</div><div class="o-line"><div class="o-kunde">Unisan Hart</div><div class="o-stk">101<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>711</div><div class="o-line"><div class="o-kunde">Traussnigg</div><div class="o-stk">30<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>724</div><div class="o-line"><div class="o-kunde">ICS Wien</div><div class="o-stk">60<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>728</div><div class="o-line"><div class="o-kunde">Döppner DE</div><div class="o-stk">15<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>376</div><div class="o-body"><div class="o-kunde">Neubauer</div><div class="o-stk">27<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>468</div><div class="o-body"><div class="o-kunde">Rieder Wels</div><div class="o-stk">185<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>539</div><div class="o-body"><div class="o-kunde">Gurmann</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>622</div><div class="o-body"><div class="o-kunde">Neubauer</div><div class="o-stk">72<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>646</div><div class="o-body"><div class="o-kunde">Unisan Hart</div><div class="o-stk">101<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>711</div><div class="o-body"><div class="o-kunde">Traussnigg</div><div class="o-stk">30<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>724</div><div class="o-body"><div class="o-kunde">ICS Wien</div><div class="o-stk">60<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>728</div><div class="o-body"><div class="o-kunde">Döppner DE</div><div class="o-stk">15<span class="u"> Stk</span></div></div></div>
     </div>
   </div>
 
@@ -172,17 +189,17 @@
       <div class="z-count">11<span class="max">/8</span></div>
     </div>
     <div class="orders">
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>651</div><div class="o-line"><div class="o-kunde">Romberger</div><div class="o-stk">9<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>709</div><div class="o-line"><div class="o-kunde">Fichtinger NÖ</div><div class="o-stk">8<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>716</div><div class="o-line"><div class="o-kunde">Gcihaustec Wien</div><div class="o-stk">32<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>722</div><div class="o-line"><div class="o-kunde">Schwartz DE</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>633</div><div class="o-line"><div class="o-kunde">FG Purgstall</div><div class="o-stk">4<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>706</div><div class="o-line"><div class="o-kunde">Klausner</div><div class="o-stk">45<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>708</div><div class="o-line"><div class="o-kunde">Grillenberger</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>712</div><div class="o-line"><div class="o-kunde">Forstenlechner</div><div class="o-stk">4<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>713</div><div class="o-line"><div class="o-kunde">Wieserscherer</div><div class="o-stk">15<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>718</div><div class="o-line"><div class="o-kunde">Thumfort Graz</div><div class="o-stk">52<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>721</div><div class="o-line"><div class="o-kunde">Steininger</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>651</div><div class="o-body"><div class="o-kunde">Romberger</div><div class="o-stk">9<span class="u"> Stk</span></div></div><div class="o-status gruen">Abholbereit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>709</div><div class="o-body"><div class="o-kunde">Fichtinger NÖ</div><div class="o-stk">8<span class="u"> Stk</span></div></div><div class="o-status gruen">Abholbereit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>716</div><div class="o-body"><div class="o-kunde">Gcihaustec Wien</div><div class="o-stk">32<span class="u"> Stk</span></div></div><div class="o-status gruen">Abholbereit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>722</div><div class="o-body"><div class="o-kunde">Schwartz DE</div><div class="o-stk">6<span class="u"> Stk</span></div></div><div class="o-status gruen">Abholbereit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>633</div><div class="o-body"><div class="o-kunde">FG Purgstall</div><div class="o-stk">4<span class="u"> Stk</span></div></div><div class="o-status orange">In Arbeit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>706</div><div class="o-body"><div class="o-kunde">Klausner</div><div class="o-stk">45<span class="u"> Stk</span></div></div><div class="o-status orange">In Arbeit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>708</div><div class="o-body"><div class="o-kunde">Grillenberger</div><div class="o-stk">6<span class="u"> Stk</span></div></div><div class="o-status orange">In Arbeit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>712</div><div class="o-body"><div class="o-kunde">Forstenlechner</div><div class="o-stk">4<span class="u"> Stk</span></div></div><div class="o-status orange">In Arbeit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>713</div><div class="o-body"><div class="o-kunde">Wieserscherer</div><div class="o-stk">15<span class="u"> Stk</span></div></div><div class="o-status orange">In Arbeit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>718</div><div class="o-body"><div class="o-kunde">Thumfort Graz</div><div class="o-stk">52<span class="u"> Stk</span></div></div><div class="o-status orange">In Arbeit</div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>721</div><div class="o-body"><div class="o-kunde">Steininger</div><div class="o-stk">6<span class="u"> Stk</span></div></div><div class="o-status orange">In Arbeit</div></div>
     </div>
   </div>
 
@@ -211,8 +228,8 @@
       <div class="z-count">2</div>
     </div>
     <div class="orders">
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>561</div><div class="o-line"><div class="o-kunde">Gregoritsch</div><div class="o-stk">72<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>675</div><div class="o-line"><div class="o-kunde">F&amp;G</div><div class="o-stk">55<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>561</div><div class="o-body"><div class="o-kunde">Gregoritsch</div><div class="o-stk">72<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>675</div><div class="o-body"><div class="o-kunde">F&amp;G</div><div class="o-stk">55<span class="u"> Stk</span></div></div></div>
     </div>
   </div>
 
@@ -223,12 +240,12 @@
       <div class="z-count">6</div>
     </div>
     <div class="orders">
-      <div class="order"><div class="o-nr"><span class="jahr">2022</span>724</div><div class="o-line"><div class="o-kunde">Holzer Weiss</div><div class="o-stk">35<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>191</div><div class="o-line"><div class="o-kunde">Shark Stmk</div><div class="o-stk">63<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>193</div><div class="o-line"><div class="o-kunde">Shark Stmk</div><div class="o-stk">7<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>201</div><div class="o-line"><div class="o-kunde">Shark Stmk</div><div class="o-stk">11<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>343</div><div class="o-line"><div class="o-kunde">Gregoritsch</div><div class="o-stk">3<span class="u"> Stk</span></div></div></div>
-      <div class="order"><div class="o-nr"><span class="jahr">2023</span>375</div><div class="o-line"><div class="o-kunde">Neubauer</div><div class="o-stk">27<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2022</span>724</div><div class="o-body"><div class="o-kunde">Holzer Weiss</div><div class="o-stk">35<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>191</div><div class="o-body"><div class="o-kunde">Shark Stmk</div><div class="o-stk">63<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>193</div><div class="o-body"><div class="o-kunde">Shark Stmk</div><div class="o-stk">7<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>201</div><div class="o-body"><div class="o-kunde">Shark Stmk</div><div class="o-stk">11<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>343</div><div class="o-body"><div class="o-kunde">Gregoritsch</div><div class="o-stk">3<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>375</div><div class="o-body"><div class="o-kunde">Neubauer</div><div class="o-stk">27<span class="u"> Stk</span></div></div></div>
     </div>
   </div>
 
