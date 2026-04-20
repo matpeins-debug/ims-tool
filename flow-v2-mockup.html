@@ -34,8 +34,23 @@
     border:2px solid var(--ink);
     margin-bottom:20px;
   }
-  .logo{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:800;letter-spacing:3px;}
+  .logo{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:800;letter-spacing:3px;color:var(--muted);}
   .clock{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:800;}
+
+  .kpi-block{
+    display:flex;align-items:center;gap:14px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .kpi-ampel{width:18px;height:18px;background:var(--amber);flex-shrink:0;}
+  .kpi-ampel.ok{background:var(--teal);}
+  .kpi-ampel.alarm{background:var(--rot);}
+  .kpi-label{
+    font-size:12px;font-weight:800;letter-spacing:2.5px;color:var(--muted);
+  }
+  .kpi-main{
+    font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--ink);line-height:1;
+  }
+  .kpi-main .sep{color:var(--muted);margin:0 6px;font-weight:500;}
 
   /* ──────── FLOW STRIP ──────── */
   .flow{
@@ -156,7 +171,12 @@
 <body>
 
 <div class="header">
-  <div class="logo">IMS — Der Auftrag muss fliessen</div>
+  <div class="logo">IMS FLOW</div>
+  <div class="kpi-block">
+    <div class="kpi-ampel"></div>
+    <div class="kpi-label">HEUTE</div>
+    <div class="kpi-main">14<span class="sep">/</span>18</div>
+  </div>
   <div class="clock">18:45</div>
 </div>
 
