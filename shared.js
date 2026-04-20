@@ -475,6 +475,130 @@
     }
   }
 
+  // ─── SUPABASE META-FETCH + CAS-PATCH ───────────────────────────────────────
+  // Neben sbFetch('load'/'save') brauchen wir fuer CAS den Server-Zustand
+  // INKLUSIVE updated_at (nicht nur auftraege). sbFetchWithMeta() liefert das.
+  async function sbFetchWithMeta() {
+    const url = `${CONFIG.SUPABASE_URL}/rest/v1/${CONFIG.SUPABASE_TABLE}?id=eq.${CONFIG.SUPABASE_ROW}&select=auftraege,updated_at`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey':        CONFIG.SUPABASE_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`,
+      },
+    });
+    if (!res.ok) throw new Error('sbFetchWithMeta failed ' + res.status);
+    const data = await res.json();
+    const row = data[0] || {};
+    return {
+      auftraege:  row.auftraege || [],
+      updated_at: row.updated_at || null,
+    };
+  }
+
+  // PATCH mit updated_at=eq.<expected> Filter (Compare-and-Swap).
+  // Returns true bei Erfolg (1 Row updated), false bei Konflikt (0 Rows).
+  async function sbPatchCAS(newAuftraege, expectedUpdatedAt) {
+    const baseUrl = `${CONFIG.SUPABASE_URL}/rest/v1/${CONFIG.SUPABASE_TABLE}?id=eq.${CONFIG.SUPABASE_ROW}`;
+    const casFilter = expectedUpdatedAt
+      ? `&updated_at=eq.${encodeURIComponent(expectedUpdatedAt)}`
+      : '';
+    const res = await fetch(baseUrl + casFilter, {
+      method: 'PATCH',
+      headers: {
+        'apikey':        CONFIG.SUPABASE_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation',
+      },
+      body: JSON.stringify({
+        auftraege:  newAuftraege,
+        // updated_at wird vom Server-Trigger automatisch gesetzt (falls vorhanden),
+        // ansonsten nutzen wir Client-Zeit als Fallback
+        updated_at: new Date().toISOString(),
+      }),
+    });
+    if (!res.ok) throw new Error('sbPatchCAS failed ' + res.status);
+    const updated = await res.json();
+    // Leeres Array → kein Row passt → Konflikt (jemand anderes hat zwischendrin geschrieben)
+    return Array.isArray(updated) && updated.length > 0;
+  }
+
+  // ─── FLUSH (Ops auf Server bringen via CAS-Loop) ───────────────────────────
+  let _flushInFlight = false;        // Single-Flight-Lock
+  let _flushTimer    = null;         // Debounce-Timer
+
+  function scheduleFlush(delay) {
+    if (_flushTimer) clearTimeout(_flushTimer);
+    _flushTimer = setTimeout(function () {
+      _flushTimer = null;
+      flush().catch(function (e) { console.error('[flush] unexpected', e); });
+    }, delay == null ? CONFIG.FLUSH_DEBOUNCE_MS : delay);
+  }
+
+  // flush() laedt den Server-State, wendet alle Pending-Ops an, versucht PATCH
+  // mit updated_at-Filter. Bei Konflikt: Retry mit Exp-Backoff (max 5).
+  // Nach Erfolg: verarbeitete op_ids aus Queue entfernen.
+  async function flush() {
+    if (_flushInFlight) return false;
+    _flushInFlight = true;
+    try {
+      const ops = opQueue.peek();
+      if (!ops.length) {
+        _setSyncState('ok', 'Synchronisiert');
+        return true;
+      }
+
+      _setSyncState('loading', 'Synchronisiere…');
+
+      for (let retry = 0; retry < CONFIG.CAS_MAX_RETRIES; retry++) {
+        try {
+          // 1. Server-State holen
+          const meta = await sbFetchWithMeta();
+          // 2. Ops auf Server-State anwenden
+          const newState = applyOpsToState(meta.auftraege, ops);
+          // 3. CAS-PATCH
+          const ok = await sbPatchCAS(newState, meta.updated_at);
+          if (ok) {
+            // Erfolg: Queue aufraeumen, Store aktualisieren
+            await opQueue.remove(ops.map(function (o) { return o.op_id; }));
+            _storeRef.auftraege = newState;
+            _storeRef.updatedAt = new Date().toISOString();
+            _setSyncState('ok', 'Synchronisiert');
+            return true;
+          }
+          // CAS-Konflikt: jemand anderes war schneller → Retry
+          console.warn('[flush] CAS conflict, retry ' + (retry + 1) + '/' + CONFIG.CAS_MAX_RETRIES);
+          const wait = 100 * Math.pow(2, retry);  // 100/200/400/800/1600
+          await new Promise(function (r) { setTimeout(r, wait); });
+        } catch (e) {
+          console.error('[flush] error on retry ' + retry + ':', e);
+          // Netzwerk-Fehler: abbrechen, Queue bleibt, naechster Poll versucht erneut
+          _setSyncState('err', 'Offline — Queue: ' + opQueue.size());
+          return false;
+        }
+      }
+
+      // Alle Retries erschoepft → Queue bleibt, naechster Poll retryt
+      console.error('[flush] exhausted ' + CONFIG.CAS_MAX_RETRIES + ' retries');
+      _setSyncState('err', 'Sync-Konflikt, Retry folgt');
+      return false;
+    } finally {
+      _flushInFlight = false;
+    }
+  }
+
+  // Vorwaertsdeklaration — wird am Ende dem echten store zugewiesen
+  // (damit flush() auf _storeRef.auftraege zugreifen kann)
+  let _storeRef = null;
+
+  // Online-Event: bei Netzwerk-Wiederherstellung sofort flushen
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', function () {
+      console.log('[shared] online-event, flushing queue');
+      scheduleFlush(0);
+    });
+  }
+
   // ─── TIMER-BERECHNUNG ──────────────────────────────────────────────────────
   // Liefert totalMs inkl. laufender Zeit wenn Timer aktiv.
   function calcTotalMs(timerData) {
@@ -630,6 +754,17 @@
     },
   };
 
+  // Forward-Reference von flush() auf den store setzen
+  // (flush() muss store.auftraege + store.updatedAt nach Erfolg aktualisieren)
+  _storeRef = store;
+
+  // API fuer station.html um Sync-State-Updates zu abonnieren
+  function onSync(cb) {
+    _syncCallback = cb;
+    // Initialen Zustand pushen
+    _setSyncState('ok', 'Synchronisiert');
+  }
+
   // ─── EXPORT ────────────────────────────────────────────────────────────────
   global.IMS = {
     CONFIG,
@@ -642,9 +777,12 @@
     calcTotalMs, istTimerAktiv,
     formatMs, formatElapsed, formatDatum, formatZeit, tageBis,
     store,
-    // v2 Ops-Framework (Queue + Flush werden in nachfolgenden Commits ergänzt)
+    // v2 Ops-Framework
     uuid, clientId, logConflict,
     makeOp, applyOp, applyOpsToState,
     opQueue, withQueueLock,
+    sbFetchWithMeta, sbPatchCAS,
+    flush, scheduleFlush,
+    onSync,
   };
 })(window);
