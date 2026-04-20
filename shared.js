@@ -771,6 +771,32 @@
     _setSyncState('ok', 'Synchronisiert');
   }
 
+  // ─── SCHEMA-MIGRATION (v1 → v2) ────────────────────────────────────────────
+  // Wird beim Laden der Seite einmalig ausgefuehrt. Sauberer Upgrade-Pfad
+  // fuer Tablets die vorher shared.js v1 benutzt haben.
+  (function migrateSchema() {
+    try {
+      const currentVersion = localStorage.getItem(CONFIG.SHARED_VERSION_KEY);
+      if (currentVersion === CONFIG.SHARED_VERSION) return;  // schon aktuell
+
+      console.log('[shared] Schema-Migration v' + (currentVersion || '1') + ' → v' + CONFIG.SHARED_VERSION);
+
+      // Op-Queue initialisieren falls nicht vorhanden
+      if (!localStorage.getItem(CONFIG.OP_QUEUE_KEY)) {
+        localStorage.setItem(CONFIG.OP_QUEUE_KEY, '[]');
+      }
+      // Konflikt-Log initialisieren falls nicht vorhanden
+      if (!localStorage.getItem(CONFIG.CONFLICT_LOG_KEY)) {
+        localStorage.setItem(CONFIG.CONFLICT_LOG_KEY, '[]');
+      }
+      // Version markieren
+      localStorage.setItem(CONFIG.SHARED_VERSION_KEY, CONFIG.SHARED_VERSION);
+      console.log('[shared] Migration abgeschlossen');
+    } catch (e) {
+      console.error('[shared] Migration fehlgeschlagen:', e);
+    }
+  })();
+
   // ─── EXPORT ────────────────────────────────────────────────────────────────
   global.IMS = {
     CONFIG,
