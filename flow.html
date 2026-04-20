@@ -60,29 +60,14 @@ body{
 }
 body.light{
   background:
-    radial-gradient(ellipse 1100px 850px at 5% -8%,   rgba(0,168,122,0.65) 0%, transparent 65%),
-    radial-gradient(ellipse 900px 750px at 108% 30%, rgba(67,56,202,0.55) 0%, transparent 65%),
-    radial-gradient(ellipse 800px 650px at 50% 115%, rgba(234,140,20,0.50) 0%, transparent 65%),
-    var(--bg);
+    radial-gradient(ellipse 1200px 900px at 0% 0%,    rgba(0,168,122,0.85) 0%, transparent 55%),
+    radial-gradient(ellipse 1000px 800px at 110% 30%, rgba(14,165,233,0.75) 0%, transparent 60%),
+    radial-gradient(ellipse 900px 700px at 30% 115%,  rgba(245,158,11,0.70) 0%, transparent 60%),
+    linear-gradient(135deg, #fff7ed 0%, #f0fdf4 50%, #eff6ff 100%);
   background-attachment:fixed;
 }
 
-/* "Die Gruene Box" Logo als Watermark (echtes PNG, transparent) */
-body::before{
-  content:"";
-  position:fixed;inset:0;
-  background-image:url('logo.png');
-  background-repeat:no-repeat;
-  background-position:center center;
-  background-size:min(52vw,680px) auto;
-  opacity:0.18;
-  z-index:0;
-  pointer-events:none;
-  user-select:none;
-}
-body:not(.light)::before{opacity:0.22;filter:brightness(1.8);}
-
-/* Main-Content liegt über dem Watermark */
+/* Main-Content liegt über dem Farbverlauf */
 body > *{position:relative;z-index:1;}
 
 /* ── HEADER ────────────────────────────────────────── */
