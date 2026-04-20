@@ -45,10 +45,52 @@ body.light {
   --z-vs:#0e7490;--z-vs-dim:#d4f0f4;--z-vs-mid:#50b0c8;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── BODY + HINTERGRUND (Farbblobs + optionaler IMS-Watermark) ───── */
+body{
+  font-family:'IBM Plex Sans',sans-serif;color:var(--text);
+  height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;
+  position:relative;
+  background:
+    radial-gradient(ellipse 900px 700px at 8% -5%,  rgba(52,211,153,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 700px 600px at 105% 35%, rgba(99,102,241,0.20) 0%, transparent 55%),
+    radial-gradient(ellipse 600px 500px at 50% 110%, rgba(234,179,8,0.12) 0%, transparent 55%),
+    var(--bg);
+  background-attachment:fixed;
+}
+body.light{
+  background:
+    radial-gradient(ellipse 900px 700px at 8% -5%,  rgba(0,168,122,0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 700px 600px at 105% 35%, rgba(67,56,202,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 600px 500px at 50% 110%, rgba(176,88,0,0.08) 0%, transparent 55%),
+    var(--bg);
+  background-attachment:fixed;
+}
+
+/* Riesiger IMS-Watermark zentriert im Hintergrund — dezent */
+body::before{
+  content:"IMS";
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:min(42vw,520px);
+  font-weight:800;
+  letter-spacing:0.05em;
+  color:var(--accent);
+  opacity:0.045;
+  z-index:0;
+  pointer-events:none;
+  user-select:none;
+  mix-blend-mode:multiply;
+}
+body:not(.light)::before{opacity:0.07;mix-blend-mode:screen;}
+
+/* Main-Content liegt über dem Watermark */
+body > *{position:relative;z-index:1;}
 
 /* ── HEADER ────────────────────────────────────────── */
-.header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--surface);border-bottom:2.5px solid var(--accent);flex-shrink:0;gap:10px;}
+.header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(21,24,32,0.7);backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-bottom:2.5px solid var(--accent);flex-shrink:0;gap:10px;}
+body.light .header{background:rgba(255,255,255,0.75);}
 .logo{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:800;color:var(--accent);letter-spacing:3px;white-space:nowrap;}
 .header-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .clock{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--text);line-height:1;}
@@ -90,7 +132,8 @@ body.light .k-status.aktiv{color:#047857;}
 
 /* ── ZONE ──────────────────────────────────────────── */
 .zone{display:flex;flex-direction:column;min-width:0;flex:1;}
-.zone-head{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-radius:12px 12px 0 0;flex-shrink:0;gap:6px;}
+/* Zone-Head: Frozen Glass + Zonen-Farbton */
+.zone-head{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-radius:12px 12px 0 0;flex-shrink:0;gap:6px;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}
 .zone-head.z-vf{background:var(--z-vf-dim);border:1px solid var(--z-vf-mid);border-bottom:none;}
 .zone-head.z-az{background:var(--z-az-dim);border:1px solid var(--z-az-mid);border-bottom:none;}
 .zone-head.z-zb{background:var(--z-zb-dim);border:1px solid var(--z-zb-mid);border-bottom:none;}
@@ -105,16 +148,33 @@ body.light .k-status.aktiv{color:#047857;}
 .zone-title.z-nb{color:var(--z-nb);}
 .zone-title.z-vs{color:var(--z-vs);}
 .zone-count{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;white-space:nowrap;flex-shrink:0;}
-.zone-body{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:0 0 12px 12px;overflow-y:auto;padding:5px;display:flex;flex-direction:column;gap:5px;}
+.zone-body{flex:1;background:rgba(21,24,32,0.45);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border:1.5px solid var(--border);border-radius:0 0 12px 12px;overflow-y:auto;padding:5px;display:flex;flex-direction:column;gap:5px;}
+body.light .zone-body{background:rgba(255,255,255,0.55);}
 .zone-body.zb-az{border-color:var(--z-az-mid);}
 .zone-body.zb-sl{border-color:var(--z-sl-mid);}
 .zone-body.zb-nb{border-color:var(--z-nb-mid);}
 .zone-body.zb-vs{border-color:var(--z-vs-mid);}
 
 /* ── KACHEL ────────────────────────────────────────── */
-/* Neutral-Hintergrund auf allen Karten — Zone-Farbe nur als Border-Left.
-   Das vermeidet Doppel-Codierung (Zone via Spalte + via Karten-BG). */
-.kachel{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:3px;transition:border-color .2s,background .2s;}
+/* Frozen Glass: semi-transparenter BG + backdrop-filter.
+   Zone-Farbe nur als 3px Border-Left (vermeidet Doppel-Codierung). */
+.kachel{
+  background:rgba(28,32,48,0.55);
+  backdrop-filter:blur(12px) saturate(150%);
+  -webkit-backdrop-filter:blur(12px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.08);
+  border-left:3px solid var(--border);
+  border-radius:10px;padding:9px 11px;
+  display:flex;flex-direction:column;gap:3px;
+  transition:border-color .2s,background .2s,transform .2s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+body.light .kachel{
+  background:rgba(255,255,255,0.7);
+  border:1px solid rgba(0,0,0,0.06);
+  border-left:3px solid var(--border);
+  box-shadow:0 2px 8px rgba(0,0,0,0.04);
+}
 .kachel.gruen  {border-left-color:var(--z-az);}
 .kachel.orange {border-left-color:var(--z-sl);}
 .kachel.rot    {border-left-color:var(--danger);}
@@ -154,7 +214,8 @@ body.light .kachel.blockiert{background:#ffe5e9!important;}
 .k-leer-txt{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-align:center;}
 
 /* ── VF KOMPAKT ────────────────────────────────────── */
-.vf-row{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;transition:all .2s;position:relative;}
+.vf-row{display:flex;align-items:center;gap:6px;background:rgba(28,32,48,0.55);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 10px;transition:all .2s;position:relative;box-shadow:0 1px 4px rgba(0,0,0,0.12);}
+body.light .vf-row{background:rgba(255,255,255,0.7);border:1px solid rgba(0,0,0,0.06);box-shadow:0 1px 4px rgba(0,0,0,0.03);}
 .vf-row.blockiert{border-color:var(--danger)!important;border-width:2px;background:rgba(239,68,68,0.12)!important;}
 body.light .vf-row.blockiert{background:#fde0e0!important;}
 .vf-row.aktiv{border-color:var(--z-az);background:var(--z-az-dim);}
