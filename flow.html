@@ -67,22 +67,20 @@ body.light{
   background-attachment:fixed;
 }
 
-/* Riesiger IMS-Watermark zentriert im Hintergrund */
+/* "Die Gruene Box" Logo als Watermark (echtes PNG, transparent) */
 body::before{
-  content:"IMS";
+  content:"";
   position:fixed;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'IBM Plex Mono',monospace;
-  font-size:min(42vw,520px);
-  font-weight:800;
-  letter-spacing:0.05em;
-  color:var(--accent);
-  opacity:0.10;
+  background-image:url('logo.png');
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:min(52vw,680px) auto;
+  opacity:0.18;
   z-index:0;
   pointer-events:none;
   user-select:none;
 }
-body:not(.light)::before{opacity:0.14;}
+body:not(.light)::before{opacity:0.22;filter:brightness(1.8);}
 
 /* Main-Content liegt über dem Watermark */
 body > *{position:relative;z-index:1;}
