@@ -661,96 +661,102 @@
   // ─── STORE: State + Schreib-Aktionen ───────────────────────────────────────
   // Hält den aktuellen auftraege-Array und kapselt alle Mutationen.
   // Die Timer-Start-Logik enthält den gleichen Guard wie der Bug-Fix in index.html.
+  // ─── STORE v2: Ops-basiert ────────────────────────────────────────────────
+  // Jede Mutation erzeugt eine Op, pusht sie in die Queue, wendet sie optimistisch
+  // auf den lokalen State an, und schedulet flush(). Alle Funktions-Signaturen
+  // bleiben identisch zu v1 — station.html ruft dieselben Methoden unverändert.
   const store = {
     auftraege: [],
     updatedAt: null,
 
     async load() {
-      this.auftraege = await sbFetch('load');
-      this.updatedAt = new Date().toISOString();
+      // Server-State laden + Pending-Queue-Ops optimistisch drauf anwenden,
+      // damit UI konsistent bleibt mit lokalen nicht-synchronisierten Mutationen.
+      const meta = await sbFetchWithMeta();
+      const pendingOps = opQueue.peek();
+      this.auftraege = pendingOps.length
+        ? applyOpsToState(meta.auftraege, pendingOps)
+        : meta.auftraege;
+      this.updatedAt = meta.updated_at;
+      // Wenn Queue nicht leer: versuche zu syncen
+      if (pendingOps.length) {
+        _setSyncState('loading', 'Pending: ' + pendingOps.length);
+        scheduleFlush(0);
+      }
       return this.auftraege;
     },
 
+    // Legacy-API: save() ist jetzt Trigger für flush.
+    // Wird von altem Code noch aufgerufen, aber die neuen Mutationen schedulen
+    // ihren Flush selbst — save() ist im neuen Pfad quasi no-op.
     async save() {
-      await sbFetch('save', this.auftraege);
-      this.updatedAt = new Date().toISOString();
+      scheduleFlush(0);
     },
 
     getAuftrag(id) {
       return this.auftraege.find(a => a.id === id);
     },
 
-    // SAFE: Prüft Lauf-Status bevor start überschrieben wird (gleicher Guard wie index.html).
+    // ─── Mutationen via Op-Queue ──
+    // Muster: (1) Op bauen, (2) in Queue, (3) optimistisch auf State appyn,
+    //         (4) Flush schedulen. Alle Signaturen wie v1.
+
     async timerStart(id, apFull) {
       const a = this.getAuftrag(id);
       if (!a) return false;
-      if (!a.timers) a.timers = {};
-      const key = timerKey(id, apFull);
-      const existing = a.timers[key] || {};
-
-      let totalMs = existing.totalMs || 0;
-      if (existing.start && !existing.end) {
-        const elapsed = Date.now() - new Date(existing.start).getTime();
-        if (elapsed > 0) totalMs += elapsed;
-        console.warn('[shared] timerStart: laufender Timer automatisch gestoppt', key, '+', Math.round(elapsed / 60000), 'min gerettet');
-      }
-
-      a.timers[key] = { totalMs, start: new Date().toISOString(), end: null };
-      await this.save();
+      const op = makeOp('timer_start', id, apFull);
+      await opQueue.enqueue(op);
+      this.auftraege = applyOp(this.auftraege, op);
+      scheduleFlush();
       return true;
     },
 
     async timerStop(id, apFull) {
       const a = this.getAuftrag(id);
-      if (!a || !a.timers) return false;
-      const key = timerKey(id, apFull);
-      const td = a.timers[key];
-      if (!td || !td.start || td.end) return false;
-
-      const elapsed = Date.now() - new Date(td.start).getTime();
-      a.timers[key] = {
-        totalMs: (td.totalMs || 0) + elapsed,
-        start:   td.start,
-        end:     new Date().toISOString(),
-      };
-      await this.save();
+      if (!a) return false;
+      const op = makeOp('timer_stop', id, apFull);
+      await opQueue.enqueue(op);
+      this.auftraege = applyOp(this.auftraege, op);
+      scheduleFlush();
       return true;
     },
 
     async setBlockierung(id, apFull, grund) {
       const a = this.getAuftrag(id);
       if (!a) return false;
-      if (!a.blockierungen) a.blockierungen = {};
-      if (grund) a.blockierungen[apFull] = grund;
-      else delete a.blockierungen[apFull];
-      a.blockierung = Object.keys(a.blockierungen).length > 0
-        ? Object.values(a.blockierungen)[0]
-        : null;
-      await this.save();
+      const op = grund
+        ? makeOp('blockierung_set', id, apFull, { grund: grund })
+        : makeOp('blockierung_clear', id, apFull);
+      await opQueue.enqueue(op);
+      this.auftraege = applyOp(this.auftraege, op);
+      scheduleFlush();
       return true;
     },
 
     async markStationFertig(id, apFull) {
       const a = this.getAuftrag(id);
       if (!a) return false;
-      if (!a.stationFertig) a.stationFertig = {};
-      a.stationFertig[apFull] = new Date().toISOString();
-      // Laufenden Timer für diese Station sauber stoppen
-      if (a.timers && a.timers[timerKey(id, apFull)] && !a.timers[timerKey(id, apFull)].end) {
-        await this.timerStop(id, apFull);  // save() passiert dort bereits
-      } else {
-        await this.save();
-      }
+      // Eine einzelne 'station_fertig' Op — impliziter timer_stop passiert in applyOp
+      const op = makeOp('station_fertig', id, apFull);
+      await opQueue.enqueue(op);
+      this.auftraege = applyOp(this.auftraege, op);
+      scheduleFlush();
       return true;
     },
 
-    // Rueckgaengig-Funktion: Fertig-Meldung zuruecknehmen (Timer bleibt wie er ist)
     async undoStationFertig(id, apFull) {
       const a = this.getAuftrag(id);
-      if (!a || !a.stationFertig) return false;
-      delete a.stationFertig[apFull];
-      await this.save();
+      if (!a) return false;
+      const op = makeOp('station_undo', id, apFull);
+      await opQueue.enqueue(op);
+      this.auftraege = applyOp(this.auftraege, op);
+      scheduleFlush();
       return true;
+    },
+
+    // Manueller Flush — z.B. fuer den Klick auf Sync-Badge
+    async syncNow() {
+      return await flush();
     },
   };
 
