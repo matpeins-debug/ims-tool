@@ -388,6 +388,93 @@
     return ops.reduce(function (s, op) { return applyOp(s, op); }, state);
   }
 
+  // ─── OP QUEUE (localStorage-backed, Multi-Tab-Safe) ────────────────────────
+  // Jede Mutation wird erst in die Queue gepusht, dann optimistisch auf den
+  // lokalen State angewendet, dann via flush() zum Server gebracht.
+  // Multi-Tab-Lock: navigator.locks verhindert dass zwei Tabs gleichzeitig
+  // den Queue-JSON lesen/schreiben (Read-Modify-Write-Race).
+  const LOCK_NAME = 'ims_op_queue_lock';
+
+  function _hasLocksAPI() {
+    return typeof navigator !== 'undefined' &&
+           navigator.locks &&
+           typeof navigator.locks.request === 'function';
+  }
+
+  // Unter Lock ausfuehren (falls API verfuegbar), sonst direkt
+  async function withQueueLock(fn) {
+    if (_hasLocksAPI()) {
+      return await navigator.locks.request(LOCK_NAME, { mode: 'exclusive' }, async () => await fn());
+    }
+    // Fallback: einfach ausfuehren (Multi-Tab-Race moeglich, aber unwahrscheinlich
+    // bei Produktions-Nutzung mit meist 1 Tab pro Tablet/Laptop)
+    return await fn();
+  }
+
+  const opQueue = {
+    _read() {
+      try {
+        return JSON.parse(localStorage.getItem(CONFIG.OP_QUEUE_KEY) || '[]');
+      } catch (e) {
+        console.error('[queue] read failed, resetting:', e);
+        localStorage.setItem(CONFIG.OP_QUEUE_KEY, '[]');
+        return [];
+      }
+    },
+
+    _write(ops) {
+      localStorage.setItem(CONFIG.OP_QUEUE_KEY, JSON.stringify(ops));
+    },
+
+    async enqueue(op) {
+      return await withQueueLock(async () => {
+        const ops = this._read();
+        if (ops.length >= CONFIG.OP_QUEUE_MAX) {
+          console.error('[queue] size limit reached (' + CONFIG.OP_QUEUE_MAX + ') — op rejected');
+          logConflict(op, 'queue_overflow');
+          _setSyncState('err', 'Offline — bitte Techniker rufen');
+          return false;
+        }
+        ops.push(op);
+        this._write(ops);
+        return true;
+      });
+    },
+
+    // Snapshot der Queue — nicht loeschen, nur lesen (fuer flush-Retry)
+    peek() {
+      return this._read();
+    },
+
+    // Ops mit gegebenen op_ids aus der Queue entfernen
+    async remove(opIds) {
+      if (!opIds || !opIds.length) return;
+      const idSet = new Set(opIds);
+      return await withQueueLock(async () => {
+        const ops = this._read();
+        const filtered = ops.filter(function (op) { return !idSet.has(op.op_id); });
+        this._write(filtered);
+      });
+    },
+
+    size() {
+      return this._read().length;
+    },
+
+    clear() {
+      // Nur fuer Tests oder Notfall-Reset
+      this._write([]);
+    },
+  };
+
+  // Sync-State-Callback — wird spaeter vom store gesetzt damit UI den Queue-Status sehen kann
+  let _syncCallback = null;
+  function _setSyncState(state, msg) {
+    if (_syncCallback) {
+      try { _syncCallback(state, msg, opQueue.size()); } catch (e) { console.error('[sync-cb]', e); }
+    }
+  }
+
   // ─── TIMER-BERECHNUNG ──────────────────────────────────────────────────────
   // Liefert totalMs inkl. laufender Zeit wenn Timer aktiv.
   function calcTotalMs(timerData) {
@@ -558,5 +645,6 @@
     // v2 Ops-Framework (Queue + Flush werden in nachfolgenden Commits ergänzt)
     uuid, clientId, logConflict,
     makeOp, applyOp, applyOpsToState,
+    opQueue, withQueueLock,
   };
 })(window);
