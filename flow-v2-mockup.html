@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>IMS FLOW v2 · Auftragsfluss-Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f2ed;
+    --surface:#ffffff;
+    --ink:#000000;
+    --muted:#6b6b6b;
+    --line:#d8d5cc;
+    --gruen:#00906a;
+    --gruen-dark:#006548;
+    --orange:#d97706;
+    --rot:#dc2626;
+    --rot-dark:#991b1b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'IBM Plex Sans',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    padding:20px;
+    font-weight:600;
+  }
+
+  /* ──────── HEADER ──────── */
+  .header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 24px;
+    background:var(--surface);
+    border:2px solid var(--ink);
+    border-radius:8px;
+    margin-bottom:20px;
+  }
+  .logo{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:800;letter-spacing:3px;}
+  .clock{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:800;}
+
+  /* ──────── FLOW STRIP ──────── */
+  .flow{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:14px;
+  }
+
+  /* Zone-Tile */
+  .zone{
+    background:var(--surface);
+    border:3px solid var(--ink);
+    border-radius:10px;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .zone.alarm{
+    background:#fff5f5;
+    border-color:var(--rot);
+    border-width:4px;
+    animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.5);}
+    50%{box-shadow:0 0 0 14px rgba(220,38,38,0);}
+  }
+
+  /* Zone Head */
+  .z-head{
+    padding:14px 16px;
+    background:var(--ink);
+    color:#fff;
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .zone.alarm .z-head{background:var(--rot);}
+  .z-name{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  }
+  .z-count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:30px;font-weight:800;line-height:1;
+  }
+  .z-count .max{font-size:16px;opacity:0.7;font-weight:700;}
+
+  /* Auftrags-Liste */
+  .orders{
+    flex:1;
+    padding:10px;
+    display:flex;flex-direction:column;gap:8px;
+    overflow-y:auto;
+  }
+
+  /* Einzel-Auftrag */
+  .order{
+    background:var(--surface);
+    border:2px solid var(--ink);
+    border-radius:6px;
+    padding:12px 14px;
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .zone.alarm .order{
+    border-color:var(--rot-dark);
+    border-width:3px;
+  }
+  .o-nr{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:28px;font-weight:800;
+    color:var(--ink);
+    line-height:1;
+    letter-spacing:-1px;
+  }
+  .o-nr .jahr{font-size:14px;font-weight:700;color:var(--muted);margin-right:6px;}
+  .o-line{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-top:6px;
+  }
+  .o-kunde{
+    font-size:14px;font-weight:700;color:var(--ink);
+    text-transform:uppercase;letter-spacing:0.5px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;
+  }
+  .o-stk{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;font-weight:800;color:var(--ink);
+  }
+  .o-stk .u{font-size:11px;color:var(--muted);font-weight:700;}
+
+  /* Leere Zone */
+  .empty{
+    flex:1;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:2px;
+    padding:40px 10px;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">IMS ◆ FLOW</div>
+  <div class="clock">18:45</div>
+</div>
+
+<div class="flow">
+
+  <!-- VORFERTIGUNG -->
+  <div class="zone">
+    <div class="z-head">
+      <div class="z-name">Vorfertigung</div>
+      <div class="z-count">15</div>
+    </div>
+    <div class="orders">
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>376</div><div class="o-line"><div class="o-kunde">Neubauer</div><div class="o-stk">27<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>468</div><div class="o-line"><div class="o-kunde">Rieder Wels</div><div class="o-stk">185<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>539</div><div class="o-line"><div class="o-kunde">Gurmann</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>622</div><div class="o-line"><div class="o-kunde">Neubauer</div><div class="o-stk">72<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>646</div><div class="o-line"><div class="o-kunde">Unisan Hart</div><div class="o-stk">101<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>711</div><div class="o-line"><div class="o-kunde">Traussnigg</div><div class="o-stk">30<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>724</div><div class="o-line"><div class="o-kunde">ICS Wien</div><div class="o-stk">60<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>728</div><div class="o-line"><div class="o-kunde">Döppner DE</div><div class="o-stk">15<span class="u"> Stk</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- AUFTRAGSZONE — ENGPASS -->
+  <div class="zone alarm">
+    <div class="z-head">
+      <div class="z-name">⚠ Auftragszone</div>
+      <div class="z-count">11<span class="max">/8</span></div>
+    </div>
+    <div class="orders">
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>651</div><div class="o-line"><div class="o-kunde">Romberger</div><div class="o-stk">9<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>709</div><div class="o-line"><div class="o-kunde">Fichtinger NÖ</div><div class="o-stk">8<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>716</div><div class="o-line"><div class="o-kunde">Gcihaustec Wien</div><div class="o-stk">32<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>722</div><div class="o-line"><div class="o-kunde">Schwartz DE</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>633</div><div class="o-line"><div class="o-kunde">FG Purgstall</div><div class="o-stk">4<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>706</div><div class="o-line"><div class="o-kunde">Klausner</div><div class="o-stk">45<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>708</div><div class="o-line"><div class="o-kunde">Grillenberger</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>712</div><div class="o-line"><div class="o-kunde">Forstenlechner</div><div class="o-stk">4<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>713</div><div class="o-line"><div class="o-kunde">Wieserscherer</div><div class="o-stk">15<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>718</div><div class="o-line"><div class="o-kunde">Thumfort Graz</div><div class="o-stk">52<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>721</div><div class="o-line"><div class="o-kunde">Steininger</div><div class="o-stk">6<span class="u"> Stk</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- SCHÄUMEN -->
+  <div class="zone">
+    <div class="z-head">
+      <div class="z-name">Schäumen</div>
+      <div class="z-count">0</div>
+    </div>
+    <div class="empty">zieht aus AZ</div>
+  </div>
+
+  <!-- SLOT -->
+  <div class="zone">
+    <div class="z-head">
+      <div class="z-name">Slot</div>
+      <div class="z-count">0<span class="max">/3</span></div>
+    </div>
+    <div class="empty">3 Slots frei</div>
+  </div>
+
+  <!-- NACHBEARBEITUNG -->
+  <div class="zone">
+    <div class="z-head">
+      <div class="z-name">Nachbearb.</div>
+      <div class="z-count">2</div>
+    </div>
+    <div class="orders">
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>561</div><div class="o-line"><div class="o-kunde">Gregoritsch</div><div class="o-stk">72<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>675</div><div class="o-line"><div class="o-kunde">F&amp;G</div><div class="o-stk">55<span class="u"> Stk</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- VERSAND -->
+  <div class="zone">
+    <div class="z-head">
+      <div class="z-name">Versand</div>
+      <div class="z-count">6</div>
+    </div>
+    <div class="orders">
+      <div class="order"><div class="o-nr"><span class="jahr">2022</span>724</div><div class="o-line"><div class="o-kunde">Holzer Weiss</div><div class="o-stk">35<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>191</div><div class="o-line"><div class="o-kunde">Shark Stmk</div><div class="o-stk">63<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>193</div><div class="o-line"><div class="o-kunde">Shark Stmk</div><div class="o-stk">7<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>201</div><div class="o-line"><div class="o-kunde">Shark Stmk</div><div class="o-stk">11<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>343</div><div class="o-line"><div class="o-kunde">Gregoritsch</div><div class="o-stk">3<span class="u"> Stk</span></div></div></div>
+      <div class="order"><div class="o-nr"><span class="jahr">2023</span>375</div><div class="o-line"><div class="o-kunde">Neubauer</div><div class="o-stk">27<span class="u"> Stk</span></div></div></div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
