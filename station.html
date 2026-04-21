@@ -372,6 +372,43 @@
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--accent);padding:12px 20px;border-radius:10px;font-size:14px;z-index:60;box-shadow:0 8px 32px rgba(0,0,0,0.18);animation:slideUpToast 0.25s ease;color:var(--text)}
   .toast.err{border-color:var(--danger)}
   @keyframes slideUpToast{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+
+  /* ── UNDO-TOAST (nach FERTIG, 8 s) ────────────────────── */
+  .undo-toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--surface);border:1.5px solid var(--accent);
+    border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.25);
+    z-index:9999;max-width:440px;width:calc(100% - 48px);
+    overflow:hidden;animation:slideUpToast 0.25s ease;
+  }
+  .undo-toast .ut-content{display:flex;align-items:center;gap:12px;padding:12px 14px}
+  .undo-toast .ut-icon{color:var(--accent);font-size:20px;font-weight:700;flex-shrink:0}
+  .undo-toast .ut-text{flex:1;min-width:0}
+  .undo-toast .ut-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
+  .undo-toast .ut-sub{font-size:12px;color:var(--text2);margin-top:2px}
+  .undo-toast .ut-undo{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    padding:8px 14px;font-size:13px;font-weight:700;border-radius:6px;cursor:pointer;
+    flex-shrink:0;min-height:36px;
+  }
+  .undo-toast .ut-undo:hover,.undo-toast .ut-undo:active{border-color:var(--accent);color:var(--accent)}
+  .undo-toast .ut-close{
+    background:transparent;border:0;color:var(--text3);
+    font-size:16px;cursor:pointer;padding:4px 8px;flex-shrink:0;
+  }
+  .undo-toast .ut-close:hover{color:var(--text)}
+  .undo-toast .ut-progress{
+    height:3px;background:var(--accent);transform-origin:left;
+    animation:utProgress 8000ms linear forwards;
+  }
+  @keyframes utProgress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+  /* Sync-Badge Queue-Counter (klein, neben Dot) */
+  .sync-queue{
+    display:inline-block;margin-left:4px;padding:1px 6px;font-size:10px;
+    font-weight:700;background:var(--warn);color:#fff;border-radius:8px;
+    min-width:16px;text-align:center;
+  }
 </style>
 </head>
 <body>
@@ -555,6 +592,8 @@ async function startApp() {
   document.getElementById('header').style.display = 'flex';
   document.getElementById('main').style.display = 'flex';
   document.getElementById('searchWrap').style.display = 'block';
+  // Sync-State-Callback registrieren (fuer Queue-Counter in Badge)
+  if (IMS.onSync) IMS.onSync((state, msg, queueLen) => setSync(state, msg, queueLen));
   await refresh();
   pollTimer = setInterval(refresh, IMS.CONFIG.POLL_MS);
 }
@@ -600,11 +639,21 @@ function clearSearch() {
 }
 
 // ─── SYNC ────────────────────────────────────────────────────────────────────
-function setSync(state, label) {
+function setSync(state, label, queueLen) {
   const dot = document.getElementById('syncDot');
   const lbl = document.getElementById('syncLabel');
   dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'loading' ? 'loading' : state === 'err' ? 'err' : '');
-  lbl.textContent = label;
+  // Queue-Counter: kleine Badge neben dem Label wenn Pending-Ops vorhanden
+  const qLen = queueLen != null ? queueLen : (IMS.opQueue ? IMS.opQueue.size() : 0);
+  if (qLen > 0) {
+    lbl.innerHTML = esc(label) + '<span class="sync-queue" title="Pending Operationen">' + qLen + '</span>';
+    lbl.style.cursor = 'pointer';
+    lbl.onclick = function () { if (IMS.store.syncNow) IMS.store.syncNow(); };
+  } else {
+    lbl.textContent = label;
+    lbl.style.cursor = '';
+    lbl.onclick = null;
+  }
 }
 
 async function refresh() {
@@ -1142,8 +1191,8 @@ async function onStop(id) {
   } catch (e) { toast('Fehler beim Pausieren', true); setSync('err', 'Fehler'); }
 }
 
-// Fertig: direkte Aktion ohne Confirm (Lean-Fix). Korrektur via Rueckgaengig-Button
-// in der Tages-Tabelle unten. Toast zeigt was passiert ist (inkl. Timer-Stopp).
+// Fertig: direkte Aktion ohne Confirm (Lean-Fix). Korrektur via Undo-Toast (8 s).
+// Nachher weiterhin in Tages-Tabelle rueckgaengig machbar.
 async function onFertig(id) {
   const a = IMS.store.getAuftrag(id);
   if (!a) return;
@@ -1153,13 +1202,62 @@ async function onFertig(id) {
   try {
     setSync('loading', 'Speichere…');
     await IMS.store.markStationFertig(id, AP);
-    setSync('ok', 'Fertig ✓');
-    toast(running
-      ? `✓ ${nr} abgeschlossen · Timer gestoppt`
-      : `✓ ${nr} abgeschlossen`);
+    showUndoToast(nr, id, AP, running);
     render();
     setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
   } catch (e) { toast('Fehler', true); setSync('err', 'Fehler'); }
+}
+
+// ─── UNDO-TOAST ─────────────────────────────────────────────────────────────
+// 8 Sekunden lang mit Progress-Stripe. Rueckgaengig-Button + Close.
+// Nur ein Toast gleichzeitig sichtbar (neuer ersetzt alten).
+let _undoToastTimer = null;
+function showUndoToast(nr, auftragId, station, wasRunning) {
+  // Alten Toast entfernen falls vorhanden
+  const existing = document.querySelector('.undo-toast');
+  if (existing) existing.remove();
+  if (_undoToastTimer) { clearTimeout(_undoToastTimer); _undoToastTimer = null; }
+
+  const toastEl = document.createElement('div');
+  toastEl.className = 'undo-toast';
+  toastEl.innerHTML = `
+    <div class="ut-content">
+      <span class="ut-icon">✓</span>
+      <div class="ut-text">
+        <div class="ut-title">${esc(nr)} abgeschlossen</div>
+        ${wasRunning ? '<div class="ut-sub">Timer gestoppt</div>' : ''}
+      </div>
+      <button class="ut-undo" data-role="undo">↶ Rückgängig</button>
+      <button class="ut-close" data-role="close" aria-label="Schließen">✕</button>
+    </div>
+    <div class="ut-progress"></div>
+  `;
+  document.body.appendChild(toastEl);
+
+  // Auto-Close nach 8 s
+  _undoToastTimer = setTimeout(() => { toastEl.remove(); _undoToastTimer = null; }, 8000);
+
+  // Event-Handler
+  toastEl.addEventListener('click', async (e) => {
+    const role = e.target.dataset && e.target.dataset.role;
+    if (role === 'close') {
+      toastEl.remove();
+      if (_undoToastTimer) { clearTimeout(_undoToastTimer); _undoToastTimer = null; }
+    } else if (role === 'undo') {
+      toastEl.remove();
+      if (_undoToastTimer) { clearTimeout(_undoToastTimer); _undoToastTimer = null; }
+      try {
+        setSync('loading', 'Nehme zurück…');
+        await IMS.store.undoStationFertig(auftragId, station);
+        toast(`${esc(nr)} wiederhergestellt`);
+        render();
+        setTimeout(() => setSync('ok', 'Synchronisiert'), 1500);
+      } catch (err) {
+        toast('Fehler beim Rückgängig', true);
+        setSync('err', 'Fehler');
+      }
+    }
+  });
 }
 
 // Rueckgaengig: Fertig-Meldung zuruecknehmen, Auftrag kommt zurueck in Queue
