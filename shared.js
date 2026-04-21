@@ -191,9 +191,13 @@
     'MATERIAL BEIGESTELLT',
   ];
   const AP_FOTO_REQUIRED = ['UP-Armatur 1', 'UP-Armatur 2'];
+  // Vereinfachte Abhaengigkeiten: nur direkter Vorgaenger wird geprueft.
+  // Transitive Abhaengigkeiten (VF-Stationen vor Zusammenbau) sind implizit
+  // durch die Zusammenbau-Pruefung abgesichert — Doppel-Pruefung fuehrt bei
+  // Race-verlorenen Fertigmeldungen zu faelschlichem Blockieren.
   const ABHAENGIGKEITEN = {
     'Zusammenbau':     ['CNC', 'AP-Armatur 1', 'AP-Armatur 2', 'UP-Armatur 1', 'UP-Armatur 2'],
-    'Nachbearbeitung': ['CNC', 'AP-Armatur 1', 'AP-Armatur 2', 'UP-Armatur 1', 'UP-Armatur 2', 'Zusammenbau'],
+    'Nachbearbeitung': ['Zusammenbau'],
   };
 
   // ─── AUFTRAGS-HELPERS ──────────────────────────────────────────────────────
