@@ -191,14 +191,18 @@
     'MATERIAL BEIGESTELLT',
   ];
   const AP_FOTO_REQUIRED = ['UP-Armatur 1', 'UP-Armatur 2'];
-  // Vereinfachte Abhaengigkeiten: nur direkter Vorgaenger wird geprueft.
-  // Transitive Abhaengigkeiten (VF-Stationen vor Zusammenbau) sind implizit
-  // durch die Zusammenbau-Pruefung abgesichert — Doppel-Pruefung fuehrt bei
-  // Race-verlorenen Fertigmeldungen zu faelschlichem Blockieren.
+  // Abhaengigkeiten:
+  //   Zusammenbau:     braucht VF-Stationen (CNC + AP/UP) fertig
+  //   Nachbearbeitung: braucht VF-Stationen fertig — laeuft PARALLEL zu ZB
+  //                     (ZB ist KEIN direkter Vorgaenger).
+  // Plus transitive Regel in sindVorgaengerFertig: wenn Zusammenbau fertig,
+  // gelten alle VF-Stationen als fertig (rettet Auftraege mit Race-verlorenen
+  // VF-Meldungen die aber bereits durch ZB durch sind).
   const ABHAENGIGKEITEN = {
     'Zusammenbau':     ['CNC', 'AP-Armatur 1', 'AP-Armatur 2', 'UP-Armatur 1', 'UP-Armatur 2'],
-    'Nachbearbeitung': ['Zusammenbau'],
+    'Nachbearbeitung': ['CNC', 'AP-Armatur 1', 'AP-Armatur 2', 'UP-Armatur 1', 'UP-Armatur 2'],
   };
+  const VF_STATIONS = ['CNC', 'AP-Armatur 1', 'AP-Armatur 2', 'UP-Armatur 1', 'UP-Armatur 2'];
 
   // ─── AUFTRAGS-HELPERS ──────────────────────────────────────────────────────
   // Welche APs sind für diesen Auftrag relevant (aus Gruppen aufgelöst)?
@@ -225,12 +229,21 @@
   }
 
   // Abhängigkeiten erfüllt (Vorgänger-APs fertig)?
+  // Transitive Regel: Wenn Zusammenbau fertig ist, gelten VF-Stationen
+  // implizit als fertig (auch wenn deren stationFertig durch die
+  // Race-Condition verloren ging).
   function sindVorgaengerFertig(a, apFull) {
     const deps = ABHAENGIGKEITEN[apFull];
     if (!deps) return true;
     const aps = getAuftragAPs(a);
     const relevante = deps.filter(d => aps.includes(d));
-    return relevante.every(d => a.stationFertig && a.stationFertig[d]);
+    const zbFertig = !!(a.stationFertig && a.stationFertig['Zusammenbau']);
+    return relevante.every(d => {
+      if (a.stationFertig && a.stationFertig[d]) return true;
+      // Transitive Regel: ZB fertig → VF gilt als fertig
+      if (zbFertig && VF_STATIONS.indexOf(d) !== -1) return true;
+      return false;
+    });
   }
 
   // Timer-Key für Auftrag x AP (so wie in index.html verwendet)
