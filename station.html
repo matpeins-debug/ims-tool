@@ -70,10 +70,12 @@
   .section-active{display:flex;flex-direction:column;gap:8px}
   .section-active .section-head{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#006b4a;padding:0 2px}
   .section-active .section-head::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite}
-  /* Running-Grid: 1 Auftrag = volle Breite, mehrere = 2 Spalten ab Desktop */
+  /* Running-Grid: 1 Auftrag = volle Breite, mehrere = auto-fit (passt sich
+     der Bildschirmbreite an — 2/3/4 Spalten je nach Platz, keine einsamen
+     Karten in leerer Zeile) */
   .running-grid{display:grid;gap:14px;grid-template-columns:1fr}
-  @media (min-width:1100px){
-    .running-grid.multi{grid-template-columns:repeat(2,1fr)}
+  @media (min-width:720px){
+    .running-grid.multi{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
   }
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.55;transform:scale(0.85)}}
 
@@ -107,12 +109,11 @@
   .date-group-rel{font-size:14px;font-weight:600;color:var(--text2)}
   .date-group-count{font-size:13px;font-weight:600;color:var(--text2);margin-left:auto}
 
-  /* Queue als echtes Grid: Karten in sauberen Reihen, gleich hoch */
-  .section-queue{display:grid;gap:14px;grid-template-columns:1fr;align-items:stretch}
-  @media (min-width:720px){.section-queue{grid-template-columns:repeat(auto-fit,minmax(380px,1fr));grid-auto-rows:1fr}}
-  /* Karte als flex-col, Fertig-Block sitzt am Boden */
-  .section-queue > .card{display:flex;flex-direction:column;gap:10px;height:100%}
-  .section-queue > .card .fertig-divider{margin-top:auto}
+  /* Queue: Grid mit natuerlicher Kartenhoehe (kein stretch auf max).
+     Karten behalten ihre eigene Hoehe — keine aufgeblaehten Mini-Karten. */
+  .section-queue{display:grid;gap:14px;grid-template-columns:1fr;align-items:start}
+  @media (min-width:720px){.section-queue{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}}
+  .section-queue > .card{display:flex;flex-direction:column;gap:10px}
 
   /* ── CARD BASIS ──────────────────────────────────────── */
   .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;border-left:4px solid transparent}
