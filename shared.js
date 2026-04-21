@@ -217,15 +217,29 @@
   }
 
   // Hat dieser Auftrag den gegebenen AP noch offen (nicht station-fertig)?
+  // Prueft beide Key-Varianten (space/dash vs. underscore — Legacy-Kompatibilitaet)
   function isAPOffen(a, apFull) {
     if (!getAuftragAPs(a).includes(apFull)) return false;
-    if (a.stationFertig && a.stationFertig[apFull]) return false;
+    if (_sfHas(a, apFull)) return false;
     return true;
   }
 
-  // Blockierung auf diesem AP?
+  // Blockierung auf diesem AP? Auch hier beide Key-Varianten.
   function hatBlockierung(a, apFull) {
-    return !!(a.blockierungen && a.blockierungen[apFull]);
+    if (!a || !a.blockierungen) return false;
+    if (a.blockierungen[apFull]) return true;
+    const norm = String(apFull).replace(/[^a-z0-9]/gi, '_');
+    return !!a.blockierungen[norm];
+  }
+
+  // Hilfsfunktion: stationFertig-Lookup mit Fallback auf normalisierten Key
+  // (index.html legacy schreibt 'AP_Armatur_1', shared.js v2 'AP-Armatur 1'
+  // — beide Varianten muessen gefunden werden).
+  function _sfHas(a, station) {
+    if (!a || !a.stationFertig) return false;
+    if (a.stationFertig[station]) return true;
+    const norm = String(station).replace(/[^a-z0-9]/gi, '_');
+    return !!a.stationFertig[norm];
   }
 
   // Abhängigkeiten erfüllt (Vorgänger-APs fertig)?
@@ -237,9 +251,9 @@
     if (!deps) return true;
     const aps = getAuftragAPs(a);
     const relevante = deps.filter(d => aps.includes(d));
-    const zbFertig = !!(a.stationFertig && a.stationFertig['Zusammenbau']);
+    const zbFertig = _sfHas(a, 'Zusammenbau');
     return relevante.every(d => {
-      if (a.stationFertig && a.stationFertig[d]) return true;
+      if (_sfHas(a, d)) return true;
       // Transitive Regel: ZB fertig → VF gilt als fertig
       if (zbFertig && VF_STATIONS.indexOf(d) !== -1) return true;
       return false;
