@@ -926,12 +926,12 @@ function renderCard(a, isHero, avgMs) {
   // (siehe avgMsForAP: kein Stueckzahl-Bezug, kein Auftragstyp-Filter).
   // Wird reaktiviert mit Positions-Integration / Plan-Zeiten aus ERP.
   const avgTxt = '';
-  // Timer-Historie: Timer war schon mal gelaufen (totalMs > 0 oder end gesetzt)
-  // → Start-Button freigeben auch wenn Vorgaenger-Check aktuell fehlschlaegt
-  //   (der Auftrag wurde damals rechtmaessig gestartet — Race-Verlust hat die
-  //   stationFertig-Eintraege u.U. zerstoert, das soll den MA nicht blockieren).
-  const hasTimerHistory = !!(td && (td.totalMs > 0 || td.end));
-  const startDisabled = blocked || (!vorgaenger && !hasTimerHistory);
+  // Vorgaenger-Check: in der Praxis werden Fertigmeldungen pro Station oft
+  // NICHT zuverlaessig gesetzt (MA arbeiten einfach weiter). Der Check war
+  // deshalb als harte Sperre zu restriktiv und blockiert realen Arbeitsfluss.
+  // Neue Logik: Start-Button ist nur bei Blockierung disabled.
+  // 'Vorgaenger nicht fertig' bleibt als sichtbare Warnung (MA entscheidet selbst).
+  const startDisabled = blocked;
   const timerBtn = running
     ? `<button class="btn-timer pause" onclick="onStop('${a.id}')">⏸ Pause</button>`
     : `<button class="btn-timer start" onclick="onStart('${a.id}')" ${startDisabled ? 'disabled' : ''}>▶ Start</button>`;
