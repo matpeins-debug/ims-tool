@@ -265,6 +265,35 @@
     return `${auftragId}_${apFull}`;
   }
 
+  // Stueckzahl die AN DIESER Station tatsaechlich bearbeitet wird.
+  // Auftraege koennen multiple Gruppen haben (a.gruppen[]), jede mit eigener
+  // stk-Zahl. Die Summe der Gruppen-stk deren Gruppe diesen AP enthaelt ist
+  // die korrekte Stueckzahl fuer die Station.
+  //
+  // Beispiel Auftrag 2023732: {stk:6,gruppe:'0'} + {stk:14,gruppe:'1'} + {stk:8,gruppe:'2'}
+  //   → CNC (in G0+G1):      6 + 14 = 20 Stk  (nicht 28!)
+  //   → Heizung (nur G2):    8 Stk
+  //   → AP-Armatur (nur G0): 6 Stk
+  //   → UP-Armatur (nur G1): 14 Stk
+  function stkFuerStation(a, apFull) {
+    if (!a) return 0;
+    if (a.gruppen && a.gruppen.length) {
+      let sum = 0;
+      a.gruppen.forEach(g => {
+        const grp = GRUPPEN[g.gruppe];
+        if (grp && grp.aps.indexOf(apFull) !== -1) {
+          sum += Number(g.stk) || 0;
+        }
+      });
+      return sum;
+    }
+    // Fallback: einzelne Gruppe (Legacy-Struktur)
+    if (a.gruppe && GRUPPEN[a.gruppe] && GRUPPEN[a.gruppe].aps.indexOf(apFull) !== -1) {
+      return Number(a.stk) || 0;
+    }
+    return 0;
+  }
+
   // ─── OPERATION FACTORY ─────────────────────────────────────────────────────
   // Erzeugt ein Op-Objekt das in die Queue geht und später auf den Server-State
   // angewendet wird. Jede Op hat eine eindeutige op_id → Idempotenz.
@@ -843,7 +872,7 @@
     resolveAP,
     isAuthed, authCheck, logout,
     GRUPPEN, ARBEITSPLAETZE, BLOCKIERUNG_GRUENDE, AP_FOTO_REQUIRED, ABHAENGIGKEITEN,
-    getAuftragAPs, isAPOffen, hatBlockierung, sindVorgaengerFertig, timerKey,
+    getAuftragAPs, isAPOffen, hatBlockierung, sindVorgaengerFertig, timerKey, stkFuerStation,
     calcTotalMs, istTimerAktiv,
     formatMs, formatElapsed, formatDatum, formatZeit, tageBis,
     store,

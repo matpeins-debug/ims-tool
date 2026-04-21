@@ -911,8 +911,11 @@ function renderCard(a, isHero, avgMs) {
   // Termin-Chip nur im Hero (Queue hat Gruppen-Header mit Datum)
   const terminBadge = isHero ? renderTerminBadge(a, tage) : '';
 
-  const sCls = stkClass(a.stk);
-  const stk = a.stk ? `<div class="card-stk ${sCls}">${esc(a.stk)} <span class="unit">Stk</span></div>` : '';
+  // Stueckzahl pro Station (aus gruppen[]-Array summiert, nicht a.stk)
+  const stkStation = IMS.stkFuerStation(a, AP);
+  const stkShow = stkStation > 0 ? stkStation : (a.stk || 0);
+  const sCls = stkClass(stkShow);
+  const stk = stkShow ? `<div class="card-stk ${sCls}">${esc(stkShow)} <span class="unit">Stk</span></div>` : '';
   // Effort-Badge bei grossen Auftraegen in Chip-Zeile
   const effortBadge = sCls === 'stk-xl' ? `<span class="badge effort-xl">Grossauftrag</span>`
                     : sCls === 'stk-l'  ? `<span class="badge effort-l">Umfangreich</span>`
@@ -1079,7 +1082,7 @@ function sortDoneList(list) {
       case 'nr':         return String(a.nr || '');
       case 'kunde':      return String(a.kunde || '').toLowerCase();
       case 'kommission': return String(a.kommission || '').toLowerCase();
-      case 'stk':        return Number(a.stk) || 0;
+      case 'stk':        return IMS.stkFuerStation(a, AP) || Number(a.stk) || 0;
       case 'ist':
         const td = a.timers && a.timers[IMS.timerKey(a.id, AP)];
         return (td && td.totalMs) || 0;
@@ -1160,7 +1163,9 @@ function renderDoneToday(list) {
     const zeit = formatUhrzeit(a.stationFertig[AP]);
     const prioCls = a.highPrio ? 'prio high' : 'prio';
     const nrFmt = fmtNrWithSpace(a);
-    const stk = a.stk ? `${esc(a.stk)} Stk` : '';
+    const stkStation = IMS.stkFuerStation(a, AP);
+    const stkShow = stkStation > 0 ? stkStation : (a.stk || 0);
+    const stk = stkShow ? `${esc(stkShow)} Stk` : '';
     return `<div class="done-row">
       <span class="${prioCls}">${esc(fmtPrioNum(a))}</span>
       <span class="time">${esc(zeit)}</span>
