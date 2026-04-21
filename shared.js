@@ -218,7 +218,21 @@
 
   // Hat dieser Auftrag den gegebenen AP noch offen (nicht station-fertig)?
   // Prueft beide Key-Varianten (space/dash vs. underscore — Legacy-Kompatibilitaet)
+  //
+  // SONDERFALL Versand: kein "fraesen" an dieser Station, sondern Abschluss
+  // der Produktionskette. 'Offen' = Produktion durch aber noch nicht versendet.
+  // Kriterium: Nachbearbeitung fertig ODER alle anderen APs fertig,
+  //            und a.fertig nicht gesetzt (a.fertig = 'versendet').
   function isAPOffen(a, apFull) {
+    if (apFull === 'Versand') {
+      if (a.fertig) return false;                      // bereits versendet
+      if (_sfHas(a, 'Versand')) return false;          // explizit als fertig markiert
+      if (_sfHas(a, 'Nachbearbeitung')) return true;   // NB durch → versandreif
+      // Kein NB im Workflow: alle anderen APs müssen fertig sein
+      const aps = getAuftragAPs(a).filter(ap => ap !== 'Versand');
+      if (aps.length === 0) return false;
+      return aps.every(ap => _sfHas(a, ap));
+    }
     if (!getAuftragAPs(a).includes(apFull)) return false;
     if (_sfHas(a, apFull)) return false;
     return true;
@@ -384,6 +398,12 @@
         stationFertig[op.station] = op.ts;
         a.stationFertig = stationFertig;
 
+        // Sonderfall Versand: markiert Auftrag als komplett fertig (versendet)
+        if (op.station === 'Versand') {
+          a.fertig = true;
+          a.fertigAm = op.ts;
+        }
+
         // Impliziter timer_stop wenn Timer läuft
         const key = timerKey(a.id, op.station);
         const timers = Object.assign({}, a.timers || {});
@@ -408,6 +428,11 @@
         }
         delete stationFertig[op.station];
         a.stationFertig = stationFertig;
+        // Sonderfall Versand: a.fertig/a.fertigAm auch zuruecknehmen
+        if (op.station === 'Versand') {
+          a.fertig = false;
+          delete a.fertigAm;
+        }
         // Timer bleibt erhalten (Historie)
         break;
       }
