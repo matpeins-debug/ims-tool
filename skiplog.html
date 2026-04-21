@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMS — Skip-Log (Fertigmeldungs-Disziplin)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f7fa; --surface:#fff; --surface2:#eef1f6; --border:#d5dbe5;
+    --text:#1a1d27; --text2:#4b5563; --text3:#8892a6;
+    --accent:#00a87a; --warn:#d98200; --danger:#d63040;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px}
+  body{font-variant-numeric:tabular-nums}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;position:sticky;top:0;z-index:10;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+  header h1{margin:0;font-size:22px;color:var(--accent);font-weight:800}
+  header .sub{color:var(--text2);font-size:13px}
+  header .refresh{margin-left:auto;padding:8px 16px;background:var(--accent);color:#fff;border:0;border-radius:6px;cursor:pointer;font-weight:600}
+  main{max-width:1400px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:28px}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px}
+  .kpi .label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3)}
+  .kpi .value{font-size:32px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1;margin-top:4px}
+  .kpi .hint{font-size:12px;color:var(--text2);margin-top:2px}
+  .kpi.warn{border-left-color:var(--warn)}
+  .kpi.danger{border-left-color:var(--danger)}
+
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin:12px 0 8px 2px}
+
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  th{text-align:left;padding:10px 14px;background:#f0f3f8;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border)}
+  td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px}
+  tr:last-child td{border-bottom:0}
+  tr:hover{background:#fafbfd}
+  td.nr{font-family:'IBM Plex Mono',monospace;font-weight:700}
+  td.kunde{color:var(--text2)}
+  td.station{font-family:'IBM Plex Mono',monospace;font-weight:600}
+  td.missing{color:var(--danger);font-weight:600}
+  td.ts{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)}
+  .badge{display:inline-block;background:var(--surface2);color:var(--text2);padding:2px 7px;border-radius:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:600;margin-right:4px}
+  .badge.miss{background:#ffd9df;color:#8a1a28}
+
+  .count-bar{height:16px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:4px;display:flex}
+  .count-bar-fill{background:var(--warn);height:100%;min-width:2px}
+
+  .empty{padding:40px;text-align:center;color:var(--text3)}
+  a.back{color:var(--accent);text-decoration:none;font-weight:600;font-size:13px}
+  a.back:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📋 Skip-Log</h1>
+  <span class="sub">Fertigmeldungs-Disziplin pro Station</span>
+  <a class="back" href="flow.html">← zurück zu Flow</a>
+  <button class="refresh" onclick="load()">↻ Neu laden</button>
+</header>
+
+<main id="main">
+  <div class="empty">Lade Daten…</div>
+</main>
+
+<script>
+const SB_URL = 'https://elwlptapzwwqhjuxnnws.supabase.co';
+const SB_KEY = 'sb_publishable_MbE6UlJorEnYMe6w77Lixw_ttcF5gBx';
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtTs(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleString('de-AT', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function fmtNr(n){
+  const s = String(n||'').replace(/\s/g,'');
+  const m = s.match(/^(\d{4})(.+)$/);
+  return m ? m[1]+' '+m[2] : s;
+}
+
+async function load() {
+  const main = document.getElementById('main');
+  main.innerHTML = '<div class="empty">Lade Daten…</div>';
+  try {
+    const res = await fetch(SB_URL+'/rest/v1/ims_data?id=eq.main&select=auftraege', {
+      headers: {apikey: SB_KEY, Authorization: 'Bearer '+SB_KEY}
+    });
+    if(!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    const auftraege = (data[0]?.auftraege) || [];
+    render(auftraege);
+  } catch(e) {
+    main.innerHTML = '<div class="empty">Fehler beim Laden: '+esc(e.message)+'</div>';
+  }
+}
+
+function render(auftraege) {
+  // Sammle alle Skip-Events
+  const events = [];
+  const perStation = {};      // {station: count}
+  const perMissing = {};      // {station: count} (wie oft einzelne Stationen uebersprungen wurden)
+  let totalAuftraegeMitSkip = 0;
+
+  auftraege.forEach(a => {
+    if (!a.skipLog || !a.skipLog.length) return;
+    totalAuftraegeMitSkip++;
+    a.skipLog.forEach(e => {
+      events.push({
+        nr: a.nr,
+        kunde: a.kunde,
+        ts: e.ts,
+        station: e.station,
+        missing: e.missing || [],
+        client: e.client || '',
+      });
+      perStation[e.station] = (perStation[e.station] || 0) + 1;
+      (e.missing || []).forEach(m => {
+        perMissing[m] = (perMissing[m] || 0) + 1;
+      });
+    });
+  });
+
+  // Sortieren: neueste zuerst
+  events.sort((a,b) => a.ts < b.ts ? 1 : -1);
+
+  const main = document.getElementById('main');
+
+  if (!events.length) {
+    main.innerHTML = '<div class="empty">Keine Skip-Events im Log. 🎉<br><br><small>Das Log wird ab jetzt neue Fertigmeldungen erfassen, bei denen Vorstationen nicht gemeldet waren.</small></div>';
+    return;
+  }
+
+  // KPIs
+  const maxMissing = Math.max(...Object.values(perMissing), 1);
+  const missingSorted = Object.entries(perMissing).sort((a,b)=>b[1]-a[1]);
+
+  const html = `
+    <div class="kpi-grid">
+      <div class="kpi"><div class="label">Skip-Events gesamt</div><div class="value">${events.length}</div><div class="hint">seit Logging-Start</div></div>
+      <div class="kpi warn"><div class="label">Betroffene Aufträge</div><div class="value">${totalAuftraegeMitSkip}</div><div class="hint">mind. 1 fehlende Vorstation</div></div>
+      <div class="kpi"><div class="label">Letztes Event</div><div class="value" style="font-size:16px;font-weight:600;margin-top:12px">${esc(fmtTs(events[0].ts))}</div></div>
+    </div>
+
+    <section>
+      <h2>Am häufigsten nicht fertig gemeldet</h2>
+      <table>
+        <thead><tr><th>Station</th><th style="width:120px">Anzahl</th><th>Verteilung</th></tr></thead>
+        <tbody>
+          ${missingSorted.map(([s,c]) => `
+            <tr>
+              <td class="station">${esc(s)}</td>
+              <td><b>${c}×</b></td>
+              <td><div class="count-bar"><div class="count-bar-fill" style="width:${Math.round(c/maxMissing*100)}%"></div></div></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Wo wurde fertig gemeldet trotz Lücken</h2>
+      <table>
+        <thead><tr><th>Station (abgeschlossen)</th><th style="width:120px">Anzahl Events</th></tr></thead>
+        <tbody>
+          ${Object.entries(perStation).sort((a,b)=>b[1]-a[1]).map(([s,c]) => `
+            <tr><td class="station">${esc(s)}</td><td><b>${c}×</b></td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Alle Events (neueste zuerst, max 200)</h2>
+      <table>
+        <thead><tr>
+          <th>Zeit</th><th>Auftrag</th><th>Kunde</th>
+          <th>Abgeschlossen</th><th>Fehlend</th><th>Tablet</th>
+        </tr></thead>
+        <tbody>
+          ${events.slice(0,200).map(e => `
+            <tr>
+              <td class="ts">${esc(fmtTs(e.ts))}</td>
+              <td class="nr">${esc(fmtNr(e.nr))}</td>
+              <td class="kunde">${esc(e.kunde||'')}</td>
+              <td class="station">${esc(e.station)}</td>
+              <td class="missing">${e.missing.map(m=>'<span class="badge miss">'+esc(m)+'</span>').join('')}</td>
+              <td class="ts">${esc(e.client||'')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ${events.length > 200 ? '<div class="empty" style="padding:14px">… und '+(events.length-200)+' weitere.</div>' : ''}
+    </section>
+  `;
+
+  main.innerHTML = html;
+}
+
+load();
+</script>
+</body>
+</html>
