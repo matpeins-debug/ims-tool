@@ -219,23 +219,40 @@
   // Hat dieser Auftrag den gegebenen AP noch offen (nicht station-fertig)?
   // Prueft beide Key-Varianten (space/dash vs. underscore — Legacy-Kompatibilitaet)
   //
-  // SONDERFALL Versand: kein "fraesen" an dieser Station, sondern Abschluss
-  // der Produktionskette. 'Offen' = Produktion durch aber noch nicht versendet.
-  // Kriterium: Nachbearbeitung fertig ODER alle anderen APs fertig,
-  //            und a.fertig nicht gesetzt (a.fertig = 'versendet').
+  // SONDERFALL Versand: kein Produktions-AP, sondern Endpunkt. Zeige ALLE
+  // noch nicht versendeten Auftraege. Fehlende Vorstations-Meldungen sind
+  // nur Warnung + werden protokolliert (a.skipLog), kein Blocker.
   function isAPOffen(a, apFull) {
     if (apFull === 'Versand') {
       if (a.fertig) return false;                      // bereits versendet
-      if (_sfHas(a, 'Versand')) return false;          // explizit als fertig markiert
-      if (_sfHas(a, 'Nachbearbeitung')) return true;   // NB durch → versandreif
-      // Kein NB im Workflow: alle anderen APs müssen fertig sein
-      const aps = getAuftragAPs(a).filter(ap => ap !== 'Versand');
-      if (aps.length === 0) return false;
-      return aps.every(ap => _sfHas(a, ap));
+      if (_sfHas(a, 'Versand')) return false;          // explizit fertig markiert
+      return true;                                      // sonst immer offen
     }
     if (!getAuftragAPs(a).includes(apFull)) return false;
     if (_sfHas(a, apFull)) return false;
     return true;
+  }
+
+  // Liefert die fehlenden Vorgaenger-Meldungen fuer eine Station
+  // (fuer UI-Warnung + Skip-Log). Beruecksichtigt transitive Regel.
+  function fehlendeVorgaenger(a, apFull) {
+    if (apFull === 'Versand') {
+      // Versand-Spezial: wenn NB fertig, gilt alles als "soweit ok";
+      // sonst alle APs ausser Versand checken
+      if (_sfHas(a, 'Nachbearbeitung')) return [];
+      const aps = getAuftragAPs(a).filter(ap => ap !== 'Versand');
+      return aps.filter(ap => !_sfHas(a, ap));
+    }
+    const deps = ABHAENGIGKEITEN[apFull];
+    if (!deps) return [];
+    const aps = getAuftragAPs(a);
+    const relevante = deps.filter(d => aps.indexOf(d) !== -1);
+    const zbFertig = _sfHas(a, 'Zusammenbau');
+    return relevante.filter(d => {
+      if (_sfHas(a, d)) return false;
+      if (zbFertig && VF_STATIONS.indexOf(d) !== -1) return false;
+      return true;
+    });
   }
 
   // Blockierung auf diesem AP? Auch hier beide Key-Varianten.
@@ -397,6 +414,20 @@
         }
         stationFertig[op.station] = op.ts;
         a.stationFertig = stationFertig;
+
+        // ── SKIP-LOG: fehlende Vorstations-Meldungen protokollieren ────
+        // Damit Mat auswerten kann wie oft pro Station die Fertigmeldung
+        // uebersprungen wurde (MA-Disziplin-Auswertung).
+        const missing = fehlendeVorgaenger(a, op.station);
+        if (missing.length > 0) {
+          a.skipLog = (a.skipLog || []).slice();
+          a.skipLog.push({
+            ts:      op.ts,
+            station: op.station,
+            missing: missing,
+            client:  op.client_id,
+          });
+        }
 
         // Sonderfall Versand: markiert Auftrag als komplett fertig (versendet)
         if (op.station === 'Versand') {
@@ -897,7 +928,7 @@
     resolveAP,
     isAuthed, authCheck, logout,
     GRUPPEN, ARBEITSPLAETZE, BLOCKIERUNG_GRUENDE, AP_FOTO_REQUIRED, ABHAENGIGKEITEN,
-    getAuftragAPs, isAPOffen, hatBlockierung, sindVorgaengerFertig, timerKey, stkFuerStation,
+    getAuftragAPs, isAPOffen, hatBlockierung, sindVorgaengerFertig, fehlendeVorgaenger, timerKey, stkFuerStation,
     calcTotalMs, istTimerAktiv,
     formatMs, formatElapsed, formatDatum, formatZeit, tageBis,
     store,

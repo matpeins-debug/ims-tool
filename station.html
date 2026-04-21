@@ -955,8 +955,14 @@ function renderCard(a, isHero, avgMs) {
   let warnRow = '';
   if (blocked) {
     warnRow = renderBlockActive(a);
-  } else if (!vorgaenger) {
-    warnRow = '<div class="vorgaenger-warn">⏳ Vorgänger-Station noch nicht fertig</div>';
+  } else {
+    // Konkrete fehlende Vorstations-Meldungen auflisten (hilft MA +
+    // wird bei FERTIG automatisch ins skipLog geschrieben)
+    const fehlende = IMS.fehlendeVorgaenger ? IMS.fehlendeVorgaenger(a, AP) : [];
+    if (fehlende.length > 0) {
+      const kurz = fehlende.map(s => s.replace('AP-Armatur ','AP').replace('UP-Armatur ','UP').replace('Nachbearbeitung','NB').replace('Zusammenbau','ZB')).join(', ');
+      warnRow = `<div class="vorgaenger-warn">⏳ Nicht fertig gemeldet: <b>${esc(kurz)}</b></div>`;
+    }
   }
 
   // Blockierung-Toggle-Button (nur wenn NICHT blockiert)
